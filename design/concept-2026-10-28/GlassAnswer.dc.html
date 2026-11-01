@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>玻璃 · 文字处理结果</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+button,input{font:inherit}
+input::placeholder{color:rgba(235,235,245,0.6)}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; color: #FFFFFF; background: radial-gradient(circle at 18% 28%, #FF8A5B 0%, rgba(255,138,91,0) 42%), radial-gradient(circle at 72% 18%, #7A5CFF 0%, rgba(122,92,255,0) 48%), radial-gradient(circle at 62% 86%, #1E8BFF 0%, rgba(30,139,255,0) 52%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div style="position: absolute; left: 60px; top: 96px; width: 520px; height: 520px; border-radius: 12px; background: rgba(246,246,248,0.97); box-shadow: 0 24px 60px rgba(0,0,0,0.35); overflow: hidden;">
+<div style="height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #ECECEE;">
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FF5F57;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FEBC2E;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #28C840;"></span>
+</div>
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 14px; color: #1C1C1E; font-size: 15px; line-height: 1.7;">
+<span style="font-size: 20px; font-weight: 700;">为什么项目里到处都是配置文件</span>
+<span>很多软件不会把设置写死在程序里，而是放进一个单独的文本文件。</span>
+<span>比较常见的做法是用 YAML 来写，因为它比 JSON 更容易让人读懂。你会在很多项目的根目录看到这样的文件。</span>
+<span style="color: #6E6E73;">它们决定了程序启动时怎么运行、连接到哪里、打开哪些功能。</span>
+</div>
+</div>
+<div style="position: absolute; right: 12px; top: 30px; width: 520px; height: 720px; box-sizing: border-box; padding: 22px 24px; border-radius: 26px; background: rgba(28,28,32,0.58); backdrop-filter: blur(36px) saturate(180%); -webkit-backdrop-filter: blur(36px) saturate(180%); box-shadow: 0 30px 80px rgba(0,0,0,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.16), inset 0 1px 0 rgba(255,255,255,0.18); display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<button type="button" style="display: flex; align-items: center; gap: 3px; padding: 4px 0; background: none; border: none; color: rgba(235,235,245,0.7); font-size: 13px; font-weight: 500; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>周报材料</button>
+<span style="flex-grow: 1;"></span>
+<button type="button" aria-label="收起" style="width: 30px; height: 30px; border-radius: 15px; border: none; background: rgba(255,255,255,0.10); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+<span style="font-size: 26px; font-weight: 700; letter-spacing: -0.4px;">解释</span>
+<div style="display: flex; padding: 2px; border-radius: 9px; background: rgba(255,255,255,0.08); box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.1);">
+<button type="button" style="height: 26px; padding: 0 10px; border-radius: 7px; border: none; background: none; color: rgba(235,235,245,0.75); font-size: 12px; font-weight: 500; cursor: pointer;">翻译</button>
+<button type="button" aria-pressed="true" style="height: 26px; padding: 0 10px; border-radius: 7px; border: none; background: rgba(255,255,255,0.26); color: #FFFFFF; font-size: 12px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.3); cursor: pointer;">解释</button>
+<button type="button" style="height: 26px; padding: 0 10px; border-radius: 7px; border: none; background: none; color: rgba(235,235,245,0.75); font-size: 12px; font-weight: 500; cursor: pointer;">总结</button>
+<button type="button" style="height: 26px; padding: 0 10px; border-radius: 7px; border: none; background: none; color: rgba(235,235,245,0.75); font-size: 12px; font-weight: 500; cursor: pointer;">润色</button>
+<button type="button" style="height: 26px; padding: 0 10px; border-radius: 7px; border: none; background: none; color: rgba(235,235,245,0.75); font-size: 12px; font-weight: 500; cursor: pointer;">改写</button>
+</div>
+</div>
+<div style="box-sizing: border-box; padding: 12px 14px; border-radius: 12px; background: #FBFAF6; color: #2B2B2E; box-shadow: 0 8px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 11px; font-weight: 600; color: #6E6E73;">原文 · 剪贴板</span>
+<span style="font-size: 13.5px; line-height: 1.55;">比较常见的做法是用 YAML 来写，因为它比 JSON 更容易让人读懂。</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 4px 2px 0; font-size: 15px; line-height: 1.68; color: rgba(255,255,255,0.94);">
+<p style="margin: 0;">YAML 和 JSON 都是写配置和数据的文本格式，区别主要在“给谁读”。</p>
+<p style="margin: 0;">JSON 用大括号和引号把每一层包起来，规则严格，程序读写方便；YAML 靠缩进表示层级，省掉了括号和引号，人读起来更轻松。</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+<div style="padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,0.28); box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11px; font-weight: 600; color: rgba(235,235,245,0.6);">JSON</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px; line-height: 1.55; white-space: pre-line;">{"name": "app",
+ "port": 8080}</span></div>
+<div style="padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,0.28); box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11px; font-weight: 600; color: rgba(235,235,245,0.6);">YAML</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px; line-height: 1.55; white-space: pre-line;">name: app
+port: 8080</span></div>
+</div>
+<p style="margin: 0;">所以人手写、常常改的配置多用 YAML；程序之间交换数据多用 JSON。</p>
+</div>
+<div style="position: absolute; left: 20px; right: 20px; bottom: 18px; display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 16px; border-radius: 24px; background: rgba(48,48,54,0.62); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.2);">
+<label style="flex-grow: 1; display: flex; min-width: 0;">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">继续追问</span>
+<input type="text" placeholder="继续追问…" style="flex-grow: 1; min-width: 0; height: 36px; background: none; border: none; outline: none; color: #FFFFFF; font-size: 14px;">
+</label>
+<button type="button" aria-label="复制回答" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: rgba(255,255,255,0.12); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button>
+<button type="button" style="height: 36px; padding: 0 16px; border-radius: 18px; border: none; background: #FFFFFF; color: #000000; font-size: 13px; font-weight: 600; cursor: pointer;">存为材料</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

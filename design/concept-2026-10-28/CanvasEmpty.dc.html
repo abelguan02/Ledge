@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>定稿方向 · 空白画布</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+button{font:inherit}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; color: #FFFFFF; background: radial-gradient(circle at 18% 28%, #FF8A5B 0%, rgba(255,138,91,0) 42%), radial-gradient(circle at 72% 18%, #7A5CFF 0%, rgba(122,92,255,0) 48%), radial-gradient(circle at 62% 86%, #1E8BFF 0%, rgba(30,139,255,0) 52%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div style="position: absolute; left: 60px; top: 96px; width: 520px; height: 520px; border-radius: 12px; background: rgba(246,246,248,0.97); box-shadow: 0 24px 60px rgba(0,0,0,0.35); overflow: hidden;">
+<div style="height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #ECECEE;">
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FF5F57;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FEBC2E;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #28C840;"></span>
+</div>
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 14px;">
+<div style="width: 70%; height: 16px; border-radius: 4px; background: #1C1C1E;"></div>
+<div style="width: 92%; height: 8px; border-radius: 4px; background: #C7C7CC;"></div>
+<div style="width: 86%; height: 8px; border-radius: 4px; background: #C7C7CC;"></div>
+<div style="height: 150px; border-radius: 10px; background: linear-gradient(135deg, #34C3FF 0%, #5E5CE6 55%, #FF6482 100%);"></div>
+<div style="width: 90%; height: 8px; border-radius: 4px; background: #C7C7CC;"></div>
+</div>
+</div>
+<div style="position: absolute; right: 0; top: 6px; width: 24px; height: 24px; background: rgba(28,28,32,0.58); backdrop-filter: blur(36px) saturate(180%); -webkit-backdrop-filter: blur(36px) saturate(180%); -webkit-mask-image: radial-gradient(circle at 0 0, rgba(0,0,0,0) 24px, #000000 24.5px); mask-image: radial-gradient(circle at 0 0, rgba(0,0,0,0) 24px, #000000 24.5px);"></div>
+<div style="position: absolute; right: 0; top: 750px; width: 24px; height: 24px; background: rgba(28,28,32,0.58); backdrop-filter: blur(36px) saturate(180%); -webkit-backdrop-filter: blur(36px) saturate(180%); -webkit-mask-image: radial-gradient(circle at 0 100%, rgba(0,0,0,0) 24px, #000000 24.5px); mask-image: radial-gradient(circle at 0 100%, rgba(0,0,0,0) 24px, #000000 24.5px);"></div>
+<div style="position: absolute; right: 0; top: 30px; width: 520px; height: 720px; border-radius: 26px 0 0 26px; overflow: hidden; background: rgba(28,28,32,0.58); backdrop-filter: blur(36px) saturate(180%); -webkit-backdrop-filter: blur(36px) saturate(180%); box-shadow: -24px 24px 70px rgba(0,0,0,0.4), inset 0.5px 0 0 rgba(255,255,255,0.16), inset 0 1px 0 rgba(255,255,255,0.14);">
+<div style="position: absolute; left: 0; right: 0; top: 0; height: 52px; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 16px;">
+<button type="button" style="display: flex; align-items: center; gap: 5px; height: 28px; padding: 0 8px; border-radius: 8px; border: none; background: none; color: rgba(255,255,255,0.92); font-size: 13px; font-weight: 600; cursor: pointer;">新应用灵感<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.6)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<span style="flex-grow: 1;"></span>
+<button type="button" disabled style="height: 28px; padding: 0 10px; border-radius: 8px; border: none; background: none; color: rgba(235,235,245,0.3); font-size: 12.5px;">清空</button>
+<button type="button" aria-label="收起" style="width: 28px; height: 28px; border-radius: 14px; border: none; background: rgba(255,255,255,0.10); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="position: absolute; left: 0; right: 0; top: 52px; bottom: 0; display: flex; align-items: center; justify-content: center;">
+<span style="font-size: 13px; color: rgba(235,235,245,0.38);">拖进来，或按 ⌘V</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

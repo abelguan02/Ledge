@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>工作台 · 文字处理结果</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+button,input{font:inherit}
+input::placeholder{color:#8E8E93}
+</style>
+</helmet>
+<div style="width: 560px; height: 700px; box-sizing: border-box; padding: 24px; border-radius: 24px 0 0 24px; background: #111113; box-shadow: inset 1px 0 0 rgba(255,255,255,0.07); font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; color: #F5F5F7; display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; align-items: center; gap: 8px;">
+<button type="button" style="display: flex; align-items: center; gap: 4px; padding: 4px 0; background: none; border: none; color: #A1A1A6; font-size: 13px; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>周报材料</button>
+<span style="flex-grow: 1;"></span>
+<button type="button" aria-label="收起" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #A1A1A6; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="box-sizing: border-box; padding: 12px 14px; border-radius: 14px; background: #1B1B1F; border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 6px;">
+<div style="display: flex; align-items: center; gap: 6px;"><span style="width: 6px; height: 6px; border-radius: 3px; background: #64D2FF;"></span><span style="font-size: 12px; color: #A1A1A6;">原文 · 摘自 ChatGPT</span></div>
+<span style="font-size: 13px; line-height: 1.55; color: #D5D8DE;">比较常见的做法是用 YAML 来写，因为它比 JSON 更容易让人读懂。</span>
+</div>
+<div style="display: flex; gap: 6px;">
+<button type="button" style="height: 30px; padding: 0 12px; border-radius: 15px; border: none; background: rgba(255,255,255,0.06); color: #A1A1A6; font-size: 12px; font-weight: 600; cursor: pointer;">翻译</button>
+<button type="button" aria-pressed="true" style="height: 30px; padding: 0 12px; border-radius: 15px; border: none; background: #F5F5F7; color: #111113; font-size: 12px; font-weight: 600; cursor: pointer;">解释</button>
+<button type="button" style="height: 30px; padding: 0 12px; border-radius: 15px; border: none; background: rgba(255,255,255,0.06); color: #A1A1A6; font-size: 12px; font-weight: 600; cursor: pointer;">总结</button>
+<button type="button" style="height: 30px; padding: 0 12px; border-radius: 15px; border: none; background: rgba(255,255,255,0.06); color: #A1A1A6; font-size: 12px; font-weight: 600; cursor: pointer;">润色</button>
+<button type="button" style="height: 30px; padding: 0 12px; border-radius: 15px; border: none; background: rgba(255,255,255,0.06); color: #A1A1A6; font-size: 12px; font-weight: 600; cursor: pointer;">改写</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; font-size: 14.5px; line-height: 1.7; color: #F5F5F7;">
+<p style="margin: 0;">YAML 和 JSON 都是写配置和数据的文本格式，区别主要在“给谁读”。</p>
+<p style="margin: 0;">JSON 用大括号和引号把每一层包起来，规则严格，程序读写很方便；YAML 靠缩进表示层级，括号和引号都省了，人读起来更轻松。</p>
+<p style="margin: 0;">比如同样写名字和端口，JSON 是 <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; color: #D5D8DE;">{"name": "app", "port": 8080}</span>，YAML 是两行 <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; color: #D5D8DE;">name: app</span> 和 <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; color: #D5D8DE;">port: 8080</span>。</p>
+<p style="margin: 0;">所以需要人手写、常常改的配置多用 YAML；程序之间交换数据多用 JSON。</p>
+</div>
+<div style="flex-grow: 1;"></div>
+<div style="display: flex; align-items: center; gap: 8px;">
+<label style="flex-grow: 1; display: flex; align-items: center; height: 42px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; background: #1B1B1F; border: 1px solid rgba(255,255,255,0.08);">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">继续追问</span>
+<input type="text" placeholder="继续追问…" style="flex-grow: 1; min-width: 0; background: none; border: none; outline: none; color: #F5F5F7; font-size: 13px;">
+</label>
+<button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: none; background: rgba(255,255,255,0.08); color: #F5F5F7; font-size: 13px; font-weight: 600; cursor: pointer;">复制</button>
+<button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: none; background: #F5F5F7; color: #111113; font-size: 13px; font-weight: 600; cursor: pointer;">存为材料</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

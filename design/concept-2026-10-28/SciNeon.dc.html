@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>科幻 B · 霓虹工作台</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F3E600}a:hover{color:#FFF79A}
+button,input{font:inherit}
+input::placeholder{color:rgba(243,230,0,0.5)}
+@keyframes neon-glitch{0%,92%,100%{transform:translate(0,0)}93%{transform:translate(-3px,1px)}95%{transform:translate(3px,-1px)}97%{transform:translate(-1px,0)}}
+@keyframes neon-stripe{to{background-position:28px 0}}
+.neon-glitch{animation:neon-glitch 4s steps(1) infinite}
+.neon-stripe{animation:neon-stripe 0.8s linear infinite}
+@media (prefers-reduced-motion: reduce){.neon-glitch,.neon-stripe{animation:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: 'Rajdhani', -apple-system, 'PingFang SC', sans-serif; color: #F2F2F2; background: radial-gradient(ellipse at 20% 100%, rgba(255,42,109,0.35) 0%, rgba(255,42,109,0) 55%), radial-gradient(ellipse at 40% 0%, rgba(0,240,255,0.12) 0%, rgba(0,240,255,0) 50%), #08080C;">
+<div style="position: absolute; left: 50px; bottom: 0; width: 360px; height: 420px; display: flex; align-items: flex-end; gap: 14px; opacity: 0.55;">
+<div style="width: 50px; height: 260px; background: linear-gradient(180deg, #1B1B26 0%, #0D0D14 100%); box-shadow: inset 0 0 0 1px rgba(255,42,109,0.25);"></div>
+<div style="width: 80px; height: 380px; background: linear-gradient(180deg, #1B1B26 0%, #0D0D14 100%); box-shadow: inset 0 0 0 1px rgba(0,240,255,0.2);"></div>
+<div style="width: 40px; height: 200px; background: linear-gradient(180deg, #1B1B26 0%, #0D0D14 100%);"></div>
+<div style="width: 70px; height: 320px; background: linear-gradient(180deg, #1B1B26 0%, #0D0D14 100%); box-shadow: inset 0 0 0 1px rgba(255,42,109,0.2);"></div>
+</div>
+<div style="position: absolute; right: 18px; top: 30px; width: 540px; height: 720px; background: #F3E600; clip-path: polygon(28px 0, 100% 0, 100% calc(100% - 28px), calc(100% - 28px) 100%, 0 100%, 0 28px);">
+<div style="position: absolute; inset: 1.5px; box-sizing: border-box; padding: 26px 26px 20px; background: rgba(9,9,13,0.96); clip-path: polygon(27px 0, 100% 0, 100% calc(100% - 27px), calc(100% - 27px) 100%, 0 100%, 0 27px); display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; align-items: flex-start; gap: 14px;">
+<div style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; min-width: 0;">
+<span style="align-self: flex-start; padding: 2px 14px 2px 8px; background: #F3E600; color: #09090D; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);">TASK_01 // ACTIVE</span>
+<button type="button" style="position: relative; align-self: flex-start; display: flex; align-items: center; gap: 10px; padding: 0; background: none; border: none; color: #F2F2F2; font-size: 34px; font-weight: 700; letter-spacing: 1px; cursor: pointer;">
+<span class="neon-glitch" style="position: relative; display: inline-block;"><span aria-hidden="true" style="position: absolute; left: -2px; top: 0; color: #FF2A6D; opacity: 0.7;">周报材料</span><span aria-hidden="true" style="position: absolute; left: 2px; top: 0; color: #00F0FF; opacity: 0.6;">周报材料</span><span style="position: relative;">周报材料</span></span>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F3E600" stroke-width="3" aria-hidden="true"><path d="M5 9l7 7 7-7"></path></svg>
+</button>
+<span style="font-size: 14px; font-weight: 500; color: rgba(242,242,242,0.7); letter-spacing: 0.5px;">周五前整理好，发给团队</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0;">
+<span style="font-size: 64px; font-weight: 700; line-height: 0.9; color: #F3E600;">06</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 2px; color: rgba(243,230,0,0.75);">MATERIALS</span>
+</div>
+</div>
+<label style="display: flex; align-items: stretch; height: 44px; background: #14141B; box-shadow: inset 0 0 0 1px rgba(243,230,0,0.35);">
+<span style="width: 6px; background: #F3E600;"></span>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">粘贴或输入要处理的文字</span>
+<input type="text" placeholder="粘贴或输入要处理的文字" style="flex-grow: 1; min-width: 0; padding: 0 14px; background: none; border: none; outline: none; color: #F2F2F2; font-size: 15px; font-weight: 500;">
+<span style="display: flex; align-items: center; padding: 0 12px 0 16px; background: #F3E600; color: #09090D; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);">⌘V</span>
+</label>
+<div style="display: flex; align-items: center; gap: 12px;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #F3E600;">// MATERIALS</span>
+<span style="flex-grow: 1; height: 6px; background: repeating-linear-gradient(-45deg, rgba(243,230,0,0.35) 0px, rgba(243,230,0,0.35) 4px, rgba(0,0,0,0) 4px, rgba(0,0,0,0) 8px);"></span>
+<span style="font-size: 13px; font-weight: 600; color: rgba(242,242,242,0.75);">1 待取 · 1 处理中</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 14px; row-gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; background: rgba(243,230,0,0.35); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);"><div style="position: absolute; inset: 1px; overflow: hidden; clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="34" width="38" height="5" rx="2" fill="#1C1C1E" opacity="0.5"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg></div><span style="position: absolute; left: 1px; top: 1px; padding: 0 6px; background: #09090D; color: #F3E600; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">01</span></div>
+<span style="font-size: 14px; font-weight: 600;">海报-初稿.png</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(242,242,242,0.6);">IMG / PNG / 4.2MB</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; background: #F3E600; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);"><div style="position: absolute; inset: 2px; overflow: hidden; clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="34" width="38" height="5" rx="2" fill="#1C1C1E" opacity="0.5"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg></div><span style="position: absolute; left: 2px; top: 2px; padding: 0 6px; background: #09090D; color: #F3E600; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">02</span><span style="position: absolute; left: 2px; bottom: 2px; padding: 1px 10px 1px 6px; background: #F3E600; color: #09090D; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 1px; clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%);">待取 READY</span></div>
+<span style="font-size: 14px; font-weight: 600;">海报-初稿.webp</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(242,242,242,0.6);">FROM 01 / −91%</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; background: rgba(243,230,0,0.35); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);"><div style="position: absolute; inset: 1px; overflow: hidden; clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sn-s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB4F0"></stop><stop offset="1" stop-color="#DCEBFA"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#sn-s1)"></rect><path d="M0 80 L35 48 L60 70 L92 36 L150 84 V108 H0Z" fill="#4E6A8A"></path><path d="M0 92 L40 70 L80 88 L120 66 L150 80 V108 H0Z" fill="#2F4660"></path></svg><div style="position: absolute; inset: 0; background: rgba(9,9,13,0.6);"></div><div style="position: absolute; left: 10px; right: 10px; top: 42px; display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 22px; font-weight: 700; line-height: 1; color: #F3E600;">62%</span><div style="height: 8px; background: rgba(243,230,0,0.18);"><div class="neon-stripe" style="width: 62%; height: 8px; background: repeating-linear-gradient(-45deg, #F3E600 0px, #F3E600 7px, #B8AE00 7px, #B8AE00 14px); background-size: 28px 8px;"></div></div></div></div><span style="position: absolute; left: 1px; top: 1px; padding: 0 6px; background: #09090D; color: #F3E600; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">03</span></div>
+<span style="font-size: 14px; font-weight: 600;">现场照片-01.jpg</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: #F3E600;">COMPRESSING…</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; background: rgba(243,230,0,0.35); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);"><div style="position: absolute; inset: 1px; overflow: hidden; clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sn-s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6B4FA0"></stop><stop offset="0.6" stop-color="#FF8A62"></stop><stop offset="1" stop-color="#FFC48A"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#sn-s2)"></rect><circle cx="76" cy="70" r="16" fill="#FFE2B0"></circle><path d="M0 84 Q38 66 75 82 T150 78 V108 H0Z" fill="#3A2448"></path></svg></div><span style="position: absolute; left: 1px; top: 1px; padding: 0 6px; background: #09090D; color: #F3E600; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">04</span></div>
+<span style="font-size: 14px; font-weight: 600;">现场照片-02.jpg</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(242,242,242,0.6);">IMG / JPG / 3.1MB</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; background: rgba(243,230,0,0.35); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);"><div style="position: absolute; inset: 1px; box-sizing: border-box; padding: 22px 10px 8px; overflow: hidden; background: #14141B; clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%); font-size: 12px; font-weight: 500; line-height: 1.5; color: rgba(242,242,242,0.85);">YAML 和 JSON 都是用来写配置和数据的文本格式……</div><span style="position: absolute; left: 1px; top: 1px; padding: 0 6px; background: #09090D; color: #F3E600; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">05</span></div>
+<span style="font-size: 14px; font-weight: 600;">一段文字</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(242,242,242,0.6);">TXT / 摘自 CHATGPT</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; background: rgba(243,230,0,0.35); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);"><div style="position: absolute; inset: 1px; display: flex; align-items: center; justify-content: center; background: #14141B; clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);"><svg width="54" height="68" viewBox="0 0 54 68" aria-hidden="true"><path d="M2 2h34l16 16v48H2z" fill="none" stroke="#F2F2F2" stroke-width="2"></path><path d="M36 2v16h16" fill="none" stroke="#F2F2F2" stroke-width="2"></path><rect x="2" y="40" width="50" height="14" fill="#F3E600"></rect><text x="27" y="51" text-anchor="middle" font-size="10" font-weight="700" font-family="JetBrains Mono, monospace" fill="#09090D">PDF</text></svg></div><span style="position: absolute; left: 1px; top: 1px; padding: 0 6px; background: #09090D; color: #F3E600; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;">06</span></div>
+<span style="font-size: 14px; font-weight: 600;">项目说明.pdf</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(242,242,242,0.6);">DOC / PDF / 12P</span>
+</div>
+</div>
+<div style="flex-grow: 1;"></div>
+<div style="display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; color: rgba(242,242,242,0.6);">
+<span style="width: 8px; height: 8px; background: #F3E600;"></span>
+<span style="color: #F3E600;">CODEX ONLINE</span>
+<span style="flex-grow: 1;"></span>
+<span>选中材料以处理 · 拖出即复制</span>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Generated applications, test executables, caches and local rollback packages
+/app/build/
+/app/archives/
+**/module-cache/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Machine-local acceptance, migration and historical work records stay local.
+/docs/*
+!/docs/PRODUCT_BRIEF.md
+!/docs/CONCEPT_SPEC.md
+
+# Credentials and local editor/runtime settings must never be published.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.codex/
+.agents/

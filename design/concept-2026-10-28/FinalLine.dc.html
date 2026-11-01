@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>定稿方向 · 细线四种状态</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+@keyframes fl-flow{0%{transform:translateY(-30px)}100%{transform:translateY(100px)}}
+@keyframes fl-breathe{0%,100%{opacity:0.55}50%{opacity:1}}
+.fl-flow{animation:fl-flow 1.6s linear infinite}
+.fl-breathe{animation:fl-breathe 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.fl-flow{animation:none;transform:translateY(34px)}.fl-breathe{animation:none;opacity:1}}
+</style>
+</helmet>
+<div style="width: 900px; height: 520px; box-sizing: border-box; padding: 36px; background: #F2F2F4; font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; color: #1C1C1E; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 340px; border-radius: 12px; overflow: hidden; background: radial-gradient(circle at 20% 30%, #FF8A5B 0%, rgba(255,138,91,0) 50%), radial-gradient(circle at 70% 70%, #1E8BFF 0%, rgba(30,139,255,0) 55%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div style="position: absolute; right: 0; top: 122px; width: 5px; height: 96px; border-radius: 3px 0 0 3px; background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: inset 0.5px 0 0 rgba(255,255,255,0.4);"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 15px; font-weight: 600;">平静</span><span style="font-size: 12px; color: #5E5E63;">没有在处理的东西</span></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 340px; border-radius: 12px; overflow: hidden; background: radial-gradient(circle at 20% 30%, #FF8A5B 0%, rgba(255,138,91,0) 50%), radial-gradient(circle at 70% 70%, #1E8BFF 0%, rgba(30,139,255,0) 55%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div style="position: absolute; right: 0; top: 122px; width: 5px; height: 96px; overflow: hidden; border-radius: 3px 0 0 3px; background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);"><div class="fl-flow" style="width: 5px; height: 30px; background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #FFFFFF 50%, rgba(255,255,255,0) 100%);"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 15px; font-weight: 600;">在动</span><span style="font-size: 12px; color: #5E5E63;">有东西正在处理</span></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 340px; border-radius: 12px; overflow: hidden; background: radial-gradient(circle at 20% 30%, #FF8A5B 0%, rgba(255,138,91,0) 50%), radial-gradient(circle at 70% 70%, #1E8BFF 0%, rgba(30,139,255,0) 55%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div class="fl-breathe" style="position: absolute; right: 0; top: 122px; width: 5px; height: 96px; border-radius: 3px 0 0 3px; background: #FFFFFF;"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 15px; font-weight: 600;">需要你看</span><span style="font-size: 12px; color: #5E5E63;">处理完成，结果还没看过</span></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 340px; border-radius: 12px; overflow: hidden; background: radial-gradient(circle at 20% 30%, #FF8A5B 0%, rgba(255,138,91,0) 50%), radial-gradient(circle at 70% 70%, #1E8BFF 0%, rgba(30,139,255,0) 55%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div class="fl-breathe" style="position: absolute; right: 0; top: 122px; width: 5px; height: 96px; border-radius: 3px 0 0 3px; background: #FF453A;"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 3px;"><span style="font-size: 15px; font-weight: 600;">出错</span><span style="font-size: 12px; color: #5E5E63;">处理失败，打开面板查看原因</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":520}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

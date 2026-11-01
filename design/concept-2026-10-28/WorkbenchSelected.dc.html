@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>工作台 · 选中图片</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 560px; height: 700px; box-sizing: border-box; padding: 24px; border-radius: 24px 0 0 24px; background: #111113; box-shadow: inset 1px 0 0 rgba(255,255,255,0.07); font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; color: #F5F5F7; display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; align-items: flex-start; gap: 8px;">
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0;">
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 6px; padding: 0; background: none; border: none; color: #F5F5F7; font-size: 22px; font-weight: 600; cursor: pointer;">周报材料<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A1A1A6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<span style="font-size: 13px; color: #A1A1A6;">周五前整理好，发给团队</span>
+</div>
+<button type="button" aria-label="收起" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: #A1A1A6; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<span style="font-size: 12px; color: #A1A1A6;">6 样材料 · 1 样待取 · 1 样处理中</span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+<div style="position: relative; box-sizing: border-box; padding: 7px; border-radius: 14px; background: #1B1B1F; border: 2px solid #F5F5F7; display: flex; flex-direction: column; gap: 8px;">
+<div style="position: relative; height: 92px; border-radius: 10px; background: linear-gradient(135deg, #C3B4D8 0%, #7D6E96 100%);">
+<span style="position: absolute; top: 6px; left: 6px; width: 20px; height: 20px; border-radius: 10px; background: #F5F5F7; display: flex; align-items: center; justify-content: center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#111113" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+</div>
+<div style="display: flex; align-items: center; gap: 6px; padding: 0 2px;"><span style="width: 6px; height: 6px; flex-shrink: 0; border-radius: 3px; background: #BF5AF2;"></span><span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">海报-初稿.png</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 8px; border-radius: 14px; background: #1B1B1F; border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px;">
+<div style="position: relative; height: 92px; border-radius: 10px; background: linear-gradient(135deg, #C3B4D8 0%, #7D6E96 100%);">
+<span style="position: absolute; top: 6px; right: 6px; padding: 2px 8px; border-radius: 10px; background: #F5F5F7; color: #111113; font-size: 11px; font-weight: 700;">待取</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 0 2px;">
+<div style="display: flex; align-items: center; gap: 6px;"><span style="width: 6px; height: 6px; flex-shrink: 0; border-radius: 3px; background: #BF5AF2;"></span><span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">海报-初稿.webp</span></div>
+<span style="font-size: 11px; color: #A1A1A6; padding-left: 12px;">由上一张压缩</span>
+</div>
+</div>
+<div style="box-sizing: border-box; padding: 8px; border-radius: 14px; background: #1B1B1F; border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px;">
+<div style="position: relative; height: 92px; border-radius: 10px; overflow: hidden; background: linear-gradient(135deg, #8FA3B8 0%, #4E5D6E 100%);">
+<div style="position: absolute; inset: 0; background: rgba(17,17,19,0.55);"></div>
+<div style="position: absolute; left: 10px; right: 10px; bottom: 10px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.22);"><div style="width: 62%; height: 4px; border-radius: 2px; background: #F5F5F7;"></div></div>
+<span style="position: absolute; left: 10px; bottom: 20px; font-size: 11px; font-weight: 600; font-family: ui-monospace, 'SF Mono', Menlo, monospace;">压缩中 62%</span>
+</div>
+<div style="display: flex; align-items: center; gap: 6px; padding: 0 2px;"><span style="width: 6px; height: 6px; flex-shrink: 0; border-radius: 3px; background: #BF5AF2;"></span><span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">现场照片-01.jpg</span></div>
+</div>
+<div style="position: relative; box-sizing: border-box; padding: 7px; border-radius: 14px; background: #1B1B1F; border: 2px solid #F5F5F7; display: flex; flex-direction: column; gap: 8px;">
+<div style="position: relative; height: 92px; border-radius: 10px; background: linear-gradient(135deg, #A3B4A0 0%, #5A6B58 100%);">
+<span style="position: absolute; top: 6px; left: 6px; width: 20px; height: 20px; border-radius: 10px; background: #F5F5F7; display: flex; align-items: center; justify-content: center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#111113" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+</div>
+<div style="display: flex; align-items: center; gap: 6px; padding: 0 2px;"><span style="width: 6px; height: 6px; flex-shrink: 0; border-radius: 3px; background: #BF5AF2;"></span><span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">现场照片-02.jpg</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 8px; border-radius: 14px; background: #1B1B1F; border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px; opacity: 0.45;">
+<div style="box-sizing: border-box; height: 92px; padding: 10px; border-radius: 10px; background: #232328; color: #D5D8DE; font-size: 11.5px; line-height: 1.55; overflow: hidden;">YAML 和 JSON 都是用来写配置和数据的文本格式，常见于项目根目录……</div>
+<div style="display: flex; align-items: center; gap: 6px; padding: 0 2px;"><span style="width: 6px; height: 6px; flex-shrink: 0; border-radius: 3px; background: #64D2FF;"></span><span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">摘自 ChatGPT</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 8px; border-radius: 14px; background: #1B1B1F; border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px; opacity: 0.45;">
+<div style="height: 92px; border-radius: 10px; background: #232328; display: flex; align-items: center; justify-content: center;"><svg width="30" height="36" viewBox="0 0 30 36" fill="none" stroke="#A1A1A6" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M3 2h16l8 8v24H3z"></path><path d="M19 2v8h8"></path><path d="M8 18h14M8 23h14M8 28h9" stroke-linecap="round"></path></svg></div>
+<div style="display: flex; align-items: center; gap: 6px; padding: 0 2px;"><span style="width: 6px; height: 6px; flex-shrink: 0; border-radius: 3px; background: #FF9F0A;"></span><span style="font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">项目说明.pdf</span></div>
+</div>
+</div>
+<div style="flex-grow: 1;"></div>
+<div style="box-sizing: border-box; padding: 14px; border-radius: 18px; background: #1B1B1F; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; align-items: center; gap: 8px;">
+<span style="width: 6px; height: 6px; border-radius: 3px; background: #BF5AF2;"></span>
+<span style="font-size: 13px; font-weight: 600;">已选 2 张图片</span>
+<span style="flex-grow: 1;"></span>
+<button type="button" style="display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: none; border: none; color: #A1A1A6; font-size: 12px; cursor: pointer;">1600 宽 · WEBP · 82%<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;">
+<button type="button" style="height: 40px; border-radius: 12px; border: none; background: #F5F5F7; color: #111113; font-size: 13px; font-weight: 600; cursor: pointer;">压缩</button>
+<button type="button" style="height: 40px; border-radius: 12px; border: none; background: rgba(255,255,255,0.08); color: #F5F5F7; font-size: 13px; font-weight: 600; cursor: pointer;">调整尺寸</button>
+<button type="button" style="height: 40px; border-radius: 12px; border: none; background: rgba(255,255,255,0.08); color: #F5F5F7; font-size: 13px; font-weight: 600; cursor: pointer;">转格式</button>
+<button type="button" style="height: 40px; border-radius: 12px; border: none; background: rgba(255,255,255,0.08); color: #F5F5F7; font-size: 13px; font-weight: 600; cursor: pointer;">识别文字</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

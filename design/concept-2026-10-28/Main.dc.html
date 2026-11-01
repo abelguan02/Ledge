@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>细线四种状态</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+@keyframes wb-flow{0%{transform:translateY(-28px)}100%{transform:translateY(96px)}}
+@keyframes wb-breathe{0%,100%{opacity:0.55}50%{opacity:1}}
+.wb-flow{animation:wb-flow 1.6s linear infinite}
+.wb-breathe{animation:wb-breathe 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.wb-flow{animation:none;transform:translateY(34px)}.wb-breathe{animation:none;opacity:1}}
+</style>
+</helmet>
+<div style="width: 760px; height: 460px; box-sizing: border-box; padding: 40px; background: linear-gradient(160deg, #4A5260 0%, #2B3038 100%); font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; color: #F5F5F7; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px;">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 300px; border-radius: 12px; background: rgba(0,0,0,0.18); overflow: hidden;">
+<div style="position: absolute; right: 0; top: 102px; width: 4px; height: 96px; border-radius: 2px 0 0 2px; background: rgba(255,255,255,0.28);"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 15px; font-weight: 600;">平静</span>
+<span style="font-size: 12px; color: #D5D8DE;">没有事要处理</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 300px; border-radius: 12px; background: rgba(0,0,0,0.18); overflow: hidden;">
+<div style="position: absolute; right: 0; top: 102px; width: 4px; height: 96px; border-radius: 2px 0 0 2px; background: rgba(255,255,255,0.28); overflow: hidden;">
+<div class="wb-flow" style="width: 4px; height: 28px; background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #FFFFFF 50%, rgba(255,255,255,0) 100%);"></div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 15px; font-weight: 600;">在动</span>
+<span style="font-size: 12px; color: #D5D8DE;">有东西正在处理</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 300px; border-radius: 12px; background: rgba(0,0,0,0.18); overflow: hidden;">
+<div class="wb-breathe" style="position: absolute; right: 0; top: 102px; width: 4px; height: 96px; border-radius: 2px 0 0 2px; background: #F5F5F7;"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 15px; font-weight: 600;">需要你看</span>
+<span style="font-size: 12px; color: #D5D8DE;">结果待取，或处理已完成</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="position: relative; height: 300px; border-radius: 12px; background: rgba(0,0,0,0.18); overflow: hidden;">
+<div class="wb-breathe" style="position: absolute; right: 0; top: 102px; width: 4px; height: 96px; border-radius: 2px 0 0 2px; background: #FF453A;"></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 15px; font-weight: 600;">出错</span>
+<span style="font-size: 12px; color: #D5D8DE;">同“需要你看”，颜色换成红色</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":460}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

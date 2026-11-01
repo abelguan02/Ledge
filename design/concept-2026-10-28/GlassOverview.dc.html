@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>玻璃 · 工作台总览</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+button,input{font:inherit}
+input::placeholder{color:rgba(235,235,245,0.6)}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; color: #FFFFFF; background: radial-gradient(circle at 18% 28%, #FF8A5B 0%, rgba(255,138,91,0) 42%), radial-gradient(circle at 72% 18%, #7A5CFF 0%, rgba(122,92,255,0) 48%), radial-gradient(circle at 62% 86%, #1E8BFF 0%, rgba(30,139,255,0) 52%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div style="position: absolute; left: 60px; top: 96px; width: 520px; height: 520px; border-radius: 12px; background: rgba(246,246,248,0.97); box-shadow: 0 24px 60px rgba(0,0,0,0.35); overflow: hidden;">
+<div style="height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #ECECEE;">
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FF5F57;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FEBC2E;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #28C840;"></span>
+</div>
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 14px;">
+<div style="width: 70%; height: 16px; border-radius: 4px; background: #1C1C1E;"></div>
+<div style="width: 92%; height: 8px; border-radius: 4px; background: #C7C7CC;"></div>
+<div style="width: 86%; height: 8px; border-radius: 4px; background: #C7C7CC;"></div>
+<div style="height: 150px; border-radius: 10px; background: linear-gradient(135deg, #34C3FF 0%, #5E5CE6 55%, #FF6482 100%);"></div>
+<div style="width: 90%; height: 8px; border-radius: 4px; background: #C7C7CC;"></div>
+<div style="width: 64%; height: 8px; border-radius: 4px; background: #C7C7CC;"></div>
+</div>
+</div>
+<div style="position: absolute; right: 12px; top: 30px; width: 520px; height: 720px; box-sizing: border-box; padding: 22px 20px; border-radius: 26px; background: rgba(28,28,32,0.58); backdrop-filter: blur(36px) saturate(180%); -webkit-backdrop-filter: blur(36px) saturate(180%); box-shadow: 0 30px 80px rgba(0,0,0,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.16), inset 0 1px 0 rgba(255,255,255,0.18); display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; align-items: flex-start; gap: 10px; padding: 0 2px;">
+<div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0;">
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; padding: 0; background: none; border: none; color: #FFFFFF; font-size: 26px; font-weight: 700; letter-spacing: -0.4px; cursor: pointer;">周报材料<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.6)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<span style="font-size: 13px; color: rgba(235,235,245,0.62);">周五前整理好，发给团队</span>
+</div>
+<button type="button" aria-label="更多" style="width: 30px; height: 30px; border-radius: 15px; border: none; background: rgba(255,255,255,0.10); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+<button type="button" aria-label="收起" style="width: 30px; height: 30px; border-radius: 15px; border: none; background: rgba(255,255,255,0.10); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<label style="display: flex; align-items: center; gap: 10px; height: 44px; box-sizing: border-box; padding: 0 12px 0 14px; border-radius: 14px; background: rgba(255,255,255,0.07); box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.12);">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.62)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2.5"></rect><path d="M9 4V3h6v1M9 10h6M9 14h4"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">粘贴或输入要处理的文字</span>
+<input type="text" placeholder="粘贴或输入要处理的文字" style="flex-grow: 1; min-width: 0; background: none; border: none; outline: none; color: #FFFFFF; font-size: 14px;">
+<span style="padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,0.12); color: rgba(235,235,245,0.8); font-size: 11px; font-weight: 600;">⌘V</span>
+</label>
+<div style="display: flex; align-items: baseline; gap: 8px; padding: 0 2px;">
+<span style="font-size: 15px; font-weight: 600;">材料</span>
+<span style="font-size: 13px; color: rgba(235,235,245,0.62);">6</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: rgba(235,235,245,0.62);">1 样待取 · 1 样处理中</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 18px; row-gap: 22px;">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="width: 100%; height: 108px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.12);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="34" width="38" height="5" rx="2" fill="#1C1C1E" opacity="0.5"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px;"><span style="font-size: 12px; font-weight: 500;">海报-初稿.png</span><span style="font-size: 11px; color: rgba(235,235,245,0.6);">PNG · 4.2 MB</span></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="position: relative; width: 100%; height: 108px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.12);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="34" width="38" height="5" rx="2" fill="#1C1C1E" opacity="0.5"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg><span style="position: absolute; top: 7px; right: 7px; padding: 2px 8px; border-radius: 9px; background: #FFFFFF; color: #000000; font-size: 10.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.25);">待取</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px;"><span style="font-size: 12px; font-weight: 500;">海报-初稿.webp</span><span style="font-size: 11px; color: rgba(235,235,245,0.6);">由上一张压缩 · 380 KB</span></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="position: relative; width: 100%; height: 108px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.12);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="go-s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB4F0"></stop><stop offset="1" stop-color="#DCEBFA"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#go-s1)"></rect><path d="M0 80 L35 48 L60 70 L92 36 L150 84 V108 H0Z" fill="#4E6A8A"></path><path d="M0 92 L40 70 L80 88 L120 66 L150 80 V108 H0Z" fill="#2F4660"></path></svg><div style="position: absolute; inset: 0; background: rgba(0,0,0,0.42); display: flex; align-items: center; justify-content: center;"><svg width="38" height="38" viewBox="0 0 38 38" role="img" aria-label="压缩中 62%"><circle cx="19" cy="19" r="15" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="3.5"></circle><circle cx="19" cy="19" r="15" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="58.4 94.2" transform="rotate(-90 19 19)"></circle></svg></div></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px;"><span style="font-size: 12px; font-weight: 500;">现场照片-01.jpg</span><span style="font-size: 11px; color: rgba(235,235,245,0.6);">压缩中 62%</span></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="width: 100%; height: 108px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.12);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="go-s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6B4FA0"></stop><stop offset="0.6" stop-color="#FF8A62"></stop><stop offset="1" stop-color="#FFC48A"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#go-s2)"></rect><circle cx="76" cy="70" r="16" fill="#FFE2B0"></circle><path d="M0 84 Q38 66 75 82 T150 78 V108 H0Z" fill="#3A2448"></path></svg></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px;"><span style="font-size: 12px; font-weight: 500;">现场照片-02.jpg</span><span style="font-size: 11px; color: rgba(235,235,245,0.6);">JPG · 3.1 MB</span></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="box-sizing: border-box; width: 100%; height: 108px; padding: 10px 11px; border-radius: 12px; background: #FBFAF6; color: #2B2B2E; font-size: 11px; line-height: 1.55; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">YAML 和 JSON 都是用来写配置和数据的文本格式，常见于项目根目录。它们决定了程序启动时怎么运行……</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px;"><span style="font-size: 12px; font-weight: 500;">一段文字</span><span style="font-size: 11px; color: rgba(235,235,245,0.6);">摘自 ChatGPT</span></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="width: 100%; height: 108px; display: flex; align-items: center; justify-content: center;"><svg width="70" height="88" viewBox="0 0 70 88" aria-hidden="true"><path d="M4 2h44l18 18v64a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#F7F7F9"></path><path d="M48 2v16a2 2 0 0 0 2 2h16" fill="#D8D8DE"></path><rect x="2" y="56" width="66" height="18" fill="#E5463B"></rect><text x="35" y="69.5" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="-apple-system, Helvetica, sans-serif">PDF</text><path d="M12 24h30M12 32h44M12 40h38" stroke="#C7C7CC" stroke-width="3" stroke-linecap="round"></path></svg></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px;"><span style="font-size: 12px; font-weight: 500;">项目说明.pdf</span><span style="font-size: 11px; color: rgba(235,235,245,0.6);">PDF · 12 页</span></div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

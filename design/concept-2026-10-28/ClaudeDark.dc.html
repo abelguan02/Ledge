@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Claude 感 · 工作台总览（深色）</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#D97757}a:hover{color:#E8977A}
+button,input{font:inherit}
+input::placeholder{color:#87867F}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: 'Anthropic Sans', -apple-system, 'PingFang SC', system-ui, 'Segoe UI', Helvetica, Arial, sans-serif; color: #FAF9F5; background: radial-gradient(circle at 25% 30%, #4D4C48 0%, rgba(77,76,72,0) 55%), linear-gradient(160deg, #30302E 0%, #141413 100%);">
+<div style="position: absolute; left: 60px; top: 96px; width: 500px; height: 500px; border-radius: 12px; background: #1F1E1D; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.15), 0 20px 50px rgba(0,0,0,0.4); overflow: hidden;">
+<div style="height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #262624; box-shadow: inset 0 -0.5px 0 rgba(222,220,209,0.15);">
+<span style="width: 11px; height: 11px; border-radius: 6px; background: #4D4C48;"></span>
+<span style="width: 11px; height: 11px; border-radius: 6px; background: #4D4C48;"></span>
+<span style="width: 11px; height: 11px; border-radius: 6px; background: #4D4C48;"></span>
+</div>
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 14px;">
+<div style="width: 64%; height: 14px; border-radius: 4px; background: #D1CFC5;"></div>
+<div style="width: 92%; height: 8px; border-radius: 4px; background: #3D3D3A;"></div>
+<div style="width: 84%; height: 8px; border-radius: 4px; background: #3D3D3A;"></div>
+<div style="width: 88%; height: 8px; border-radius: 4px; background: #3D3D3A;"></div>
+<div style="height: 140px; border-radius: 10px; background: #30302E;"></div>
+<div style="width: 76%; height: 8px; border-radius: 4px; background: #3D3D3A;"></div>
+</div>
+</div>
+<div style="position: absolute; right: 12px; top: 30px; width: 540px; height: 720px; box-sizing: border-box; padding: 28px 24px 20px; border-radius: 22px; background: #262624; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.15), 0 24px 60px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 22px;">
+<div style="display: flex; align-items: flex-start; gap: 8px; padding: 0 4px;">
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0;">
+<span style="font-size: 12px; color: #9C9A92;">当前这件事</span>
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; padding: 0; background: none; border: none; color: #FAF9F5; font-family: 'Anthropic Serif', 'Songti SC', Georgia, 'Times New Roman', serif; font-size: 30px; font-weight: 400; line-height: 1.25; cursor: pointer;">周报材料<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C9A92" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<span style="font-size: 14px; color: #B0AEA5;">周五前整理好，发给团队</span>
+</div>
+<button type="button" aria-label="收起" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: none; color: #9C9A92; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="box-sizing: border-box; padding: 14px 12px 10px 16px; border-radius: 20px; background: #30302E; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.15), 0 4px 16px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 16px;">
+<label style="display: flex;">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">粘贴或输入要处理的文字</span>
+<input type="text" placeholder="粘贴或输入要处理的文字…" style="flex-grow: 1; min-width: 0; padding: 0; background: none; border: none; outline: none; color: #FAF9F5; font-size: 15px;">
+</label>
+<div style="display: flex; align-items: center; gap: 6px;">
+<button type="button" aria-label="添加文件" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: none; box-shadow: inset 0 0 0 0.5px rgba(222,220,209,0.3); color: #B0AEA5; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+<button type="button" style="height: 32px; display: flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: 8px; border: none; background: none; color: #B0AEA5; font-size: 13px; cursor: pointer;">解释<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: #9C9A92;">⌘V 粘贴</span>
+<button type="button" aria-label="开始处理" disabled style="width: 32px; height: 32px; margin-left: 6px; border-radius: 8px; border: none; background: rgba(217,119,87,0.4); color: #FAF9F5; display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg></button>
+</div>
+</div>
+<div style="display: flex; align-items: baseline; gap: 10px; padding: 0 4px;">
+<span style="font-family: 'Anthropic Serif', 'Songti SC', Georgia, serif; font-size: 18px; font-weight: 500;">材料</span>
+<span style="font-size: 13px; color: #9C9A92;">6 样</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: #9C9A92;">1 样待取 · 1 样处理中</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 12px; background: #30302E; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.12);">
+<div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 8px; overflow: hidden;"><svg width="44" height="44" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg></div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">海报-初稿.png</span><span style="font-size: 12px; color: #9C9A92;">PNG · 4.2 MB</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 12px; background: #30302E; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.12);">
+<div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 8px; overflow: hidden;"><svg width="44" height="44" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg></div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex-grow: 1;"><span style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">海报-初稿.webp</span><span style="font-size: 12px; color: #9C9A92;">由上一张压缩 · 380 KB</span></div>
+<span style="flex-shrink: 0; padding: 2px 7px; border-radius: 6px; background: rgba(217,119,87,0.18); color: #E8977A; font-size: 12px; font-weight: 500;">待取</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 12px; background: #30302E; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.12);">
+<div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 8px; overflow: hidden; opacity: 0.55;"><svg width="44" height="44" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="cd-s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB4F0"></stop><stop offset="1" stop-color="#DCEBFA"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#cd-s1)"></rect><path d="M0 80 L35 48 L60 70 L92 36 L150 84 V108 H0Z" fill="#4E6A8A"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 5px; min-width: 0; flex-grow: 1;"><span style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">现场照片-01.jpg</span><div style="height: 3px; border-radius: 2px; background: #3D3D3A;"><div style="width: 62%; height: 3px; border-radius: 2px; background: #D97757;"></div></div><span style="font-size: 12px; color: #9C9A92;">压缩中 · 62%</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 12px; background: #30302E; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.12);">
+<div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 8px; overflow: hidden;"><svg width="44" height="44" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="cd-s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6B4FA0"></stop><stop offset="0.6" stop-color="#FF8A62"></stop><stop offset="1" stop-color="#FFC48A"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#cd-s2)"></rect><circle cx="76" cy="70" r="16" fill="#FFE2B0"></circle><path d="M0 84 Q38 66 75 82 T150 78 V108 H0Z" fill="#3A2448"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">现场照片-02.jpg</span><span style="font-size: 12px; color: #9C9A92;">JPG · 3.1 MB</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 12px; background: #30302E; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.12);">
+<div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 8px; background: #3D3D3A; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C2C0B6" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">粘贴的文字</span><span style="font-size: 12px; color: #9C9A92;">31 字 · 摘自 ChatGPT</span></div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 10px; border-radius: 12px; background: #30302E; box-shadow: 0 0 0 0.5px rgba(222,220,209,0.12);">
+<div style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 8px; background: #3D3D3A; display: flex; align-items: center; justify-content: center; color: #C2C0B6; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">PDF</div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">项目说明.pdf</span><span style="font-size: 12px; color: #9C9A92;">12 页 · 1.8 MB</span></div>
+</div>
+</div>
+<div style="flex-grow: 1;"></div>
+<span style="align-self: center; font-size: 12px; color: #9C9A92;">选中材料来处理 · 拖出去即取走一份副本</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

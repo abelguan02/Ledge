@@ -1,0 +1,460 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-28T12:00:00Z"
+ },
+ "title": "新工作台应用 · 概念稿",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 760,
+   "h": 460,
+   "title": "细线 · 四种状态"
+  },
+  "DropImage.dc.html": {
+   "x": 0,
+   "y": 820,
+   "w": 720,
+   "h": 520,
+   "title": "投放面板 · 拖入图片"
+  },
+  "DropText.dc.html": {
+   "x": 800,
+   "y": 820,
+   "w": 720,
+   "h": 520,
+   "title": "投放面板 · 拖入文字"
+  },
+  "Workbench.dc.html": {
+   "x": 0,
+   "y": 1700,
+   "w": 560,
+   "h": 700,
+   "title": "工作台 · 总览"
+  },
+  "WorkbenchSelected.dc.html": {
+   "x": 640,
+   "y": 1700,
+   "w": 560,
+   "h": 700,
+   "title": "工作台 · 选中图片"
+  },
+  "WorkbenchAnswer.dc.html": {
+   "x": 1280,
+   "y": 1700,
+   "w": 560,
+   "h": 700,
+   "title": "工作台 · 文字处理结果"
+  },
+  "GlassOverview.dc.html": {
+   "x": 0,
+   "y": 2760,
+   "w": 900,
+   "h": 780,
+   "title": "玻璃 · 工作台总览"
+  },
+  "GlassPaste.dc.html": {
+   "x": 980,
+   "y": 2760,
+   "w": 900,
+   "h": 780,
+   "title": "玻璃 · 粘贴剪贴板文字"
+  },
+  "GlassSelected.dc.html": {
+   "x": 1960,
+   "y": 2760,
+   "w": 900,
+   "h": 780,
+   "title": "玻璃 · 选中图片"
+  },
+  "GlassAnswer.dc.html": {
+   "x": 2940,
+   "y": 2760,
+   "w": 900,
+   "h": 780,
+   "title": "玻璃 · 文字处理结果"
+  },
+  "SciHolo.dc.html": {
+   "x": 0,
+   "y": 3900,
+   "w": 900,
+   "h": 780,
+   "title": "科幻 A · 全息（贾维斯感）"
+  },
+  "SciNeon.dc.html": {
+   "x": 980,
+   "y": 3900,
+   "w": 900,
+   "h": 780,
+   "title": "科幻 B · 霓虹（赛博朋克感）"
+  },
+  "SciAmber.dc.html": {
+   "x": 1960,
+   "y": 3900,
+   "w": 900,
+   "h": 780,
+   "title": "科幻 C · 琥珀雾（银翼杀手 2049 感）"
+  },
+  "ClaudeOverview.dc.html": {
+   "x": 0,
+   "y": 5040,
+   "w": 900,
+   "h": 780,
+   "title": "Claude 感 · 工作台总览（浅色）"
+  },
+  "ClaudePaste.dc.html": {
+   "x": 980,
+   "y": 5040,
+   "w": 900,
+   "h": 780,
+   "title": "Claude 感 · 粘贴文字"
+  },
+  "ClaudeAnswer.dc.html": {
+   "x": 1960,
+   "y": 5040,
+   "w": 900,
+   "h": 780,
+   "title": "Claude 感 · 文字处理结果"
+  },
+  "ClaudeDark.dc.html": {
+   "x": 2940,
+   "y": 5040,
+   "w": 900,
+   "h": 780,
+   "title": "Claude 感 · 工作台总览（深色）"
+  },
+  "CanvasEmpty.dc.html": {
+   "x": 0,
+   "y": 6180,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 1 空白画布"
+  },
+  "CanvasMixed.dc.html": {
+   "x": 980,
+   "y": 6180,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 2 任何格式、自由摆放"
+  },
+  "CanvasPaste.dc.html": {
+   "x": 1960,
+   "y": 6180,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 3 粘贴文字"
+  },
+  "CanvasSelect.dc.html": {
+   "x": 2940,
+   "y": 6180,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 4 选中图片"
+  },
+  "CanvasAnswer.dc.html": {
+   "x": 3920,
+   "y": 6180,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 5 文字处理结果"
+  },
+  "CanvasExpanded.dc.html": {
+   "x": 4900,
+   "y": 6180,
+   "w": 1440,
+   "h": 900,
+   "title": "定稿方向 · 6 铺开与切换收集区"
+  },
+  "CanvasEdges.dc.html": {
+   "x": 0,
+   "y": 7200,
+   "w": 1540,
+   "h": 470,
+   "title": "定稿方向 · 7 从屏幕边长出来：右侧／左侧／上方"
+  },
+  "FinalLine.dc.html": {
+   "x": 0,
+   "y": 8030,
+   "w": 900,
+   "h": 520,
+   "title": "定稿方向 · 8 细线四种状态"
+  },
+  "FinalDropImage.dc.html": {
+   "x": 980,
+   "y": 8030,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 9 投放面板：拖入图片"
+  },
+  "FinalDropFile.dc.html": {
+   "x": 1960,
+   "y": 8030,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 10 投放面板：拖入其他文件"
+  },
+  "FinalLight.dc.html": {
+   "x": 2940,
+   "y": 8030,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 11 浅色模式"
+  },
+  "FinalClear.dc.html": {
+   "x": 3920,
+   "y": 8030,
+   "w": 900,
+   "h": 780,
+   "title": "定稿方向 · 12 清空确认"
+  },
+  "LineOptions.dc.html": {
+   "x": 0,
+   "y": 9310,
+   "w": 1238,
+   "h": 984,
+   "title": "细线重设计 · 方案对比"
+  },
+  "LineTabStates.dc.html": {
+   "x": 1320,
+   "y": 9310,
+   "w": 998,
+   "h": 694,
+   "title": "细线重设计 · 方案 B 四种状态"
+  },
+  "CardResize.dc.html": {
+   "x": 0,
+   "y": 10640,
+   "w": 1700,
+   "h": 748,
+   "title": "第三阶段 · 卡片尺寸"
+  },
+  "CardStack.dc.html": {
+   "x": 0,
+   "y": 11468,
+   "w": 1700,
+   "h": 748,
+   "title": "第三阶段 · 叠成一摞"
+  },
+  "LinkPreview.dc.html": {
+   "x": 0,
+   "y": 12736,
+   "w": 2108,
+   "h": 748,
+   "title": "第五阶段 · 网页预览与空格预览"
+  },
+  "CollectionManager.dc.html": {
+   "x": 0,
+   "y": 14004,
+   "w": 2108,
+   "h": 788,
+   "title": "收集区管理 · 管理列表"
+  },
+  "CollectionDelete.dc.html": {
+   "x": 0,
+   "y": 14872,
+   "w": 2108,
+   "h": 788,
+   "title": "收集区管理 · 批量删除"
+  },
+  "MenuBarMenu.dc.html": {
+   "x": 0,
+   "y": 16180,
+   "w": 2108,
+   "h": 728,
+   "title": "菜单栏菜单"
+  },
+  "Settings.dc.html": {
+   "x": 0,
+   "y": 16988,
+   "w": 1832,
+   "h": 1194,
+   "title": "设置窗口"
+  },
+  "About.dc.html": {
+   "x": 0,
+   "y": 18702,
+   "w": 1860,
+   "h": 828,
+   "title": "关于 Dump"
+  },
+  "Onboarding.dc.html": {
+   "x": 0,
+   "y": 19610,
+   "w": 2072,
+   "h": 1214,
+   "title": "新手引导"
+  },
+  "NameIcon.dc.html": {
+   "x": 0,
+   "y": 21344,
+   "w": 1016,
+   "h": 1718,
+   "title": "名字与图标"
+  },
+  "AppIcon.dc.html": {
+   "x": 1116,
+   "y": 21344,
+   "w": 1644,
+   "h": 1162,
+   "title": "图标细化"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "DropImage.dc.html",
+  "DropText.dc.html",
+  "Workbench.dc.html",
+  "WorkbenchSelected.dc.html",
+  "WorkbenchAnswer.dc.html",
+  "GlassOverview.dc.html",
+  "GlassPaste.dc.html",
+  "GlassSelected.dc.html",
+  "GlassAnswer.dc.html",
+  "SciHolo.dc.html",
+  "SciNeon.dc.html",
+  "SciAmber.dc.html",
+  "ClaudeOverview.dc.html",
+  "ClaudePaste.dc.html",
+  "ClaudeAnswer.dc.html",
+  "ClaudeDark.dc.html",
+  "CanvasEmpty.dc.html",
+  "CanvasMixed.dc.html",
+  "CanvasPaste.dc.html",
+  "CanvasSelect.dc.html",
+  "CanvasAnswer.dc.html",
+  "CanvasExpanded.dc.html",
+  "CanvasEdges.dc.html",
+  "FinalLine.dc.html",
+  "FinalDropImage.dc.html",
+  "FinalDropFile.dc.html",
+  "FinalLight.dc.html",
+  "FinalClear.dc.html",
+  "LineOptions.dc.html",
+  "LineTabStates.dc.html",
+  "CardResize.dc.html",
+  "CardStack.dc.html",
+  "LinkPreview.dc.html",
+  "CollectionManager.dc.html",
+  "CollectionDelete.dc.html",
+  "MenuBarMenu.dc.html",
+  "Settings.dc.html",
+  "About.dc.html",
+  "Onboarding.dc.html",
+  "NameIcon.dc.html",
+  "AppIcon.dc.html"
+ ],
+ "notes": {
+  "t1": {
+   "x": 0,
+   "y": -260,
+   "text": "① 细线",
+   "kind": "title1",
+   "maxW": 760
+  },
+  "t2": {
+   "x": 0,
+   "y": 560,
+   "text": "② 投放面板",
+   "kind": "title1",
+   "maxW": 1520
+  },
+  "t3": {
+   "x": 0,
+   "y": 1440,
+   "text": "③ 工作台",
+   "kind": "title1",
+   "maxW": 1840
+  },
+  "t4": {
+   "x": 0,
+   "y": 2500,
+   "text": "④ 方向二：原生玻璃",
+   "kind": "title1",
+   "maxW": 3840
+  },
+  "t5": {
+   "x": 0,
+   "y": 3640,
+   "text": "⑤ 方向三：科幻 HUD",
+   "kind": "title1",
+   "maxW": 2860
+  },
+  "t6": {
+   "x": 0,
+   "y": 4780,
+   "text": "⑥ 方向四：Claude 感",
+   "kind": "title1",
+   "maxW": 3840
+  },
+  "t7": {
+   "x": 0,
+   "y": 5920,
+   "text": "⑦ 定稿方向：原生玻璃 · 空白画布",
+   "kind": "title1",
+   "maxW": 6340
+  },
+  "t8": {
+   "x": 0,
+   "y": 7770,
+   "text": "⑧ 定稿方向：补画",
+   "kind": "title1",
+   "maxW": 4820
+  },
+  "t9": {
+   "x": 0,
+   "y": 9050,
+   "text": "⑨ 细线重设计（2026-10-29）",
+   "kind": "title1",
+   "maxW": 2400
+  },
+  "t10": {
+   "x": 0,
+   "y": 10380,
+   "text": "⑩ 第三阶段：卡片尺寸与叠成一摞（2026-10-29）",
+   "kind": "title1",
+   "maxW": 1700
+  },
+  "t11": {
+   "x": 0,
+   "y": 12476,
+   "text": "⑪ 第五阶段：网页预览与空格预览（2026-10-30）",
+   "kind": "title1",
+   "maxW": 2108
+  },
+  "t12": {
+   "x": 0,
+   "y": 13744,
+   "text": "⑫ 收集区管理与批量删除（2026-10-31）",
+   "kind": "title1",
+   "maxW": 2108
+  },
+  "t13": {
+   "x": 0,
+   "y": 15920,
+   "text": "⑬ 菜单栏菜单与设置窗口（2026-10-31）",
+   "kind": "title1",
+   "maxW": 2108
+  },
+  "t14": {
+   "x": 0,
+   "y": 18442,
+   "text": "⑭ 关于窗口与新手引导（2026-10-31）",
+   "kind": "title1",
+   "maxW": 2108
+  },
+  "t15": {
+   "x": 0,
+   "y": 21084,
+   "text": "⑮ 名字与图标：Ledge／搁这儿（2026-10-31）",
+   "kind": "title1",
+   "maxW": 2760
+  }
+ },
+ "designSystems": []
+}

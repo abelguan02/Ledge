@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>玻璃 · 粘贴剪贴板文字</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#64D2FF}a:hover{color:#C4EEFF}
+button,input{font:inherit}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: -apple-system, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif; color: #FFFFFF; background: radial-gradient(circle at 18% 28%, #FF8A5B 0%, rgba(255,138,91,0) 42%), radial-gradient(circle at 72% 18%, #7A5CFF 0%, rgba(122,92,255,0) 48%), radial-gradient(circle at 62% 86%, #1E8BFF 0%, rgba(30,139,255,0) 52%), linear-gradient(160deg, #1B1F3A 0%, #0E1024 100%);">
+<div style="position: absolute; left: 60px; top: 96px; width: 520px; height: 520px; border-radius: 12px; background: rgba(246,246,248,0.97); box-shadow: 0 24px 60px rgba(0,0,0,0.35); overflow: hidden;">
+<div style="height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #ECECEE;">
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FF5F57;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #FEBC2E;"></span>
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #28C840;"></span>
+</div>
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 14px; color: #1C1C1E; font-size: 15px; line-height: 1.7;">
+<span style="font-size: 20px; font-weight: 700;">为什么项目里到处都是配置文件</span>
+<span>很多软件不会把设置写死在程序里，而是放进一个单独的文本文件。</span>
+<span><span style="background: rgba(10,132,255,0.28);">比较常见的做法是用 YAML 来写，因为它比 JSON 更容易让人读懂。</span>你会在很多项目的根目录看到这样的文件。</span>
+<span style="color: #6E6E73;">它们决定了程序启动时怎么运行、连接到哪里、打开哪些功能。</span>
+</div>
+</div>
+<div style="position: absolute; right: 12px; top: 30px; width: 520px; height: 720px; box-sizing: border-box; padding: 22px 20px; border-radius: 26px; background: rgba(28,28,32,0.58); backdrop-filter: blur(36px) saturate(180%); -webkit-backdrop-filter: blur(36px) saturate(180%); box-shadow: 0 30px 80px rgba(0,0,0,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.16), inset 0 1px 0 rgba(255,255,255,0.18); display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; align-items: flex-start; gap: 10px; padding: 0 2px;">
+<div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0;">
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; padding: 0; background: none; border: none; color: #FFFFFF; font-size: 26px; font-weight: 700; letter-spacing: -0.4px; cursor: pointer;">周报材料<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.6)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<span style="font-size: 13px; color: rgba(235,235,245,0.62);">周五前整理好，发给团队</span>
+</div>
+<button type="button" aria-label="更多" style="width: 30px; height: 30px; border-radius: 15px; border: none; background: rgba(255,255,255,0.10); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+<button type="button" aria-label="收起" style="width: 30px; height: 30px; border-radius: 15px; border: none; background: rgba(255,255,255,0.10); color: #FFFFFF; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="box-sizing: border-box; padding: 14px 16px 16px; border-radius: 18px; background: rgba(255,255,255,0.10); box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.18), 0 12px 32px rgba(0,0,0,0.28); display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; align-items: center; gap: 8px;">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.62)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2.5"></rect><path d="M9 4V3h6v1M9 10h6M9 14h4"></path></svg>
+<span style="font-size: 12px; color: rgba(235,235,245,0.62);">剪贴板 · 刚刚复制 · 31 字</span>
+<span style="flex-grow: 1;"></span>
+<button type="button" aria-label="不使用这段文字" style="width: 24px; height: 24px; border-radius: 12px; border: none; background: rgba(255,255,255,0.10); color: rgba(235,235,245,0.8); display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<span style="font-size: 15px; line-height: 1.6; color: #FFFFFF;">比较常见的做法是用 YAML 来写，因为它比 JSON 更容易让人读懂。</span>
+<div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+<button type="button" style="height: 32px; padding: 0 14px; border-radius: 16px; border: none; background: #FFFFFF; color: #000000; font-size: 13px; font-weight: 600; cursor: pointer;">解释</button>
+<button type="button" style="height: 32px; padding: 0 14px; border-radius: 16px; border: none; background: rgba(255,255,255,0.12); color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer;">翻译</button>
+<button type="button" style="height: 32px; padding: 0 14px; border-radius: 16px; border: none; background: rgba(255,255,255,0.12); color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer;">总结</button>
+<button type="button" style="height: 32px; padding: 0 14px; border-radius: 16px; border: none; background: rgba(255,255,255,0.12); color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer;">润色</button>
+<button type="button" style="height: 32px; padding: 0 14px; border-radius: 16px; border: none; background: rgba(255,255,255,0.12); color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer;">改写</button>
+<span style="flex-grow: 1;"></span>
+<button type="button" style="height: 32px; padding: 0 6px; border: none; background: none; color: rgba(235,235,245,0.8); font-size: 13px; font-weight: 500; cursor: pointer;">只放进来</button>
+</div>
+</div>
+<span style="align-self: center; font-size: 12px; color: rgba(235,235,245,0.6);">按 ↩ 直接“解释” · 打开面板时按 ⌘V 就会出现这张卡片</span>
+<div style="display: flex; align-items: baseline; gap: 8px; padding: 0 2px; opacity: 0.55;">
+<span style="font-size: 15px; font-weight: 600;">材料</span>
+<span style="font-size: 13px; color: rgba(235,235,245,0.62);">6</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 18px; row-gap: 22px; opacity: 0.55;">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="width: 100%; height: 108px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.12);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="34" width="38" height="5" rx="2" fill="#1C1C1E" opacity="0.5"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg></div>
+<span style="font-size: 12px; font-weight: 500;">海报-初稿.png</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="width: 100%; height: 108px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.12);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="gp-s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB4F0"></stop><stop offset="1" stop-color="#DCEBFA"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#gp-s1)"></rect><path d="M0 80 L35 48 L60 70 L92 36 L150 84 V108 H0Z" fill="#4E6A8A"></path><path d="M0 92 L40 70 L80 88 L120 66 L150 80 V108 H0Z" fill="#2F4660"></path></svg></div>
+<span style="font-size: 12px; font-weight: 500;">现场照片-01.jpg</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 9px;">
+<div style="width: 100%; height: 108px; display: flex; align-items: center; justify-content: center;"><svg width="70" height="88" viewBox="0 0 70 88" aria-hidden="true"><path d="M4 2h44l18 18v64a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#F7F7F9"></path><path d="M48 2v16a2 2 0 0 0 2 2h16" fill="#D8D8DE"></path><rect x="2" y="56" width="66" height="18" fill="#E5463B"></rect><text x="35" y="69.5" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="-apple-system, Helvetica, sans-serif">PDF</text><path d="M12 24h30M12 32h44M12 40h38" stroke="#C7C7CC" stroke-width="3" stroke-linecap="round"></path></svg></div>
+<span style="font-size: 12px; font-weight: 500;">项目说明.pdf</span>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

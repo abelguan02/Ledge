@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Claude 感 · 文字处理结果</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#D97757}a:hover{color:#B85C3E}
+button,input{font:inherit}
+input::placeholder{color:#87867F}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: 'Anthropic Sans', -apple-system, 'PingFang SC', system-ui, 'Segoe UI', Helvetica, Arial, sans-serif; color: #141413; background: radial-gradient(circle at 25% 30%, #EFE6D6 0%, rgba(239,230,214,0) 55%), linear-gradient(160deg, #E3DACC 0%, #C9C1B2 100%);">
+<div style="position: absolute; left: 60px; top: 96px; width: 500px; height: 500px; border-radius: 12px; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(31,30,29,0.15), 0 20px 50px rgba(31,30,29,0.12); overflow: hidden;">
+<div style="height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #F5F4ED; box-shadow: inset 0 -0.5px 0 rgba(31,30,29,0.15);">
+<span style="width: 11px; height: 11px; border-radius: 6px; background: #E0DED6;"></span>
+<span style="width: 11px; height: 11px; border-radius: 6px; background: #E0DED6;"></span>
+<span style="width: 11px; height: 11px; border-radius: 6px; background: #E0DED6;"></span>
+</div>
+<div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.7; color: #3D3D3A;">
+<span style="font-family: 'Anthropic Serif', 'Songti SC', Georgia, serif; font-size: 22px; color: #141413;">为什么项目里到处都是配置文件</span>
+<span>很多软件不会把设置写死在程序里，而是放进一个单独的文本文件。</span>
+<span>比较常见的做法是用 YAML 来写，因为它比 JSON 更容易让人读懂。你会在很多项目的根目录看到这样的文件。</span>
+</div>
+</div>
+<div style="position: absolute; right: 12px; top: 30px; width: 540px; height: 720px; box-sizing: border-box; padding: 20px 24px 18px; border-radius: 22px; background: #FAF9F5; box-shadow: 0 0 0 0.5px rgba(31,30,29,0.15), 0 24px 60px rgba(31,30,29,0.18); display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; align-items: center; gap: 8px;">
+<button type="button" style="display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 8px 0 4px; border-radius: 8px; border: none; background: none; color: #5E5D59; font-size: 13px; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>周报材料</button>
+<span style="flex-grow: 1;"></span>
+<button type="button" aria-label="收起" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: none; color: #73726C; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="align-self: flex-end; max-width: 340px; box-sizing: border-box; padding: 10px 14px; border-radius: 16px; background: #F0EEE6; display: flex; flex-direction: column; gap: 8px;">
+<span style="font-size: 14px; line-height: 1.55; color: #141413;">比较常见的做法是用 YAML 来写，因为它比 JSON 更容易让人读懂。</span>
+<span style="font-size: 12px; color: #73726C;">解释 · 粘贴的文字</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px; font-family: 'Anthropic Serif', 'Songti SC', Georgia, 'Times New Roman', serif; font-size: 16px; line-height: 1.7; color: #141413;">
+<p style="margin: 0;">YAML 和 JSON 都是写配置和数据的文本格式，区别主要在“给谁读”。</p>
+<p style="margin: 0;">JSON 用大括号和引号把每一层包起来，规则严格，程序读写方便；YAML 靠缩进表示层级，省掉了括号和引号，人读起来更轻松。同样写名字和端口：</p>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-family: 'Anthropic Mono', 'JetBrains Mono', 'SF Mono', Monaco, monospace; font-size: 12.5px; line-height: 1.6;">
+<div style="padding: 10px 12px; border-radius: 10px; background: #F5F4ED; box-shadow: 0 0 0 0.5px rgba(31,30,29,0.15); display: flex; flex-direction: column; gap: 4px;"><span style="font-family: 'Anthropic Sans', -apple-system, 'PingFang SC', sans-serif; font-size: 11px; color: #73726C;">JSON</span><span style="white-space: pre-line; color: #3D3D3A;">{"name": "app",
+ "port": 8080}</span></div>
+<div style="padding: 10px 12px; border-radius: 10px; background: #F5F4ED; box-shadow: 0 0 0 0.5px rgba(31,30,29,0.15); display: flex; flex-direction: column; gap: 4px;"><span style="font-family: 'Anthropic Sans', -apple-system, 'PingFang SC', sans-serif; font-size: 11px; color: #73726C;">YAML</span><span style="white-space: pre-line; color: #3D3D3A;">name: app
+port: 8080</span></div>
+</div>
+<p style="margin: 0;">所以人手写、常常改的配置多用 YAML；程序之间交换数据多用 JSON。</p>
+</div>
+<div style="display: flex; align-items: center; gap: 2px;">
+<button type="button" aria-label="复制" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: none; color: #73726C; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></button>
+<button type="button" aria-label="重新处理" style="width: 32px; height: 32px; border-radius: 8px; border: none; background: none; color: #73726C; display: flex; align-items: center; justify-content: center; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3L20 9"></path><path d="M20 4v5h-5"></path><path d="M20 12a8 8 0 0 1-14 5.3L4 15"></path><path d="M4 20v-5h5"></path></svg></button>
+<button type="button" style="height: 32px; display: flex; align-items: center; gap: 6px; margin-left: 4px; padding: 0 10px; border-radius: 8px; border: none; background: none; box-shadow: inset 0 0 0 0.5px rgba(31,30,29,0.3); color: #3D3D3A; font-size: 13px; cursor: pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>存为材料</button>
+</div>
+<div style="flex-grow: 1;"></div>
+<div style="box-sizing: border-box; padding: 12px 12px 10px 16px; border-radius: 20px; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(31,30,29,0.15), 0 4px 16px rgba(31,30,29,0.06); display: flex; align-items: center; gap: 8px;">
+<label style="flex-grow: 1; display: flex; min-width: 0;">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">继续追问</span>
+<input type="text" placeholder="继续追问…" style="flex-grow: 1; min-width: 0; padding: 0; background: none; border: none; outline: none; color: #141413; font-size: 15px;">
+</label>
+<button type="button" aria-label="发送" disabled style="width: 32px; height: 32px; border-radius: 8px; border: none; background: rgba(217,119,87,0.45); color: #FFFFFF; display: flex; align-items: center; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg></button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

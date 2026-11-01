@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>科幻 A · 全息工作台</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#5CE1FF}a:hover{color:#B8F3FF}
+button,input{font:inherit}
+input::placeholder{color:rgba(92,225,255,0.55)}
+@keyframes holo-spin{to{transform:rotate(360deg)}}
+@keyframes holo-spin-rev{to{transform:rotate(-360deg)}}
+@keyframes holo-scan{0%{top:-80px}100%{top:740px}}
+@keyframes holo-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.holo-spin{animation:holo-spin 14s linear infinite}
+.holo-spin-rev{animation:holo-spin-rev 9s linear infinite}
+.holo-scan{animation:holo-scan 6s linear infinite}
+.holo-blink{animation:holo-blink 1.1s step-end infinite}
+@media (prefers-reduced-motion: reduce){.holo-spin,.holo-spin-rev,.holo-scan,.holo-blink{animation:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 900px; height: 780px; overflow: hidden; font-family: 'Rajdhani', -apple-system, 'PingFang SC', sans-serif; color: #E6FBFF; background: radial-gradient(circle at 70% 35%, #0D3350 0%, rgba(13,51,80,0) 55%), radial-gradient(circle at 15% 85%, #08233A 0%, rgba(8,35,58,0) 50%), #02070D;">
+<div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(92,225,255,0.05) 1px, rgba(0,0,0,0) 1px), linear-gradient(90deg, rgba(92,225,255,0.05) 1px, rgba(0,0,0,0) 1px); background-size: 40px 40px;"></div>
+<div style="position: absolute; left: 70px; top: 120px; width: 300px; display: flex; flex-direction: column; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; color: rgba(92,225,255,0.45);">
+<span>MING.WORKBENCH // v0.1</span>
+<span>EDGE: RIGHT · DISPLAY 1</span>
+<span>CODEX LINK ········ OK</span>
+</div>
+<div style="position: absolute; right: 18px; top: 30px; width: 540px; height: 720px; box-sizing: border-box; padding: 26px 26px 20px; background: linear-gradient(180deg, rgba(6,26,40,0.72) 0%, rgba(3,14,22,0.72) 100%); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: inset 0 0 0 1px rgba(92,225,255,0.14), 0 0 60px rgba(92,225,255,0.08); overflow: hidden; display: flex; flex-direction: column; gap: 18px;">
+<div class="holo-scan" style="position: absolute; left: 0; right: 0; top: -80px; height: 80px; background: linear-gradient(180deg, rgba(92,225,255,0) 0%, rgba(92,225,255,0.07) 80%, rgba(92,225,255,0.18) 100%); pointer-events: none;"></div>
+<span style="position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid #5CE1FF; border-top: 2px solid #5CE1FF;"></span>
+<span style="position: absolute; right: 0; top: 0; width: 22px; height: 22px; border-right: 2px solid #5CE1FF; border-top: 2px solid #5CE1FF;"></span>
+<span style="position: absolute; left: 0; bottom: 0; width: 22px; height: 22px; border-left: 2px solid #5CE1FF; border-bottom: 2px solid #5CE1FF;"></span>
+<span style="position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; border-right: 2px solid #5CE1FF; border-bottom: 2px solid #5CE1FF;"></span>
+<div style="position: relative; display: flex; align-items: center; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1; min-width: 0;">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2.5px; color: rgba(92,225,255,0.75);">TASK 01 // ACTIVE</span>
+<button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 10px; padding: 0; background: none; border: none; color: #E6FBFF; font-size: 30px; font-weight: 600; letter-spacing: 1px; text-shadow: 0 0 14px rgba(92,225,255,0.55); cursor: pointer;">周报材料<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5CE1FF" stroke-width="2.6" aria-hidden="true"><path d="M5 9l7 7 7-7"></path></svg></button>
+<span style="font-size: 13px; color: rgba(184,243,255,0.7); letter-spacing: 0.5px;">周五前整理好，发给团队</span>
+</div>
+<div style="position: relative; width: 84px; height: 84px; flex-shrink: 0;">
+<div class="holo-spin" style="position: absolute; inset: 0;"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="none" stroke="rgba(92,225,255,0.45)" stroke-width="1" stroke-dasharray="3 5"></circle></svg></div>
+<div class="holo-spin-rev" style="position: absolute; inset: 0;"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="33" fill="none" stroke="#5CE1FF" stroke-width="2" stroke-dasharray="40 167" stroke-linecap="round"></circle></svg></div>
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;"><span style="font-size: 28px; font-weight: 700; line-height: 1; color: #E6FBFF; text-shadow: 0 0 10px rgba(92,225,255,0.6);">06</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 1.5px; color: rgba(92,225,255,0.75);">ITEMS</span></div>
+</div>
+</div>
+<label style="position: relative; display: flex; align-items: center; gap: 10px; height: 42px; box-sizing: border-box; padding: 0 12px; background: rgba(92,225,255,0.06); box-shadow: inset 0 -1px 0 #5CE1FF, inset 0 0 0 1px rgba(92,225,255,0.12);">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #5CE1FF;">&gt;</span>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">粘贴或输入要处理的文字</span>
+<input type="text" placeholder="粘贴或输入要处理的文字" style="flex-grow: 1; min-width: 0; background: none; border: none; outline: none; color: #E6FBFF; font-size: 14px;">
+<span class="holo-blink" style="width: 8px; height: 16px; background: #5CE1FF;"></span>
+<span style="padding: 1px 6px; box-shadow: inset 0 0 0 1px rgba(92,225,255,0.5); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5CE1FF;">⌘V</span>
+</label>
+<div style="position: relative; display: flex; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: rgba(92,225,255,0.8);">
+<span>MATERIALS</span>
+<span style="flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(92,225,255,0.5) 0%, rgba(92,225,255,0.05) 100%);"></span>
+<span>1 待取 · 1 处理中</span>
+</div>
+<div style="position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 14px; row-gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(92,225,255,0.4);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="34" width="38" height="5" rx="2" fill="#1C1C1E" opacity="0.5"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg><div style="position: absolute; inset: 0; background: #0B4A66; mix-blend-mode: color;"></div><div style="position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(2,7,13,0.28) 0px, rgba(2,7,13,0.28) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px);"></div></div>
+<span style="font-size: 13px; font-weight: 600; color: #E6FBFF;">海报-初稿.png</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(92,225,255,0.7);">IMG · PNG · 4.2MB</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; overflow: hidden; box-shadow: inset 0 0 0 1px #5CE1FF, 0 0 18px rgba(92,225,255,0.35);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="150" height="108" fill="#F3EADB"></rect><circle cx="100" cy="44" r="26" fill="#FF6A3D"></circle><rect x="16" y="20" width="52" height="8" rx="2" fill="#1C1C1E"></rect><rect x="16" y="34" width="38" height="5" rx="2" fill="#1C1C1E" opacity="0.5"></rect><rect x="16" y="82" width="118" height="10" rx="2" fill="#2E5BFF"></rect></svg><div style="position: absolute; inset: 0; background: #0B4A66; mix-blend-mode: color;"></div><div style="position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(2,7,13,0.28) 0px, rgba(2,7,13,0.28) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px);"></div><span style="position: absolute; top: 6px; right: 6px; padding: 1px 6px; background: #5CE1FF; color: #02070D; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 600; letter-spacing: 1px;">READY 待取</span></div>
+<span style="font-size: 13px; font-weight: 600; color: #E6FBFF;">海报-初稿.webp</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(92,225,255,0.7);">← 01 · 380KB · −91%</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(92,225,255,0.4);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sh-s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FB4F0"></stop><stop offset="1" stop-color="#DCEBFA"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#sh-s1)"></rect><path d="M0 80 L35 48 L60 70 L92 36 L150 84 V108 H0Z" fill="#4E6A8A"></path><path d="M0 92 L40 70 L80 88 L120 66 L150 80 V108 H0Z" fill="#2F4660"></path></svg><div style="position: absolute; inset: 0; background: #0B4A66; mix-blend-mode: color;"></div><div style="position: absolute; inset: 0; background: rgba(2,7,13,0.55);"></div><div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;"><div class="holo-spin" style="position: absolute; width: 64px; height: 64px;"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="none" stroke="rgba(92,225,255,0.5)" stroke-width="1" stroke-dasharray="2 4"></circle></svg></div><svg width="50" height="50" viewBox="0 0 50 50" role="img" aria-label="压缩中 62%"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(92,225,255,0.2)" stroke-width="3"></circle><circle cx="25" cy="25" r="20" fill="none" stroke="#5CE1FF" stroke-width="3" stroke-dasharray="77.9 125.7" transform="rotate(-90 25 25)"></circle></svg><span style="position: absolute; font-size: 13px; font-weight: 700; color: #E6FBFF;">62</span></div></div>
+<span style="font-size: 13px; font-weight: 600; color: #E6FBFF;">现场照片-01.jpg</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(92,225,255,0.7);">COMPRESSING · 62%</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="position: relative; height: 104px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(92,225,255,0.4);"><svg width="100%" height="100%" viewBox="0 0 150 108" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sh-s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6B4FA0"></stop><stop offset="0.6" stop-color="#FF8A62"></stop><stop offset="1" stop-color="#FFC48A"></stop></linearGradient></defs><rect width="150" height="108" fill="url(#sh-s2)"></rect><circle cx="76" cy="70" r="16" fill="#FFE2B0"></circle><path d="M0 84 Q38 66 75 82 T150 78 V108 H0Z" fill="#3A2448"></path></svg><div style="position: absolute; inset: 0; background: #0B4A66; mix-blend-mode: color;"></div><div style="position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(2,7,13,0.28) 0px, rgba(2,7,13,0.28) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px);"></div></div>
+<span style="font-size: 13px; font-weight: 600; color: #E6FBFF;">现场照片-02.jpg</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(92,225,255,0.7);">IMG · JPG · 3.1MB</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="box-sizing: border-box; height: 104px; padding: 9px 10px; overflow: hidden; background: rgba(92,225,255,0.06); box-shadow: inset 0 0 0 1px rgba(92,225,255,0.4); font-family: 'JetBrains Mono', 'PingFang SC', monospace; font-size: 10.5px; line-height: 1.6; color: #B8F3FF;">YAML 和 JSON 都是用来写配置和数据的文本格式，常见于项目根目录……</div>
+<span style="font-size: 13px; font-weight: 600; color: #E6FBFF;">一段文字</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(92,225,255,0.7);">TXT · 摘自 CHATGPT</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px;">
+<div style="height: 104px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 0 1px rgba(92,225,255,0.4);"><svg width="58" height="72" viewBox="0 0 58 72" fill="none" stroke="#5CE1FF" stroke-width="1.5" aria-hidden="true"><path d="M2 2h36l18 18v50H2z"></path><path d="M38 2v18h18"></path><path d="M10 34h36M10 42h36M10 50h24" stroke-opacity="0.6"></path><text x="29" y="64" text-anchor="middle" font-size="9" font-family="JetBrains Mono, monospace" fill="#5CE1FF" stroke="none">PDF</text></svg></div>
+<span style="font-size: 13px; font-weight: 600; color: #E6FBFF;">项目说明.pdf</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 1px; color: rgba(92,225,255,0.7);">DOC · PDF · 12P</span>
+</div>
+</div>
+<div style="flex-grow: 1;"></div>
+<div style="position: relative; display: flex; align-items: center; gap: 10px; padding-top: 12px; box-shadow: inset 0 1px 0 rgba(92,225,255,0.18); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1.5px; color: rgba(92,225,255,0.7);">
+<span style="width: 6px; height: 6px; background: #5CE1FF; box-shadow: 0 0 8px #5CE1FF;"></span>
+<span>CODEX 已连接</span>
+<span style="flex-grow: 1;"></span>
+<span>选中材料以处理 · 拖出即复制</span>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":780}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
