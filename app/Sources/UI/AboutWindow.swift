@@ -48,9 +48,9 @@ private struct AboutView: View {
                 updateButton
             }.frame(height: 24).padding(.top, 14)
             VStack(spacing: 0) {
-                linkRow("开源仓库", detail: "GitHub", symbol: "chevron.left.forwardslash.chevron.right", color: Color(red: 36/255, green: 41/255, blue: 47/255), arrow: "arrow.up.right") {}
+                linkRow("开源仓库", detail: "GitHub", symbol: "chevron.left.forwardslash.chevron.right", color: Color(red: 36/255, green: 41/255, blue: 47/255), arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.repository) }
                 Divider()
-                linkRow("反馈与建议", detail: "Issues", symbol: "bubble.left.and.bubble.right", color: .blue, arrow: "arrow.up.right") {}
+                linkRow("反馈与建议", detail: "Issues", symbol: "bubble.left.and.bubble.right", color: .blue, arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.feedback) }
                 Divider()
                 linkRow("自愿赞赏", detail: "请作者喝杯咖啡", symbol: "cup.and.saucer.fill", color: .orange, arrow: "chevron.right") { coffee = true }
             }.background(.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 12)).padding(.top, 20)
@@ -62,6 +62,7 @@ private struct AboutView: View {
         switch update.status {
         case .checking: HStack(spacing: 4) { ProgressView().controlSize(.mini); Text("正在检查…") }.font(.system(size: 11.5))
         case .current: Label("已是最新版本", systemImage: "checkmark").font(.system(size: 11.5))
+        case .unreleased: Text("暂无正式发布").font(.system(size: 11.5)).foregroundStyle(.secondary)
         case .available(let version, let url): Button("新版本 \(version) · 前往下载 ↗") { NSWorkspace.shared.open(url) }.buttonStyle(.borderedProminent).controlSize(.mini)
         case .idle, .failed:
             Button(update.status == .failed ? "无法连接 · 重试" : "检查更新") { Task { await update.check() } }.buttonStyle(.bordered).clipShape(Capsule()).controlSize(.mini)

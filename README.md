@@ -56,6 +56,8 @@ LEDGE_BUILD_ROOT=/tmp/ledge-build bash app/build.sh
 
 「关于 → 重新观看新手引导」可以再次进入示例引导。示例只在临时内存画布中，不读剪贴板、不申请权限、不联网，结束后清理。赞赏页展示作者提供的收款码，完全自愿，不影响功能。
 
+关于页的「开源仓库」打开本仓库，「反馈与建议」打开新建 Issue 页面。「检查更新」手动查询 GitHub 最新正式 Release：有新版时打开对应发布页，没有正式发布时显示「暂无正式发布」。不会自动下载或安装。
+
 ## 数据与联网边界
 
 - 应用身份：`local.ledge.desktop`。数据目录：`~/Library/Application Support/Ledge`，通过沙盒目录授权访问。
@@ -64,6 +66,7 @@ LEDGE_BUILD_ROOT=/tmp/ledge-build bash app/build.sh
 - 文字 AI 会把所选文字发送给已连接的服务；关闭后不再发送后续排队请求，已发送的请求可以完成。客户端禁用工具、MCP 和网页搜索；无法可靠识别的 MCP 配置会明确拒绝启动。
 - 网页自动截图会访问网址，可在设置中关闭；手动生成或刷新仍会访问对应页面。没有截图的网址在 Quick Look 中展示本地说明，避免预览原链接触发请求。
 - 普通本地图片转换、OCR 和文件整理无需 AI 账号。仓库中不包含作者的材料库、账号凭据、迁移审计、回退应用包或本机验收截图。
+- 只有点击「检查更新」才访问公开 GitHub Releases API，不携带账号凭据、Cookie 或材料内容；打开关于页不触发查询。
 
 ## 开发与测试
 
@@ -91,6 +94,7 @@ bash app/test-collections.sh
 bash app/test-collection-model.sh
 bash app/test-settings.sh
 bash app/test-presentation.sh
+bash app/test-updates.sh
 bash app/test-coffee.sh
 ```
 
@@ -106,7 +110,7 @@ bash app/test-coffee.sh
 - 本地图片转换面向单帧 PNG／JPEG；视频／音频转换、转写和网页正文总结未实现。
 - 收纳目录不接受符号链接和特殊文件，不接受包含应用自身材料库的目录。
 - 网页截图可能受网站访问限制影响，失败时会保留材料及已有缓存，不承诺绕过访问限制。
-- 应用内仓库／反馈按钮及 GitHub 自动更新查询尚未接入；请使用本仓库的 [Issues](https://github.com/abelguan02/Ledge/issues) 反馈问题。
+- 更新检查只识别正式 Release 的数字版本标签（如 `v0.1.1` 或 `0.1.1`，一至三段），与应用的 `CFBundleShortVersionString` 比较；草稿和预发布不作为更新。尚未提供自动下载安装。
 - `local.*` 身份与本地签名用于当前开发阶段，正式分发的签名、公证和安装流程尚未提供。
 
 ## 许可
