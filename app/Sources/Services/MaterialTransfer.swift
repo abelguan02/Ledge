@@ -14,6 +14,7 @@ extension NSPasteboard.PasteboardType {
 enum ReceivedMaterial: Sendable {
     case file(URL, MaterialSource)
     case text(String, MaterialSource)
+    case note(String, MaterialSource)
     case image(Data, MaterialSource)
 }
 
@@ -63,6 +64,11 @@ enum ReceivedMaterial: Sendable {
             let titledURLs = item.propertyList(forType: .webURLsWithTitles) as? [[String]]
             let webURL = item.string(forType: .URL).flatMap { Library.webURL($0)?.absoluteString }
             let source = source(item)
+            // Ledge supplies file URLs for other apps even when a card is a note or link.
+            if let tag = item.string(forType: .dumpMaterial), UUID(uuidString: tag) != nil {
+                if let webURL { return [.text(webURL, source)] }
+                if item.types.contains(.string), let note = item.string(forType: .string) { return [.note(note, source)] }
+            }
             if let value = item.string(forType: .fileURL), let url = URL(string: value), url.isFileURL {
                 return [.file(url, source)]
             }

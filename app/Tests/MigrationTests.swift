@@ -1,7 +1,7 @@
 import Foundation
 
 @main struct MigrationTests {
-    static func main() async throws {
+    @MainActor static func main() async throws {
         let fm = FileManager.default
         let base = fm.temporaryDirectory.appendingPathComponent("ledge-migration-test-\(UUID())")
         defer { try? fm.removeItem(at: base) }
@@ -29,7 +29,12 @@ import Foundation
         defer { defaults.removePersistentDomain(forName: domain) }
         let bookmark = Data([1, 2, 3])
         defaults.setPersistentDomain(["NSOSPLastRootDirectory": "new authorization location", "ledge.libraryLocation": bookmark], forName: domain)
-        LibraryMigration.importPreferences(["NSOSPLastRootDirectory": "old location", "aiEnabled": false, "dockEdge": "left"], into: defaults, domain: domain)
+        let (_, live) = try LibraryLocation.openForLaunch(defaults: defaults) { _ in
+            LibraryMigration.importPreferences(["NSOSPLastRootDirectory": "old location", "aiEnabled": false, "automaticWebPreviews": false,
+                                                "dockEdge": "left", "shortcutConfigured": true, "itemLimit": 12345], into: defaults, domain: domain)
+            return new
+        }
+        precondition(!live.aiEnabled && !live.automaticWebPreviews && live.shortcut == nil && live.dockEdge == .left && live.capacity.item == 12345)
         let reloaded = UserDefaults(suiteName: domain)!
         precondition(reloaded.string(forKey: "NSOSPLastRootDirectory") == "old location")
         precondition(reloaded.object(forKey: "aiEnabled") as? Bool == false)

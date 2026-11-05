@@ -17,11 +17,13 @@ final class SystemPreviewItem: NSObject, QLPreviewItem {
     private let directory = FileManager.default.temporaryDirectory.appendingPathComponent("dump-link-preview-\(UUID())", isDirectory: true)
     private var created = false
 
-    func make(title: String, siteName: String, url: URL) throws -> URL {
+    func make(title: String, siteName: String, url: URL, language: AppLanguage) throws -> URL {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         created = true
         let file = directory.appendingPathComponent("\(UUID()).txt")
-        let text = "\(title)\n\(siteName)\n\n\(url.absoluteString)\n\n尚无网页截图。这是本地网址说明，预览不会打开网页。\n要打开网页，请返回 \(AppIdentity.name) 双击链接卡片。\n"
+        let explanation = language.label("尚无网页截图。这是本地网址说明，预览不会打开网页。")
+        let open = language.phrase("要打开网页，请返回 %@ 双击链接卡片。", language.label("搁这儿"))
+        let text = "\(title)\n\(siteName)\n\n\(url.absoluteString)\n\n\(explanation)\n\(open)\n"
         try text.write(to: file, atomically: true, encoding: .utf8)
         return file
     }

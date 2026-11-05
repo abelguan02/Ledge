@@ -45,6 +45,17 @@ import SwiftUI
         precondition(urls == model.selectedItems.map { model.payloadURLs[$0.id]! }, "files remain available including text, URL and folder")
         let copiedCSV = try Data(contentsOf: urls[3]); let nestedCSV = try Data(contentsOf: urls[5].appendingPathComponent("nested.csv"))
         precondition(copiedCSV == csv && nestedCSV == csv && rows[4].data(forType: .png) == png)
+        let other = try await library.createCollection("Clipboard target")
+        await model.refresh()
+        model.importPayload(.materials(MaterialTransfer.received(rows))); await model.waitForWrites()
+        let copies = model.items
+        precondition(copies.map(\.kind) == [.text, .text, .link, .file, .image, .folder])
+        let roundTripText = try await library.text(for: copies[0]), roundTripLink = try await library.text(for: copies[2])
+        precondition(roundTripText == fullText && roundTripLink == address && copies[2].sourceTitle == link.sourceTitle)
+        let summary = try await library.clearSummary(ids: Set(copies.map(\.id)))
+        precondition(summary.backedUp == 0 && copies.allSatisfy { $0.collectionID == other.id && $0.sourcePath == nil })
+        try await library.selectCollection(collection); await model.refresh()
+        model.selected = Set([first, second, link, file, picture, folder].map(\.id))
         let source = MaterialDragView(model: model, item: first)
         let dragged = try source.makeDraggingItems().map { $0.item as! NSPasteboardItem }
         precondition(dragged.count == rows.count)
