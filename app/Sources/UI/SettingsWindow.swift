@@ -9,15 +9,15 @@ private typealias SettingsState<Value> = SwiftUI.State<Value>
     @Published var error: String?
     init() { refresh() }
     func refresh() { enabled = SMAppService.mainApp.status == .enabled }
-    func set(_ value: Bool) {
+    func set(_ value: Bool, language: AppLanguage) {
         do {
             let status = SMAppService.mainApp.status
             if value && status != .enabled && status != .requiresApproval { try SMAppService.mainApp.register() }
             else if !value && status != .notRegistered { try SMAppService.mainApp.unregister() }
             refresh()
             if SMAppService.mainApp.status == .requiresApproval {
-                let alert = NSAlert(); alert.messageText = "请在系统设置中允许登录时启动"
-                alert.addButton(withTitle: "打开系统设置"); alert.addButton(withTitle: "取消")
+                let alert = NSAlert(); alert.messageText = language.label("请在系统设置中允许登录时启动")
+                alert.addButton(withTitle: language.label("打开系统设置")); alert.addButton(withTitle: language.label("取消"))
                 if alert.runModal() == .alertFirstButtonReturn { SMAppService.openSystemSettingsLoginItems() }
             }
         } catch { refresh(); self.error = error.localizedDescription }
@@ -43,9 +43,9 @@ private typealias SettingsState<Value> = SwiftUI.State<Value>
 }
 
 private enum SettingsTab: String, CaseIterable {
-    case general = "通用", storage = "存储", ai = "AI", web = "网页预览"
+    case general = "通用", storage = "存储", ai = "智能", web = "网页预览"
     var symbol: String { switch self { case .general: "gearshape"; case .storage: "internaldrive"; case .ai: "sparkles"; case .web: "globe" } }
-    var height: CGFloat { switch self { case .general: 291; case .storage: 380; case .ai: 195; case .web: 155 } }
+    var height: CGFloat { switch self { case .general: 332; case .storage: 380; case .ai: 195; case .web: 155 } }
 }
 
 private struct SettingsView: View {
@@ -64,9 +64,9 @@ private struct SettingsView: View {
                     Button { tab = page } label: {
                         VStack(spacing: 4) {
                             if skin.isUnit { ViewThatFits(in: .horizontal) { SkinDisplayText(page.rawValue, size: 34); SkinDisplayText(page.rawValue, size: 24) } }
-                            else { Image(systemName: page.symbol).font(skin.typography.settingsIcon); Text(page.rawValue).font(skin.typography.small) }
+                            else { Image(systemName: page.symbol).font(skin.typography.settingsIcon); Text(skin.label(page.rawValue)).font(skin.typography.small) }
                         }
-                            .frame(width: skin.isUnit ? 104 : 72, height: 54).foregroundStyle(tab == page ? skin.palette.accent : skin.palette.secondary)
+                            .frame(width: skin.isUnit ? 104 : skin.language == .english ? 92 : 72, height: 54).foregroundStyle(tab == page ? skin.palette.accent : skin.palette.secondary)
                             .background(tab == page ? skin.palette.settingsTab : skin.palette.clear, in: skin.shapes.control)
                             .overlay(alignment: .bottom) { if skin.isUnit && tab == page { skin.palette.accent.frame(height: 3) } }
                     }.buttonStyle(.plain)
@@ -77,12 +77,16 @@ private struct SettingsView: View {
                 case .general:
                     group {
                         row("皮肤") {
-                            SkinSegments(title: "皮肤", choices: SkinChoice.allCases.map { ($0, skin.isUnit ? $0.title(language: skin.language.rawValue) : $0.title()) }, selection: $preferences.skin).frame(width: 180)
+                            SkinSegments(title: "皮肤", choices: SkinChoice.allCases.map { ($0, $0.title(language: skin.language.rawValue)) }, selection: $preferences.skin).frame(width: 180)
                         }
                         Divider()
-                        row("登录时启动") { Toggle(skin.label("登录时启动"), isOn: Binding(get: { login.enabled }, set: { login.set($0) })).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small) }
+                        row("语言") {
+                            SkinSegments(title: "语言", choices: [(.chinese, "中文"), (.english, "英语")], selection: $preferences.language).frame(width: 180)
+                        }
                         Divider()
-                        row(skin.phrase("显示／收起 %@", skin.isUnit ? skin.label("搁这儿") : AppIdentity.name)) { ShortcutRecorder(shortcut: shortcut, preferences: preferences).frame(width: 182, height: 28) }
+                        row("登录时启动") { Toggle(skin.label("登录时启动"), isOn: Binding(get: { login.enabled }, set: { login.set($0, language: skin.language) })).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small) }
+                        Divider()
+                        row(skin.phrase("显示／收起 %@", skin.label("搁这儿"))) { ShortcutRecorder(shortcut: shortcut, preferences: preferences).frame(width: 182, height: 28) }
                         if !shortcut.error.isEmpty { Text(skin.label(shortcut.error)).font(skin.typography.small).foregroundStyle(skin.palette.destructive).frame(maxWidth: .infinity, alignment: .trailing).padding(.horizontal, 12).padding(.bottom, 6) }
                         Divider()
                         row("停靠位置") {
@@ -104,11 +108,11 @@ private struct SettingsView: View {
                             Button(skin.label("在访达中显示")) { NSWorkspace.shared.activateFileViewerSelecting([model.library.root]) }.controlSize(.small)
                         }.padding(12)
                         Divider()
-                        row("已用空间") { Text(skin.phrase("%d 个收集区 · %@", model.index.collections.count, CapacityLimits.format(model.index.items.reduce(0) { $0 + $1.byteCount + ($1.linkPreview?.byteCount ?? 0) }))).foregroundStyle(skin.ink.secondary) }
+                        row("已用空间") { Text(skin.phrase("%d 个收集区 · %@", model.index.collections.count, skin.language.size(model.index.items.reduce(0) { $0 + $1.byteCount + ($1.linkPreview?.byteCount ?? 0) }))).foregroundStyle(skin.ink.secondary) }
                     }
                 case .ai:
                     group {
-                        row("AI 处理") { Toggle(skin.label("AI 处理"), isOn: $preferences.aiEnabled).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small).disabled(model.codexAvailable == false) }
+                        row("智能处理") { Toggle(skin.label("智能处理"), isOn: $preferences.aiEnabled).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small).disabled(model.codexAvailable == false) }
                         HStack(spacing: 6) {
                             skin.shapes.circle.fill(model.codexAvailable == false ? skin.palette.destructive : preferences.aiEnabled && model.codexAvailable == true ? skin.palette.connected : skin.palette.inactive).frame(width: 6, height: 6)
                             Text(skin.label(model.aiStatus)).foregroundStyle(skin.ink.secondary); Spacer()
@@ -123,11 +127,12 @@ private struct SettingsView: View {
         }.font(skin.typography.body).frame(width: 520)
             .background(scheme == .dark ? skin.palette.settingsDark : skin.palette.settingsLight)
             .onAppear { resize(skin.label(tab.rawValue), tab.height); login.refresh() }
+            .onChange(of: skin.language) { _, _ in resize(skin.label(tab.rawValue), tab.height + (tab == .general && !shortcut.error.isEmpty ? 20 : 0)) }
             .onChange(of: preferences.skin) { _, _ in resize(skin.label(tab.rawValue), tab.height + (tab == .general && !shortcut.error.isEmpty ? 20 : 0)) }
             .onChange(of: tab) { _, value in resize(skin.label(value.rawValue), value.height + (value == .general && !shortcut.error.isEmpty ? 20 : 0)) }
             .onChange(of: shortcut.error) { _, value in if tab == .general { resize(skin.label(tab.rawValue), tab.height + (value.isEmpty ? 0 : 20)) } }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in login.refresh() }
-            .alert("无法更改登录启动项", isPresented: Binding(get: { login.error != nil }, set: { if !$0 { login.error = nil } })) { Button(skin.label("好")) { login.error = nil } } message: { Text(login.error ?? "") }
+            .alert(skin.label("无法更改登录启动项"), isPresented: Binding(get: { login.error != nil }, set: { if !$0 { login.error = nil } })) { Button(skin.label("好")) { login.error = nil } } message: { Text(login.error ?? "") }
     }
     private func group<C: View>(@ViewBuilder _ content: () -> C) -> some View {
         VStack(spacing: 0, content: content).background(scheme == .dark ? skin.palette.darkSettingsGroup : skin.palette.lightSettingsGroup, in: skin.shapes.field)
@@ -135,7 +140,7 @@ private struct SettingsView: View {
     }
     private func row<C: View>(_ title: String, @ViewBuilder control: () -> C) -> some View { HStack { Text(skin.label(title)); Spacer(); control() }.padding(.horizontal, 12).frame(height: 40) }
     private func capacityRow(_ title: String, value: Binding<Int64>, choices: [Int64]) -> some View {
-        row(title) { Picker(title, selection: value) { ForEach(Array(Set(choices + [value.wrappedValue])).sorted(), id: \.self) { Text(CapacityLimits.format($0)).tag($0) } }.labelsHidden().frame(width: 100) }
+        row(title) { Picker(skin.label(title), selection: value) { ForEach(Array(Set(choices + [value.wrappedValue])).sorted(), id: \.self) { Text(skin.language.size($0)).tag($0) } }.labelsHidden().frame(width: 100) }
     }
 }
 
@@ -149,7 +154,7 @@ private struct ShortcutRecorder: NSViewRepresentable {
         view.recordingFeedback = { shortcut.error = $0 }
         return view
     }
-    func updateNSView(_ view: ShortcutField, context: Context) { view.skin = skin; view.label = preferences.shortcut?.display ?? ""; view.needsDisplay = true }
+    func updateNSView(_ view: ShortcutField, context: Context) { view.skin = skin; view.label = preferences.shortcut?.keyCaps.map(skin.label).joined() ?? ""; view.needsDisplay = true }
     static func dismantleNSView(_ view: ShortcutField, coordinator: ()) { view.stopRecording() }
 }
 final class ShortcutField: NSView {
@@ -174,7 +179,7 @@ final class ShortcutField: NSView {
     }
     private func beginRecording() {
         guard window?.makeFirstResponder(self) == true else { return }
-        session.begin(); recordingFeedback?(session.error); needsDisplay = true
+        session.begin(language: skin.language); recordingFeedback?(session.error); needsDisplay = true
     }
     @objc func stopRecording() { session.stop(); needsDisplay = true }
     func acceptCurrentShortcut() -> Bool {

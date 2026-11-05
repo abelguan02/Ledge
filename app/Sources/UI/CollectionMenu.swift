@@ -120,10 +120,10 @@ struct CollectionMenuView: View {
                                 Text(group.name).lineLimit(1).truncationMode(.tail).help(group.name)
                                 current(group.id)
                                 Spacer(minLength: 0)
-                                Text(members.isEmpty ? skin.label("空") : skin.phrase("%d 样 · %@", members.count, CapacityLimits.format(members.reduce(0) { $0 + $1.byteCount + ($1.linkPreview?.byteCount ?? 0) })))
+                                Text(members.isEmpty ? skin.label("空") : skin.phrase("%d 样 · %@", members.count, skin.language.size(members.reduce(0) { $0 + $1.byteCount + ($1.linkPreview?.byteCount ?? 0) })))
                                     .font(skin.typography.detail).monospacedDigit().foregroundStyle(skin.ink.secondary).fixedSize()
                             }.padding(.horizontal, 10).frame(height: 36).background(checked ? inset : skin.palette.clear, in: skin.shapes.control).contentShape(Rectangle())
-                        }.accessibilityLabel("\(group.name)，\(checked ? "已选择" : "未选择")").accessibilityAddTraits(checked ? .isSelected : [])
+                        }.accessibilityLabel("\(group.name)，\(skin.label(checked ? "已选择" : "未选择"))").accessibilityAddTraits(checked ? .isSelected : [])
                     }
                 }.padding(.horizontal, 6)
             }.frame(height: CGFloat(min(6, model.index.collections.count)) * 36)
@@ -160,7 +160,7 @@ struct CollectionMenuView: View {
                 } else { Text(title(snapshot)).font(skin.typography.collectionTitle) }
                 if !model.collectionStatus.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(model.collectionStatusText(skin.label)).foregroundStyle(model.collectionError ? skin.palette.destructive : skin.palette.secondary)
+                        Text(model.collectionStatus).foregroundStyle(model.collectionError ? skin.palette.destructive : skin.palette.secondary)
                         if model.collectionDeleting { ProgressView().controlSize(.small) }
                         else if model.collectionExporting {
                             ProgressView(value: Double(model.collectionExportProgress?.completed ?? 0), total: Double(max(1, model.collectionExportProgress?.total ?? 1))).frame(height: 3)
@@ -187,8 +187,8 @@ struct CollectionMenuView: View {
                         HStack { Text(skin.label(category.rawValue)); Spacer(); Text("\(ids.count)") }.font(skin.typography.detail).foregroundStyle(skin.ink.secondary)
                     }
                 }
-                if snapshot.removesAll { (skin.isUnit ? Text(skin.label("删除后将保留一个新的空白‘收集区’。")) : Text("删除后将保留一个新的空白‘收集区’。")).font(skin.typography.note) }
-                if snapshot.summary.total > 0 { (skin.isUnit ? Text(skin.label("删除后可以撤销一次。")) : Text("删除后可以撤销一次。")).font(skin.typography.detail).foregroundStyle(skin.ink.secondary) }
+                if snapshot.removesAll { (skin.isUnit || skin.language != .simplified ? Text(skin.label("删除后将保留一个新的空白‘收集区’。")) : Text("删除后将保留一个新的空白‘收集区’。")).font(skin.typography.note) }
+                if snapshot.summary.total > 0 { (skin.isUnit || skin.language != .simplified ? Text(skin.label("删除后可以撤销一次。")) : Text("删除后可以撤销一次。")).font(skin.typography.detail).foregroundStyle(skin.ink.secondary) }
                 if !snapshot.summary.uniqueIDs.isEmpty && !model.collectionDeleteFailed {
                     Button(model.collectionError ? skin.label("重试导出…") : skin.phrase("先导出这 %d 样…", snapshot.summary.uniqueIDs.count)) { model.exportSelectedCollections() }
                         .frame(maxWidth: .infinity).frame(height: 28).background(inset, in: skin.shapes.compactControl).disabled(model.collectionDeleting || model.collectionExporting)
@@ -211,6 +211,6 @@ struct CollectionMenuView: View {
     private func explanation(_ s: CollectionRemovalSnapshot) -> String {
         if s.summary.total == 0 { return skin.label("可以撤销一次。") }
         if s.summary.uniqueIDs.isEmpty { return skin.phrase("共 %d 样，都是导入文件的副本，原件不受影响。", s.summary.total) }
-        return skin.phrase("共 %d 样材料，其中 %d 样只保存在%@里，删除后将一并移除。", s.summary.total, s.summary.uniqueIDs.count, skin.isUnit ? skin.label("搁这儿") : AppIdentity.name) + (s.summary.backedUp == 0 ? "" : skin.phrase("其余 %d 样的外部原件不受影响。", s.summary.backedUp))
+        return skin.phrase("共 %d 样材料，其中 %d 样只保存在%@里，删除后将一并移除。", s.summary.total, s.summary.uniqueIDs.count, skin.label("搁这儿")) + (s.summary.backedUp == 0 ? "" : (skin.language == .english ? " " : "") + skin.phrase("其余 %d 样的外部原件不受影响。", s.summary.backedUp))
     }
 }

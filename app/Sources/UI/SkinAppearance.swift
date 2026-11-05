@@ -4,7 +4,7 @@ import AppKit
 extension LedgeSkin {
     static func selected(_ choice: SkinChoice, locale: Locale? = nil) -> LedgeSkin {
         var skin = choice == .classic ? LedgeSkin.classic : .unit01
-        if let locale { skin.language = SkinLanguage(identifier: locale.identifier) }
+        if let locale { skin.language = AppLanguage(identifier: locale.identifier) }
         return skin
     }
 }
@@ -14,7 +14,6 @@ extension LedgeSkin {
 struct SkinRoot<Content: View>: View {
     @ObservedObject var preferences: AppPreferences
     @Environment(\.colorScheme) private var systemScheme
-    @Environment(\.locale) private var locale
     let content: Content
     var scanlines: Bool
     var decorateWindow: Bool
@@ -22,7 +21,7 @@ struct SkinRoot<Content: View>: View {
         self.preferences = preferences; self.scanlines = scanlines; self.decorateWindow = decorateWindow; self.content = content()
     }
     var body: some View {
-        let skin = LedgeSkin.selected(preferences.skin, locale: locale)
+        let skin = LedgeSkin.selected(preferences.skin, locale: preferences.interfaceLanguage.locale)
         content
             .background { if decorateWindow { SkinWindowChrome(isUnit: skin.isUnit).frame(width: 0, height: 0) } }
             .foregroundStyle(skin.ink.primary)
@@ -33,6 +32,7 @@ struct SkinRoot<Content: View>: View {
                         .allowsHitTesting(false).accessibilityHidden(true)
                 }
             }
+            .environment(\.locale, skin.language.locale)
             .environment(\.ledgeSkin, skin)
             .environment(\.colorScheme, preferences.skin == .unit01 ? .dark : systemScheme)
     }

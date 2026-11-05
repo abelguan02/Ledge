@@ -30,7 +30,7 @@ struct CardResizeHandle: NSViewRepresentable {
         NSGraphicsContext.restoreGraphicsState()
     }
     override func resetCursorRects() {
-        let image = NSImage(systemSymbolName: "arrow.up.left.and.arrow.down.right", accessibilityDescription: "调整卡片大小")!
+        let image = NSImage(systemSymbolName: "arrow.up.left.and.arrow.down.right", accessibilityDescription: skin.label("调整卡片大小"))!
         addCursorRect(bounds, cursor: NSCursor(image: image, hotSpot: CGPoint(x: image.size.width / 2, y: image.size.height / 2)))
     }
     override func mouseDown(with event: NSEvent) {
@@ -92,7 +92,7 @@ struct MaterialDragSource: NSViewRepresentable {
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = NSMenu(); menu.autoenablesItems = false
         func add(_ title: String, _ action: Selector, enabled: Bool = true) {
-            let entry = NSMenuItem(title: LedgeSkin.selected(model.preferences.skin, locale: .current).label(title), action: action, keyEquivalent: "")
+            let entry = NSMenuItem(title: model.preferences.interfaceLanguage.label(title), action: action, keyEquivalent: "")
             entry.target = self; entry.isEnabled = enabled; menu.addItem(entry)
         }
         add(item.stackID != nil && !inTray ? "展开" : "打开", #selector(openMaterial))
@@ -105,7 +105,7 @@ struct MaterialDragSource: NSViewRepresentable {
         if let _ = item.stackID, !inTray { add("解除堆叠", #selector(dissolve), enabled: !model.locked) }
         if item.sourcePath != nil { add("查看原件位置", #selector(revealMaterial)) }
         if let error = model.errors[item.id] {
-            let message = NSMenuItem(title: error, action: nil, keyEquivalent: ""); message.isEnabled = false; menu.addItem(message)
+            let message = NSMenuItem(title: error.rendered(model.preferences.interfaceLanguage), action: nil, keyEquivalent: ""); message.isEnabled = false; menu.addItem(message)
             add("关闭错误提示", #selector(clearError))
         }
         menu.addItem(.separator())
@@ -364,7 +364,7 @@ struct DropView: View {
     var body: some View {
         PanelShell(width: 300, height: 420, edge: model.preferences.dockEdge) {
             VStack(spacing: 12) {
-                (skin.isUnit ? Text("\(unitCount) → \(model.collectionName)") : Text("\(model.dropCount) \(skin.label(model.dropKind == .image ? "张图片" : model.dropKind == .text ? "段文字" : model.dropKind == .link ? "个链接" : "个文件")) → \(model.collectionName)"))
+                Text("\(unitCount) → \(model.collectionName)")
                     .font(skin.isUnit ? .system(size: 15, weight: .semibold) : skin.typography.caption)
                     .foregroundStyle(skin.isUnit ? AnyShapeStyle(skin.palette.accent) : skin.ink.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                     .modifier(UnitBootBlock(index: 0))

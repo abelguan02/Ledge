@@ -15,7 +15,7 @@ struct LedgeSkin: Sendable {
     static let classic = LedgeSkin()
     static let unit01 = LedgeSkin(isUnit: true)
     var isUnit = false
-    var language = SkinLanguage(identifier: Locale.preferredLanguages.first ?? "en")
+    var language = AppLanguage.simplified
     var typography: Typography { Typography(isUnit: isUnit) }
     var materials: Materials { Materials(isUnit: isUnit) }
     var palette: Palette { Palette(isUnit: isUnit) }
@@ -288,25 +288,14 @@ struct LedgeSkin: Sendable {
     }
 }
 
-enum SkinLanguage: String, Sendable {
-    case simplified = "zh-Hans", traditional = "zh-Hant", english = "en"
-    init(identifier: String) {
-        let id = identifier.lowercased()
-        self = !id.hasPrefix("zh") ? .english : id.contains("hant") || id.contains("tw") || id.contains("hk") || id.contains("mo") ? .traditional : .simplified
-    }
-}
-
 extension LedgeSkin {
     // Only fixed interface copy uses this table. Material contents, user names,
     // action identifiers and persisted strings never pass through translation.
     func label(_ key: String) -> String {
-        guard isUnit, language != .simplified,
-              let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj"),
-              let bundle = Bundle(path: path) else { return key }
-        return bundle.localizedString(forKey: key, value: key, table: "Unit")
+        language.label(key)
     }
     func itemCount(_ count: Int) -> String {
-        isUnit && language == .english && count == 1 ? "1 item" : phrase("%d 样", count)
+        language == .english && count == 1 ? "1 item" : phrase("%d 样", count)
     }
     func phrase(_ key: String, _ values: CVarArg...) -> String {
         String(format: label(key), arguments: values)

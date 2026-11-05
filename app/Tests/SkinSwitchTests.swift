@@ -95,7 +95,9 @@ private struct SkinProbe: NSViewRepresentable {
         window.makeFirstResponder(editor)
         for choice in [SkinChoice.unit01, .classic, .unit01, .classic] {
             preferences.skin = choice
+            preferences.language = choice == .classic ? .chinese : .english
             try await settle()
+            precondition(probe.skin.language == preferences.interfaceLanguage)
             precondition(model.canvasDocumentView === document && scroll.documentView === document)
             precondition(descendants(host).contains { $0 === scroll })
             precondition(scroll.visibleCanvasRect.origin == viewport.origin && scroll.visibleCanvasRect.width == viewport.width && model.openStackID == stack)
@@ -174,7 +176,7 @@ private struct SkinProbe: NSViewRepresentable {
         for choice in SkinChoice.allCases {
             preferences.skin = choice
             let renderer = ImageRenderer(content: SkinRoot(preferences: preferences) {
-                skinSnapshotSettings(model: model, tab: 0).frame(width: 520, height: 291)
+                skinSnapshotSettings(model: model, tab: 0).frame(width: 520, height: 332)
             })
             guard let image = renderer.cgImage else { fatalError("Cannot render General settings") }
             try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!
@@ -201,7 +203,7 @@ private struct SkinProbe: NSViewRepresentable {
         precondition(renders[0] == renders[2] && renders[0] != renders[1] && payload == original)
         print("PASS production imported thumbnail: Unit idle toned, selected matches original rendering; stored copy unchanged")
         try await checkUnitDrop(item: item, model: model)
-        try checkLanguages(preferences: preferences, model: model, root: root)
+        try checkLanguages(model: model, root: root)
         print("PASS bundled renamed Black font, Songti fallback, identical fixed-dark renders, both General settings; no visible windows or network")
     }
 
@@ -236,10 +238,21 @@ private struct SkinProbe: NSViewRepresentable {
         print("PASS Unit native drag writer, hidden panel enter/update/drop and persisted move at the previewed position (synthetic sender)")
     }
 
-    static func checkLanguages(preferences: AppPreferences, model: WorkbenchModel, root: URL) throws {
-        preferences.skin = .unit01
+    static func checkLanguages(model: WorkbenchModel, root: URL) throws {
+        let id = "海貓 %2$@"
+        let nested: InterfaceText = "“\(id)”已保留；\(InterfaceText(key: "链接"))暂不支持“\(InterfaceText(key: "解释"))”，可先粘贴要处理的文字。"
+        let rpc = CodexConnectionError.backendExit(7, "配置不兼容").copy
+        let serviceError: InterfaceText = "\(InterfaceText(key: "初始化 Codex"))：\(rpc)"
+        let decoded = try JSONDecoder().decode(InterfaceText.self, from: JSONEncoder().encode(serviceError))
+        precondition(decoded.rendered(.english).contains("Starting Codex: The Codex process exited (7, incompatible configuration)"))
+        precondition(nested.rendered(.english).contains(id) && nested.rendered(.english).contains("Explain"))
+        precondition(nested.rendered(.traditional).contains(id) && nested.rendered(.traditional).contains("解釋"))
+        precondition(AppLanguage.english.label("警报") == "EMERGENCY" && AppLanguage.simplified.label("警报") == "警报")
         model.index.collections[0].name = String(String(repeating: "海貓 · Collection 龘 ", count: 8).prefix(80))
         for (id, expected) in [("en-US", "General"), ("zh-Hant-TW", "通用"), ("zh-Hans-CN", "通用")] {
+            let preferences = AppPreferences(preferredLanguages: [id])
+            let localizedModel = WorkbenchModel(library: model.library, bridge: SkinTestBackend(), preferences: preferences)
+            localizedModel.index = model.index
             let locale = Locale(identifier: id)
             let skin = LedgeSkin.selected(.unit01, locale: locale)
             precondition(skin.label("通用") == expected)
@@ -248,20 +261,23 @@ private struct SkinProbe: NSViewRepresentable {
             }
             precondition(skin.phrase("清空“%@”中的%d样材料？", "海貓", 7).contains("海貓"))
             if skin.language == .traditional { precondition(skin.label("皮肤") == "皮膚") }
-            func save<V: View>(_ view: V, _ name: String, _ width: CGFloat, _ height: CGFloat) throws {
-                let renderer = ImageRenderer(content: SkinRoot(preferences: preferences) { view.frame(width: width, height: height) }
-                    .environment(\.locale, locale).environment(\.skinMotionOverride, true))
-                guard let image = renderer.cgImage else { fatalError("Missing locale render") }
-                try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!
-                    .write(to: root.appendingPathComponent("locale-\(id)-\(name).png"))
+            for choice in SkinChoice.allCases {
+                preferences.skin = choice
+                func save<V: View>(_ view: V, _ name: String, _ width: CGFloat, _ height: CGFloat) throws {
+                    let renderer = ImageRenderer(content: SkinRoot(preferences: preferences) { view.frame(width: width, height: height) }
+                        .environment(\.skinMotionOverride, true))
+                    guard let image = renderer.cgImage else { fatalError("Missing locale render") }
+                    try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!
+                        .write(to: root.appendingPathComponent("locale-\(id)-\(choice)-\(name).png"))
+                }
+                try save(WorkbenchView(model: localizedModel).snapshotHeader, "long-header", 520, 128)
+                try save(skinSnapshotSettings(model: localizedModel, tab: 0), "settings", 520, 332)
+                try save(skinSnapshotAbout(coffee: false), "about", 340, 470)
+                let request = RemovalRequest(ids: Set(model.items.map(\.id)), title: "清空", summary: ClearSummary(backedUp: 1, unique: [.pastedText: [UUID()]]))
+                try save(ClearConfirmation(model: localizedModel, request: request), "clear", 520, 720)
             }
-            try save(WorkbenchView(model: model).snapshotHeader, "long-header", 520, 128)
-            try save(skinSnapshotSettings(model: model, tab: 0), "settings", 520, 291)
-            try save(skinSnapshotAbout(coffee: false), "about", 340, 470)
-            let request = RemovalRequest(ids: Set(model.items.map(\.id)), title: "清空", summary: ClearSummary(backedUp: 1, unique: [.pastedText: [UUID()]]))
-            try save(ClearConfirmation(model: model, request: request), "clear", 520, 720)
         }
-        print("PASS three language tables and production layout fixtures; custom collection names preserved")
+        print("PASS both skins in English and Simplified/Traditional Chinese; localized service failures, user names and production layout fixtures")
     }
 
     static func checkCoffee(preferences: AppPreferences, root: URL) throws {

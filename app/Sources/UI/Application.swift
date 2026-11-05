@@ -222,6 +222,7 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
 }
 
 struct EdgeLineView: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let open: () -> Void
     @SkinReducedMotion private var reduceMotion
@@ -231,7 +232,7 @@ struct EdgeLineView: View {
             EdgeLineIndicator(state: model.edgeState, time: context.date.timeIntervalSinceReferenceDate, reduceMotion: reduceMotion, hovering: hovering, edge: model.preferences.dockEdge)
         }.frame(width: model.preferences.dockEdge == .top ? 160 : 48, height: model.preferences.dockEdge == .top ? 48 : 160, alignment: model.preferences.dockEdge == .top ? .top : model.preferences.dockEdge == .left ? .leading : .trailing).contentShape(Rectangle()).onTapGesture(perform: open)
             .onHover { hovering = $0 }
-            .accessibilityElement(children: .ignore).accessibilityLabel("打开 \(AppIdentity.name) 收集区").accessibilityAddTraits(.isButton).accessibilityAction { open() }
+            .accessibilityElement(children: .ignore).accessibilityLabel(skin.phrase("打开 %@ 收集区", skin.label("搁这儿"))).accessibilityAddTraits(.isButton).accessibilityAction { open() }
     }
 }
 
@@ -256,9 +257,9 @@ struct EdgeLineView: View {
     private var preferenceObservation: AnyCancellable?
     func applicationDidFinishLaunching(_ notification: Notification) {
         UIFocusTrace.start()
+        let preferences = AppPreferences(defaults: .standard)
         do {
-            let root = try LibraryLocation.open()
-            let preferences = AppPreferences(defaults: .standard)
+            let root = try LibraryLocation.open(language: preferences.interfaceLanguage)
             let library = try Library(root: root, limits: preferences.capacity)
             let model = WorkbenchModel(library: library, webSnapshot: { url, manual, progress in
                 try await WebSnapshotCapture().capture(url, permitsOneTime: manual, progress: progress)
@@ -309,7 +310,7 @@ struct EdgeLineView: View {
                 }
             }
         } catch {
-            let alert = NSAlert(); alert.messageText = "\(AppIdentity.name)无法打开收集区"; alert.informativeText = error.localizedDescription
+            let alert = NSAlert(); alert.messageText = preferences.interfaceLanguage.phrase("%@无法打开收集区", preferences.interfaceLanguage.label("搁这儿")); alert.informativeText = InterfaceText(error: error).rendered(preferences.interfaceLanguage)
             alert.runModal(); NSApp.terminate(nil)
         }
     }
@@ -330,7 +331,7 @@ struct EdgeLineView: View {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         let icon = NSImage(named: "MenuBarTemplate")
         icon?.isTemplate = true; icon?.size = NSSize(width: 16, height: 16)
-        item.button?.image = icon; item.button?.setAccessibilityLabel(AppIdentity.name)
+        item.button?.image = icon
         let menu = NSMenu()
         menu.autoenablesItems = false
         for (entry, selector) in [(showItem, #selector(open)), (addItem, #selector(addFiles)), (undoItem, #selector(undo))] {
@@ -339,25 +340,31 @@ struct EdgeLineView: View {
         menu.addItem(.separator())
         if let model {
             let aiItem = NSMenuItem()
-            let host = NSHostingView(rootView: AIMenuRow(model: model)); host.frame = NSRect(x: 0, y: 0, width: 260, height: 57)
+            let host = NSHostingView(rootView: AIMenuRow(model: model, preferences: model.preferences)); host.frame = NSRect(x: 0, y: 0, width: 260, height: 57)
             aiItem.view = host; menu.addItem(aiItem)
         }
-        recheckItem.title = "重新检查"; recheckItem.action = #selector(recheck); recheckItem.target = self; menu.addItem(recheckItem)
+        recheckItem.action = #selector(recheck); recheckItem.target = self; menu.addItem(recheckItem)
         menu.addItem(.separator())
-        let settings = NSMenuItem(title: "设置…", action: #selector(settings), keyEquivalent: ","); settings.target = self; menu.addItem(settings)
-        let about = NSMenuItem(title: "关于 \(AppIdentity.name)", action: #selector(about), keyEquivalent: ""); about.target = self; menu.addItem(about)
+        let settings = NSMenuItem(title: "", action: #selector(settings), keyEquivalent: ","); settings.tag = 1; settings.target = self; menu.addItem(settings)
+        let about = NSMenuItem(title: "", action: #selector(about), keyEquivalent: ""); about.tag = 2; about.target = self; menu.addItem(about)
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "退出 \(AppIdentity.name)", action: #selector(quit), keyEquivalent: "q"); quit.target = self; menu.addItem(quit)
+        let quit = NSMenuItem(title: "", action: #selector(quit), keyEquivalent: "q"); quit.tag = 3; quit.target = self; menu.addItem(quit)
         menu.delegate = self; item.menu = menu; statusItem = item
         updateMenu()
     }
     private func updateMenu() {
         guard let model else { return }
-        showItem.title = "\(model.canvasVisible ? "收起" : "显示") \(AppIdentity.name)"
+        let language = model.preferences.interfaceLanguage, name = language.label("搁这儿")
+        statusItem?.button?.setAccessibilityLabel(name)
+        statusItem?.menu?.item(withTag: 1)?.title = language.label("设置…")
+        statusItem?.menu?.item(withTag: 2)?.title = language.phrase("关于 %@", name)
+        statusItem?.menu?.item(withTag: 3)?.title = language.phrase("退出 %@", name)
+        recheckItem.title = language.label("重新检查")
+        showItem.title = language.phrase(model.canvasVisible ? "收起 %@" : "显示 %@", name)
         showItem.keyEquivalent = model.preferences.shortcut?.menuKey ?? ""
         showItem.keyEquivalentModifierMask = NSEvent.ModifierFlags(rawValue: model.preferences.shortcut?.modifiers ?? 0)
-        addItem.title = "添加文件到「\(model.collectionName)」…"
-        undoItem.title = model.undoTitle ?? "撤销"; undoItem.isHidden = model.undoTitle == nil; undoItem.isEnabled = !model.locked
+        addItem.title = language.phrase("添加文件到「%@」…", model.collectionName)
+        undoItem.title = model.undoTitle ?? language.label("撤销"); undoItem.isHidden = model.undoTitle == nil; undoItem.isEnabled = !model.locked
         recheckItem.isHidden = model.codexAvailable != false; recheckItem.isEnabled = !model.checkingCodex
     }
     func menuWillOpen(_ menu: NSMenu) { updateMenu() }

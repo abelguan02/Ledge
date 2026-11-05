@@ -22,12 +22,16 @@ enum SkinChoice: String, CaseIterable, Sendable {
     }
     @Published var aiEnabled: Bool { didSet { defaults?.set(aiEnabled, forKey: "aiEnabled") } }
     @Published var automaticWebPreviews: Bool { didSet { defaults?.set(automaticWebPreviews, forKey: "automaticWebPreviews") } }
+    @Published var language: LanguageChoice { didSet { defaults?.set(language.rawValue, forKey: "interfaceLanguage") } }
+    private let preferredLanguages: [String]
+    var interfaceLanguage: AppLanguage { language.resolve(preferredLanguages) }
     @Published var skin: SkinChoice { didSet { defaults?.set(skin.rawValue, forKey: "skin") } }
     @Published var dockEdge: DockEdge { didSet { defaults?.set(dockEdge.rawValue, forKey: "dockEdge") } }
     @Published var collectionLimit: Int64 { didSet { defaults?.set(collectionLimit, forKey: "collectionLimit") } }
     @Published var itemLimit: Int64 { didSet { defaults?.set(itemLimit, forKey: "itemLimit") } }
     @Published var freeDiskLimit: Int64 { didSet { defaults?.set(freeDiskLimit, forKey: "freeDiskLimit") } }
-    init(defaults: UserDefaults? = nil) {
+    init(defaults: UserDefaults? = nil, preferredLanguages: [String] = Locale.preferredLanguages) {
+        self.preferredLanguages = preferredLanguages
         self.defaults = defaults
         if defaults?.bool(forKey: "shortcutConfigured") == true {
             if let saved = defaults?.dictionary(forKey: "shortcut"), let code = saved["keyCode"] as? NSNumber,
@@ -38,6 +42,7 @@ enum SkinChoice: String, CaseIterable, Sendable {
         } else { shortcut = .initial }
         aiEnabled = defaults?.object(forKey: "aiEnabled") as? Bool ?? true
         automaticWebPreviews = defaults?.object(forKey: "automaticWebPreviews") as? Bool ?? true
+        language = defaults?.string(forKey: "interfaceLanguage").flatMap(LanguageChoice.init(rawValue:)) ?? .initial(preferredLanguages)
         skin = SkinChoice(rawValue: defaults?.string(forKey: "skin") ?? "classic") ?? .classic
         dockEdge = DockEdge(rawValue: defaults?.string(forKey: "dockEdge") ?? "right") ?? .right
         collectionLimit = (defaults?.object(forKey: "collectionLimit") as? NSNumber)?.int64Value ?? 5_000_000_000

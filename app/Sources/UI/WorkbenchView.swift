@@ -53,14 +53,14 @@ struct WorkbenchView: View {
                     }
                     if !model.message.isEmpty || !model.notice.isEmpty {
                         HStack(alignment: .top) {
-                            Text(skin.label(model.message.isEmpty ? model.notice : model.message)).font(skin.typography.caption).textSelection(.enabled)
+                            Text(model.message.isEmpty ? model.notice : model.message).font(skin.typography.caption).textSelection(.enabled)
                             Spacer(minLength: 4)
                             Button { if model.message.isEmpty { model.notice = "" } else { model.message = "" }; model.statusChanged?() } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
                         }.padding(12).background(skin.materials.regular, in: skin.shapes.card).padding(.horizontal, 16)
                     }
                     if let failed = model.selectedItems.first(where: { model.errors[$0.id] != nil }), let error = model.errors[failed.id], model.activeAnswer != failed.id {
                         HStack(alignment: .top) {
-                            Text(error).font(skin.typography.caption).foregroundStyle(skin.palette.destructive).textSelection(.enabled)
+                            Text(error.rendered(skin.language)).font(skin.typography.caption).foregroundStyle(skin.palette.destructive).textSelection(.enabled)
                             Spacer(minLength: 4)
                             Button { model.errors[failed.id] = nil; model.statusChanged?() } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
                         }.padding(12).background(skin.materials.regular, in: skin.shapes.card).padding(.horizontal, 16)
@@ -100,9 +100,9 @@ struct WorkbenchView: View {
                     }
                     SkinSegments(title: "格式", choices: [("original", "原格式"), ("jpeg", "JPEG"), ("png", "PNG")], selection: $imageSettings.format)
                 } else {
-                Toggle("调整宽度", isOn: $imageSettings.resize)
+                Toggle(skin.label("调整宽度"), isOn: $imageSettings.resize)
                 if imageSettings.resize { TextField(skin.label("宽度（像素）"), value: $imageSettings.width, format: .number).textFieldStyle(.roundedBorder) }
-                Picker("格式", selection: $imageSettings.format) {
+                Picker(skin.label("格式"), selection: $imageSettings.format) {
                     Text(skin.label("原格式")).tag("original"); Text("JPEG").tag("jpeg"); Text("PNG").tag("png")
                 }.pickerStyle(.segmented)
                 }
@@ -192,8 +192,8 @@ private struct WorkbenchHeader: View {
             if skin.isUnit {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(String(format: "%02d", model.items.count)).font(.system(size: 40, weight: .light, design: .monospaced))
-                    Text("ITEMS").font(.system(size: 11, design: .monospaced)).tracking(2).foregroundStyle(skin.palette.accent)
-                    Text(CapacityLimits.format(model.items.reduce(0) { $0 + $1.byteCount + ($1.linkPreview?.byteCount ?? 0) }))
+                    Text(skin.label("材料数")).font(.system(size: 11, design: .monospaced)).tracking(2).foregroundStyle(skin.palette.accent)
+                    Text(skin.language.size(model.items.reduce(0) { $0 + $1.byteCount + ($1.linkPreview?.byteCount ?? 0) }))
                         .font(.system(size: 11, design: .monospaced)).foregroundStyle(skin.palette.secondary)
                 }.fixedSize()
             }
@@ -325,7 +325,7 @@ struct MaterialView: View {
                     .background(skin.palette.insetLight, in: skin.shapes.smallControl)
                     .overlay(skin.shapes.smallControl.stroke(skin.palette.controlBorder, lineWidth: 0.5))
                     .offset(y: (item.size.height - 72) / 2 + 13.5)
-                    .accessibilityLabel(action + "：" + model.linkTitle(item))
+                    .accessibilityLabel(skin.phrase("%@：%@", skin.label(action), model.linkTitle(item)))
             }
         }
         .overlay(alignment: .bottomTrailing) {
@@ -348,11 +348,11 @@ struct MaterialView: View {
         }
         .overlay {
             if let feedback = model.webFeedback[item.id] {
-                Text(feedback).font(skin.typography.small).multilineTextAlignment(.center).padding(8)
+                Text(skin.label(feedback)).font(skin.typography.small).multilineTextAlignment(.center).padding(8)
                     .background(skin.palette.feedbackBackdrop, in: skin.shapes.compactControl).foregroundStyle(skin.palette.light).allowsHitTesting(false)
             }
         }
-        .overlay(alignment: .topTrailing) { if model.errors[item.id] != nil { Image(systemName: "exclamationmark.circle.fill").foregroundStyle(skin.palette.destructive).background(skin.ink.background, in: skin.shapes.circle).help(model.errors[item.id]!) } }
+        .overlay(alignment: .topTrailing) { if let error = model.errors[item.id] { Image(systemName: "exclamationmark.circle.fill").foregroundStyle(skin.palette.destructive).background(skin.ink.background, in: skin.shapes.circle).help(error.rendered(skin.language)) } }
         .overlay(alignment: .topLeading) {
             if model.drafts[item.id]?.answer.isEmpty == false {
                 Label(skin.label("回答"), systemImage: "text.bubble.fill").font(skin.typography.tiny).padding(5).background(skin.materials.regular, in: skin.shapes.capsule).help(skin.label("点开这张材料查看回答")).allowsHitTesting(false)
@@ -360,7 +360,7 @@ struct MaterialView: View {
         }
         .onHover { hovering = $0 }
         .opacity(skin.isUnit && !model.selected.isEmpty && !model.selected.contains(item.id) ? skin.opacity.unselected : 1)
-        .accessibilityElement(children: item.kind == .link ? .contain : .ignore).accessibilityLabel((item.kind == .link ? model.linkTitle(item) : item.name) + (model.missingCopies.contains(item.id) ? "，副本已丢失" : "")).accessibilityAddTraits(.isButton)
+        .accessibilityElement(children: item.kind == .link ? .contain : .ignore).accessibilityLabel((item.kind == .link ? model.linkTitle(item) : item.name) + (model.missingCopies.contains(item.id) ? skin.label("，副本已丢失") : "")).accessibilityAddTraits(.isButton)
         .accessibilityAction { model.select(item.id) }
     }
     @ViewBuilder private var content: some View {
@@ -414,7 +414,7 @@ struct MaterialView: View {
         } else {
             VStack(spacing: 6) {
                 if skin.isUnit {
-                    Text(item.kind == .folder ? "DIR" : item.filename.pathExtension.isEmpty ? "FILE" : item.filename.pathExtension.uppercased())
+                    Text(item.kind == .folder ? skin.label("目录") : item.filename.pathExtension.isEmpty ? skin.label("文件") : item.filename.pathExtension.uppercased())
                         .font(.custom("Times-Bold", size: 40)).scaleEffect(x: 0.66, y: 1).frame(height: 80)
                 } else {
                     Image(nsImage: NSWorkspace.shared.icon(for: item.kind == .folder ? .folder : (UTType(filenameExtension: item.filename.pathExtension) ?? .data))).resizable().scaledToFit().frame(width: 66, height: 80)
@@ -486,11 +486,11 @@ struct AnswerCard: View {
     let item: Material
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack { Group { if skin.isUnit { SkinDisplayText(model.drafts[item.id]?.action ?? "解释", size: 44) } else { Text(model.drafts[item.id]?.action ?? "解释").font(skin.typography.answerTitle) } }; Spacer(); Button { model.closeAnswer(item.id) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(skin.ink.secondary) }.buttonStyle(.plain).accessibilityLabel(skin.label("关闭回答")) }
+            HStack { Group { if skin.isUnit { SkinDisplayText(model.drafts[item.id]?.action ?? "解释", size: 44) } else { Text(skin.label(model.drafts[item.id]?.action ?? "解释")).font(skin.typography.answerTitle) } }; Spacer(); Button { model.closeAnswer(item.id) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(skin.ink.secondary) }.buttonStyle(.plain).accessibilityLabel(skin.label("关闭回答")) }
             SkinSegments(title: "动作", choices: TextAction.allCases.map { ($0.rawValue, $0.rawValue) }, selection: Binding(get: { model.drafts[item.id]?.action ?? "解释" }, set: { value in if let action = TextAction(rawValue: value) { model.runText(item, action: action) } })).disabled(model.busy.contains(item.id) || !model.canUseAI)
                 .opacity(model.canUseAI ? 1 : skin.opacity.disabled).help(skin.label(model.aiHelp))
             if model.busy.contains(item.id) { ProgressView().frame(maxWidth: .infinity).padding(20) }
-            if let error = model.errors[item.id] { Text(error).font(skin.typography.caption).foregroundStyle(skin.palette.destructive).textSelection(.enabled) }
+            if let error = model.errors[item.id] { Text(error.rendered(skin.language)).font(skin.typography.caption).foregroundStyle(skin.palette.destructive).textSelection(.enabled) }
             TextEditor(text: Binding(get: { model.drafts[item.id]?.answer ?? "" }, set: { model.editDraft(item.id, answer: $0) }))
                 .font(skin.typography.answer).scrollContentBackground(.hidden).frame(height: 220).disabled(model.busy.contains(item.id))
                 .accessibilityLabel(skin.label("回答内容"))
@@ -523,9 +523,9 @@ struct ClearConfirmation: View {
         ZStack {
             skin.palette.clearDim.contentShape(Rectangle())
             VStack(alignment: .leading, spacing: 15) {
-                Text(request.title).font(skin.typography.confirmationTitle)
+                Text(skin.language == .simplified ? request.title : request.collection == nil ? skin.phrase("清空“%@”中的%d样材料？", model.collectionName, request.summary.total) : skin.phrase("删除收集区“%@”？", model.index.collections.first { $0.id == request.collection }?.name ?? model.collectionName)).font(skin.typography.confirmationTitle)
                 explanation
-                Button(role: .destructive) { model.confirmRemoval() } label: { Text(request.collection == nil ? "清空" : "删除收集区").frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).tint(skin.palette.destructive).disabled(model.locked)
+                Button(role: .destructive) { model.confirmRemoval() } label: { Text(skin.label(request.collection == nil ? "清空" : "删除收集区")).frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).tint(skin.palette.destructive).disabled(model.locked)
                 if !request.summary.uniqueIDs.isEmpty { Button { model.export(request.summary.uniqueIDs) } label: { Text(skin.phrase("先导出这 %d 样…", request.summary.uniqueIDs.count)).frame(maxWidth: .infinity) }.buttonStyle(.bordered) }
                 Button { model.removal = nil } label: { Text(skin.label("取消")).frame(maxWidth: .infinity) }.buttonStyle(.bordered).keyboardShortcut(.cancelAction)
             }.padding(24).frame(width: 400).background(skin.materials.regular, in: skin.shapes.dialog)
@@ -536,7 +536,7 @@ struct ClearConfirmation: View {
             let headingSize = min(190, max(80, (geometry.size.height - 430) / 2))
             VStack(alignment: .leading, spacing: 10) {
                 UnitWarningStripe(color: skin.palette.alarm).frame(height: 10)
-                Text("EMERGENCY").font(.system(size: 15, weight: .bold, design: .monospaced)).tracking(6).foregroundStyle(skin.palette.destructive)
+                Text(skin.label("警报")).font(.system(size: 15, weight: .bold, design: .monospaced)).tracking(6).foregroundStyle(skin.palette.destructive)
                     .modifier(UnitSignalPulse(alarm: true))
                 Text(skin.phrase("清空“%@”中的%d样材料？", model.collectionName, request.summary.total)).font(.system(size: 13, design: .monospaced)).lineLimit(2)
                 HStack { Spacer(); VStack(spacing: 0) {
@@ -576,15 +576,15 @@ struct ClearConfirmation: View {
     }
     @ViewBuilder private var explanation: some View {
                 if !request.summary.uniqueIDs.isEmpty {
-                    (skin.isUnit ? Text(skin.phrase("其中 %d 样只存在于这里，清空后将移除。", request.summary.uniqueIDs.count)) : Text("其中 \(request.summary.uniqueIDs.count) 样只存在于这里，清空后将移除。")).font(skin.typography.body)
+                    (skin.language != .simplified || skin.isUnit ? Text(skin.phrase("其中 %d 样只存在于这里，清空后将移除。", request.summary.uniqueIDs.count)) : Text("其中 \(request.summary.uniqueIDs.count) 样只存在于这里，清空后将移除。")).font(skin.typography.body)
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(ClearCategory.allCases, id: \.self) { category in
                             if let values = request.summary.unique[category], !values.isEmpty { HStack { Text(skin.label(category.rawValue)); Spacer(); Text("\(values.count)") } }
                         }
                     }.font(skin.typography.caption).padding(12).background(skin.ink.clearCategories, in: skin.shapes.field)
-                    (skin.isUnit ? Text(skin.phrase("其余 %d 样是副本，原件不受影响。", request.summary.backedUp)) : Text("其余 \(request.summary.backedUp) 样是副本，原件不受影响。")).font(skin.typography.caption).foregroundStyle(skin.ink.secondary)
-                } else { (skin.isUnit ? Text(skin.phrase("这 %d 样都是导入文件的副本，原件不受影响。", request.summary.backedUp)) : Text("这 \(request.summary.backedUp) 样都是导入文件的副本，原件不受影响。")).font(skin.typography.body) }
-                (skin.isUnit ? Text(skin.label("可撤销一次，直到下次清空、删除收集区或退出应用。")) : Text("可撤销一次，直到下次清空、删除收集区或退出应用。")).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
+                    (skin.language != .simplified || skin.isUnit ? Text(skin.phrase("其余 %d 样是副本，原件不受影响。", request.summary.backedUp)) : Text("其余 \(request.summary.backedUp) 样是副本，原件不受影响。")).font(skin.typography.caption).foregroundStyle(skin.ink.secondary)
+                } else { (skin.language != .simplified || skin.isUnit ? Text(skin.phrase("这 %d 样都是导入文件的副本，原件不受影响。", request.summary.backedUp)) : Text("这 \(request.summary.backedUp) 样都是导入文件的副本，原件不受影响。")).font(skin.typography.body) }
+                (skin.language != .simplified || skin.isUnit ? Text(skin.label("可撤销一次，直到下次清空、删除收集区或退出应用。")) : Text("可撤销一次，直到下次清空、删除收集区或退出应用。")).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
     }
 
 }

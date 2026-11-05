@@ -3,9 +3,13 @@ import Security
 
 actor Worker {
     private var tasks: [String: Task<Void, Never>] = [:]
+    private func report(_ text: InterfaceText, to reply: @Sendable (Data?, Data?) -> Void) {
+        // A malformed response is already handled by the client.
+        reply(nil, try? JSONEncoder().encode(text))
+    }
     func run(id: String, input: String?, instructions: String = "", model: String = "",
-             reply: @escaping @Sendable (Data?, String?) -> Void) {
-        guard tasks[id] == nil, tasks.count < 4 else { reply(nil, "已有请求进行中，请稍后再试。"); return }
+             reply: @escaping @Sendable (Data?, Data?) -> Void) {
+        guard tasks[id] == nil, tasks.count < 4 else { report("已有请求进行中，请稍后再试。", to: reply); return }
         tasks[id] = Task {
             let timing = CodexTiming(requestID: id, operation: input == nil ? .catalog : .respond)
             let total = timing.begin(.total)
@@ -13,7 +17,7 @@ actor Worker {
             defer { total.finish(outcome: outcome) }
             let client = CodexConnection(timeout: .seconds(45), timing: timing)
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("dump-codex-\(UUID().uuidString)")
-            var stage = "初始化 Codex"
+            var stage: InterfaceText = "初始化 Codex"
             do {
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 let launch = try CodexLaunch.make(directory: directory)
@@ -30,8 +34,11 @@ actor Worker {
                 reply(data, nil)
             } catch {
                 outcome = .failure(error, cancelled: Task.isCancelled)
-                let detail = error is CodexConnectionError || error is AIError ? error.localizedDescription : "后台连接未完成；没有启动登录或重复发送。"
-                reply(nil, "\(stage)：\(detail)")
+                let detail: InterfaceText
+                if let connection = error as? CodexConnectionError { detail = connection.copy }
+                else if error is AIError { detail = InterfaceText(key: error.localizedDescription) }
+                else { detail = "后台连接未完成；没有启动登录或重复发送。" }
+                report("\(stage)：\(detail)", to: reply)
             }
             await client.stop()
             try? FileManager.default.removeItem(at: directory)
@@ -45,12 +52,12 @@ actor Worker {
 final class Service: NSObject, HUDCodexService, @unchecked Sendable {
     let worker = Worker()
     private let queue = ServiceQueue()
-    func connect(_ requestID: String, reply: @escaping @Sendable (Data?, String?) -> Void) {
-        guard UUID(uuidString: requestID) != nil else { reply(nil, "无效请求。"); return }
+    func connect(_ requestID: String, reply: @escaping @Sendable (Data?, Data?) -> Void) {
+        guard UUID(uuidString: requestID) != nil else { reply(nil, try? JSONEncoder().encode(InterfaceText(key: "无效请求。"))); return }
         queue.enqueue { [worker] in await worker.run(id: requestID, input: nil, reply: reply) }
     }
-    func respond(_ input: String, instructions: String, model: String, requestID: String, reply: @escaping @Sendable (Data?, String?) -> Void) {
-        guard UUID(uuidString: requestID) != nil else { reply(nil, "无效请求。"); return }
+    func respond(_ input: String, instructions: String, model: String, requestID: String, reply: @escaping @Sendable (Data?, Data?) -> Void) {
+        guard UUID(uuidString: requestID) != nil else { reply(nil, try? JSONEncoder().encode(InterfaceText(key: "无效请求。"))); return }
         queue.enqueue { [worker] in await worker.run(id: requestID, input: input, instructions: instructions, model: model, reply: reply) }
     }
     func cancel(_ requestID: String) { queue.enqueue { [worker] in await worker.cancel(requestID) } }

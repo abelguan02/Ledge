@@ -6,7 +6,7 @@ private typealias AboutState<Value> = SwiftUI.State<Value>
 @MainActor final class AboutController: NSWindowController {
     init(preferences: AppPreferences = AppPreferences(), replay: @escaping () -> Void) {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 340, height: 470), styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
-        window.title = "关于 \(AppIdentity.name)"; window.titleVisibility = .hidden
+        window.title = preferences.interfaceLanguage.phrase("关于 %@", preferences.interfaceLanguage.label("搁这儿")); window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true; window.isOpaque = false; window.backgroundColor = .clear
         window.isReleasedWhenClosed = false; window.isMovableByWindowBackground = true
         window.standardWindowButton(.miniaturizeButton)?.isHidden = true
@@ -33,7 +33,7 @@ private struct AboutView: View {
     var setWindowTitle: (String) -> Void = { _ in }
     @AboutState private var coffee = false
     @Environment(\.colorScheme) private var scheme
-    private var chinese: Bool { skin.isUnit ? skin.language != .english : AppIdentity.name == "搁这儿" }
+    private var chinese: Bool { skin.language != .english }
     var body: some View {
         ZStack {
             GlassBackground()
@@ -41,7 +41,7 @@ private struct AboutView: View {
             if coffee { coffeePage } else { mainPage }
         }.frame(maxWidth: .infinity, maxHeight: .infinity).ignoresSafeArea().clipShape(skin.shapes.dialog)
             .overlay(skin.shapes.dialog.stroke(skin.ink.floatingBorder, lineWidth: 0.5))
-            .onChange(of: skin.isUnit ? skin.phrase("关于 %@", skin.label("搁这儿")) : "关于 \(AppIdentity.name)", initial: true) { _, title in
+            .onChange(of: skin.phrase("关于 %@", skin.label("搁这儿")), initial: true) { _, title in
                 setWindowTitle(title)
             }
     }
@@ -52,22 +52,21 @@ private struct AboutView: View {
                     if chinese {
                         VStack(spacing: -16) { SkinDisplayText(wordmark: .appName, size: 120, fragment: 0..<1); SkinDisplayText(wordmark: .appName, size: 74, fragment: 1..<3) }
                     } else { SkinDisplayText("Ledge", size: 72, compression: 0.62) }
-                    Text("LEDGE").font(.system(size: 14, design: .monospaced)).tracking(4).foregroundStyle(skin.palette.accent).padding(.bottom, 10)
+                    if !chinese { Text("LEDGE").font(.system(size: 14, design: .monospaced)).tracking(4).foregroundStyle(skin.palette.accent).padding(.bottom, 10) }
                 }.frame(height: chinese ? 180 : 100)
             } else {
                 Image(nsImage: NSImage(named: "Ledge") ?? NSImage()).resizable().frame(width: 84, height: 84).skinShadow(skin.shadows.appIcon)
-                Text(AppIdentity.name).font(skin.typography.applicationTitle).padding(.top, 16)
-                if chinese { Text("Ledge").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 2) }
+                Text(skin.label("搁这儿")).font(skin.typography.applicationTitle).padding(.top, 16)
             }
-            Text(chinese ? skin.label("看中的东西，先搁这儿") : "Set it here for now.").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 6)
+            Text(skin.label("看中的东西，先搁这儿")).font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 6)
             HStack(spacing: 10) {
-                (skin.isUnit ? Text(skin.phrase("版本 %@（%@）", Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")) : Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")（\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")）")).font(skin.typography.caption).monospacedDigit().foregroundStyle(skin.ink.secondary)
+                (skin.isUnit || skin.language != .simplified ? Text(skin.phrase("版本 %@（%@）", Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")) : Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")（\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")）")).font(skin.typography.caption).monospacedDigit().foregroundStyle(skin.ink.secondary)
                 updateButton
             }.frame(height: 24).padding(.top, 14)
             VStack(spacing: 0) {
                 linkRow("开源仓库", detail: "GitHub", symbol: "chevron.left.forwardslash.chevron.right", color: skin.palette.repositoryIcon, arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.repository) }
                 Divider()
-                linkRow("反馈与建议", detail: "Issues", symbol: "bubble.left.and.bubble.right", color: skin.palette.feedback, arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.feedback) }
+                linkRow("反馈与建议", detail: "问题反馈", symbol: "bubble.left.and.bubble.right", color: skin.palette.feedback, arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.feedback) }
                 Divider()
                 linkRow("自愿赞赏", detail: "请作者喝杯咖啡", symbol: "cup.and.saucer.fill", color: skin.palette.coffee, arrow: "chevron.right") { coffee = true }
             }.background(skin.ink.sectionInset, in: skin.shapes.card).padding(.top, 20)
@@ -105,7 +104,7 @@ private struct AboutView: View {
                 Text(skin.label("请作者喝杯咖啡")).font(skin.typography.sectionTitle).padding(.top, 14)
             }
             CoffeePaymentCode().padding(.top, 20)
-            (skin.isUnit ? Text(skin.label("完全自愿，不影响任何功能")) : Text("完全自愿，不影响任何功能")).font(skin.typography.caption).foregroundStyle(skin.ink.secondary).padding(.top, 16)
+            (skin.isUnit || skin.language != .simplified ? Text(skin.label("完全自愿，不影响任何功能")) : Text("完全自愿，不影响任何功能")).font(skin.typography.caption).foregroundStyle(skin.ink.secondary).padding(.top, 16)
             Spacer(minLength: 0)
         }.padding(.horizontal, 20).padding(.top, 44)
     }

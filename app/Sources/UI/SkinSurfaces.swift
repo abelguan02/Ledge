@@ -216,7 +216,7 @@ struct SkinSegments<Value: Hashable>: View {
                 }
             }.overlay(Rectangle().stroke(skin.palette.line, lineWidth: 1).allowsHitTesting(false)).accessibilityElement(children: .contain).accessibilityLabel(skin.label(title))
         } else {
-            Picker(title, selection: $selection) { ForEach(choices, id: \.0) { value, label in Text(label).tag(value) } }
+            Picker(skin.label(title), selection: $selection) { ForEach(choices, id: \.0) { value, label in Text(skin.label(label)).tag(value) } }
                 .labelsHidden().pickerStyle(.segmented)
         }
     }

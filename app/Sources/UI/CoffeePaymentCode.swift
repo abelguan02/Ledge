@@ -10,9 +10,9 @@ struct CoffeePaymentCode: View {
         Group {
             if let image {
                 Image(nsImage: image).resizable().interpolation(.none).scaledToFit()
-                    .accessibilityLabel("作者收款码")
+                    .accessibilityLabel(skin.label("作者收款码"))
             } else {
-                Text("收款码未能加载").font(skin.typography.body).foregroundStyle(skin.palette.paymentMissingText)
+                Text(skin.label("收款码未能加载")).font(skin.typography.body).foregroundStyle(skin.palette.paymentMissingText)
             }
         }.frame(width: 196, height: 196).background(skin.palette.light)
             .clipShape(skin.shapes.payment)

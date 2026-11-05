@@ -4,7 +4,7 @@ import AppKit
 @MainActor enum LibraryLocation {
     static func requireOldAppStopped() throws {
         guard NSRunningApplication.runningApplications(withBundleIdentifier: "local.dump.desktop").isEmpty else {
-            throw LibraryError.invalid("请先退出旧版 Dump，再打开\(AppIdentity.name)。旧库尚未迁移。")
+            throw LibraryError.invalid("请先退出旧版 Dump，再打开\(InterfaceText(key: "搁这儿"))。旧库尚未迁移。")
         }
     }
     static func choose(_ message: String) throws -> URL {
@@ -14,7 +14,7 @@ import AppKit
         guard panel.runModal() == .OK, let url = panel.url else { throw LibraryError.invalid("已取消目录授权；未打开收集区。") }
         return url
     }
-    static func open(expectedParent: URL? = nil) throws -> URL {
+    static func open(expectedParent: URL? = nil, language: AppLanguage = .simplified) throws -> URL {
         try requireOldAppStopped()
         let defaults = UserDefaults.standard
         if let bookmark = defaults.data(forKey: "ledge.libraryLocation") {
@@ -25,14 +25,14 @@ import AppKit
                 if stale { defaults.set(try root.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil), forKey: "ledge.libraryLocation") }
                 return root
             } catch {
-                let alert = NSAlert(); alert.messageText = "需要重新授权数据目录"
-                alert.informativeText = error.localizedDescription
-                alert.addButton(withTitle: "重新选择目录"); alert.addButton(withTitle: "取消")
+                let alert = NSAlert(); alert.messageText = language.label("需要重新授权数据目录")
+                alert.informativeText = InterfaceText(error: error).rendered(language)
+                alert.addButton(withTitle: language.label("重新选择目录")); alert.addButton(withTitle: language.label("取消"))
                 guard alert.runModal() == .alertFirstButtonReturn else { throw error }
                 defaults.removeObject(forKey: "ledge.libraryLocation")
             }
         }
-        let parent = try choose("请选择用户目录中的 Library/Application Support，用于保存 Ledge。")
+        let parent = try choose(language.label("请选择用户目录中的 Library/Application Support，用于保存 Ledge。"))
         let accessing = parent.startAccessingSecurityScopedResource()
         defer { if accessing { parent.stopAccessingSecurityScopedResource() } }
         // The selected parent remains authoritative; enforce the requested location.
@@ -46,12 +46,12 @@ import AppKit
         var created = false
         if !FileManager.default.fileExists(atPath: root.path) {
             let alert = NSAlert()
-            alert.messageText = "迁移旧版 Dump 的收集区？"
-            alert.informativeText = "将复制并核对旧库，原目录保留。请选择旧库所在的 Library 文件夹；迁移完成前请保持旧版退出。"
-            alert.addButton(withTitle: "选择旧库并迁移"); alert.addButton(withTitle: "取消"); alert.addButton(withTitle: "我没有旧库，创建空库")
+            alert.messageText = language.label("迁移旧版 Dump 的收集区？")
+            alert.informativeText = language.label("将复制并核对旧库，原目录保留。请选择旧库所在的 Library 文件夹；迁移完成前请保持旧版退出。")
+            alert.addButton(withTitle: language.label("选择旧库并迁移")); alert.addButton(withTitle: language.label("取消")); alert.addButton(withTitle: language.label("我没有旧库，创建空库"))
             switch alert.runModal() {
             case .alertFirstButtonReturn:
-                let oldData = try choose("请选择旧库所在的 Library 文件夹：通常是 ~/Library/Containers/local.dump.desktop/Data/Library；非沙盒旧库则选 ~/Library。只读取 Dump 收集区及旧偏好设置。")
+                let oldData = try choose(language.label("请选择旧库所在的 Library 文件夹：通常是 ~/Library/Containers/local.dump.desktop/Data/Library；非沙盒旧库则选 ~/Library。只读取 Dump 收集区及旧偏好设置。"))
                 let oldAccess = oldData.startAccessingSecurityScopedResource()
                 defer { if oldAccess { oldData.stopAccessingSecurityScopedResource() } }
                 let source = oldData.appendingPathComponent("Application Support/Dump")

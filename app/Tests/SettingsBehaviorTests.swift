@@ -31,9 +31,16 @@ import AppKit
         defer { try? FileManager.default.removeItem(at: root) }
         let domain = "local.ledge.test.\(UUID())", defaults = UserDefaults(suiteName: domain)!
         defer { defaults.removePersistentDomain(forName: domain) }
-        let prefs = AppPreferences(defaults: defaults), backend = SettingsBackend()
+        let prefs = AppPreferences(defaults: defaults, preferredLanguages: ["zh-Hant-TW"]), backend = SettingsBackend()
         precondition(prefs.skin == .classic)
+        precondition(prefs.interfaceLanguage == .traditional)
+        prefs.language = .english
+        precondition(AppPreferences(defaults: defaults, preferredLanguages: ["zh"]).interfaceLanguage == .english)
         prefs.skin = .unit01
+        prefs.language = .chinese
+        precondition(prefs.skin == .unit01 && prefs.interfaceLanguage == .traditional)
+        defaults.set("unknown", forKey: "interfaceLanguage")
+        precondition(AppPreferences(defaults: defaults, preferredLanguages: ["fr"]).interfaceLanguage == .english)
         precondition(AppPreferences(defaults: defaults).skin == .unit01)
         defaults.set("unknown", forKey: "skin")
         precondition(AppPreferences(defaults: defaults).skin == .classic)
@@ -47,7 +54,7 @@ import AppKit
         await model.refresh()
         prefs.aiEnabled = false
         model.runText(item, action: .explain)
-        precondition(model.busy.isEmpty && backend.calls == 0 && model.aiHelp == "AI 已关闭")
+        precondition(model.busy.isEmpty && backend.calls == 0 && model.aiHelp == "智能处理已关闭")
         precondition(!AppPreferences(defaults: defaults).aiEnabled)
         prefs.aiEnabled = true
         await model.checkCodex()

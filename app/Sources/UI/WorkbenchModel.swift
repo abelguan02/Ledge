@@ -35,7 +35,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     @Published var codexAvailable: Bool? = nil
     @Published var checkingCodex = false
     var canUseAI: Bool { preferences.aiEnabled && codexAvailable != false }
-    var aiHelp: String { codexAvailable == false ? "未找到 Codex" : preferences.aiEnabled ? "" : "AI 已关闭" }
+    var aiHelp: String { codexAvailable == false ? "未找到 Codex" : preferences.aiEnabled ? "" : "智能处理已关闭" }
     var aiStatus: String { codexAvailable == false ? "未找到 Codex" : !preferences.aiEnabled ? "已关闭" : codexAvailable == true ? "已连接 Codex" : "正在检查…" }
     func checkCodex() async {
         guard !checkingCodex, !shuttingDown else { return }
@@ -76,11 +76,19 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     private var selectionStart: (point: CanvasPoint, previous: Set<UUID>, base: Set<UUID>)?
     var selecting: Bool { selectionStart != nil }
     var dragOffset = CanvasPoint(x: 0, y: 0)
-    @Published var errors: [UUID: String] = [:]
+    @Published var errors: [UUID: InterfaceText] = [:]
     @Published var missingCopies: Set<UUID> = []
     @Published var recoveryPaths: [URL] = []
-    @Published var message = ""
-    @Published var notice = ""
+    @Published private var messageCopy: InterfaceText = ""
+    @Published private var noticeCopy: InterfaceText = ""
+    var message: String {
+        get { messageCopy.rendered(preferences.interfaceLanguage) }
+        set { messageCopy = InterfaceText(key: newValue) }
+    }
+    var notice: String {
+        get { noticeCopy.rendered(preferences.interfaceLanguage) }
+        set { noticeCopy = InterfaceText(key: newValue) }
+    }
     @Published var busy: Set<UUID> = []
     @Published var importing = false
     @Published var writing = 0
@@ -93,11 +101,8 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     @Published var collectionExporting = false
     // Keep arguments separate so an open confirmation can change language/skin
     // without translating collection names, paths, or operating-system errors.
-    @Published private var collectionNotice: (format: String, arguments: [any CVarArg]) = ("", [])
-    var collectionStatus: String { collectionStatusText { $0 } }
-    func collectionStatusText(_ localize: (String) -> String) -> String {
-        String(format: localize(collectionNotice.format), arguments: collectionNotice.arguments)
-    }
+    @Published private var collectionNotice: InterfaceText = ""
+    var collectionStatus: String { collectionNotice.rendered(preferences.interfaceLanguage) }
     @Published var collectionError = false
     @Published var collectionDeleteFailed = false
     @Published var collectionExportProgress: CollectionExportProgress?
@@ -164,13 +169,16 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
             return value
         }
     }
-    var collectionName: String { index.collections.first { $0.id == index.currentCollection }?.name ?? "收集区" }
+    var collectionName: String { index.collections.first { $0.id == index.currentCollection }?.name ?? preferences.interfaceLanguage.label("收集区") }
     var undoTitle: String? {
-        if index.dissolved != nil { return "撤销解除堆叠" }
+        if index.dissolved != nil { return preferences.interfaceLanguage.label("撤销解除堆叠") }
         guard let undo = index.undo else { return nil }
-        if let groups = undo.collections { return groups.count == 1 ? "撤销删除「\(groups[0].name)」" : "撤销删除 \(groups.count) 个收集区" }
-        if let group = undo.collection { return "撤销删除「\(group.name)」" }
-        return undo.actionTitle ?? "撤销删除 \(undo.items.count) 样材料"
+        if let groups = undo.collections { return groups.count == 1 ? preferences.interfaceLanguage.phrase("撤销删除「%@」", groups[0].name) : preferences.interfaceLanguage.phrase("撤销删除 %d 个收集区", groups.count) }
+        if let group = undo.collection { return preferences.interfaceLanguage.phrase("撤销删除「%@」", group.name) }
+        if let title = undo.actionTitle, title.hasPrefix("撤销清空「"), title.hasSuffix("」") {
+            return preferences.interfaceLanguage.phrase("撤销清空「%@」", String(title.dropFirst("撤销清空「".count).dropLast()))
+        }
+        return preferences.interfaceLanguage.phrase("撤销删除 %d 样材料", undo.items.count)
     }
     var requestSettings: (() -> Void)?
     var selectedItems: [Material] { items.filter { selected.contains($0.id) } }
@@ -182,7 +190,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
             let writers = try MaterialTransfer.writers(selectedItems, urls: payloadURLs)
             board.clearContents()
             guard board.writeObjects(writers) else { throw LibraryError.invalid("无法写入剪贴板，请重试。") }
-            notice = "已复制 \(writers.count) 样材料"; statusChanged?()
+            noticeCopy = "已复制 \(writers.count) 样材料"; statusChanged?()
         } catch { fail(error) }
     }
     var canvasItems: [Material] { CardStacks.visible(items) }
@@ -246,19 +254,20 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     }
     private func cleanSavedTemporary(_ url: URL) {
         do { try cleanTemporary(url) }
-        catch { notice = "材料已保存，但临时文件清理失败：\(error.localizedDescription)" }
+        catch { noticeCopy = "材料已保存，但临时文件清理失败：\(InterfaceText(error: error))" }
     }
     private func finishPromiseDestination(_ destination: PromiseDestination) async {
         do {
             if try !destination.cleanIfEmpty(), let retained = try await library.retainPromisedFiles(from: destination.url) {
                 recoveryPaths = try await library.promisedRecoveries()
-                message += (message.isEmpty ? "" : "\n") + "未入库的文件保留在：\(retained.path)。请取回后重新拖入。"
+                let retainedNotice: InterfaceText = "未入库的文件保留在：\(retained.path)。请取回后重新拖入。"
+                messageCopy = message.isEmpty ? retainedNotice : "\(lines: [messageCopy, retainedNotice])"
                 statusChanged?()
             }
             pendingPromiseRecovery.remove(destination.url)
         } catch {
             pendingPromiseRecovery.insert(destination.url)
-            fail(LibraryError.invalid("临时文件未能移入取回目录，文件仍在 \(destination.url.path)：\(error.localizedDescription)"))
+            fail(LibraryError.invalid("临时文件未能移入取回目录，文件仍在 \(destination.url.path)：\(InterfaceText(error: error))"))
         }
     }
     private func performWrite(_ operation: @escaping @MainActor () async -> Void) {
@@ -273,7 +282,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     func waitForWrites() async {
         while !writes.isEmpty { for task in Array(writes.values) { await task.value } }
     }
-    func fail(_ error: Error) { message = error.localizedDescription; statusChanged?() }
+    func fail(_ error: Error) { messageCopy = InterfaceText(error: error); statusChanged?() }
     func markViewed() { unseenResults.subtract(items.map(\.id)) }
     func refresh() async {
         index = await library.index
@@ -303,7 +312,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                     if let image = preview.image { thumbnails[item.id] = NSImage(cgImage: image, size: .zero) }
                     durations[item.id] = preview.duration
                 }
-            } catch { errors[item.id] = error.localizedDescription }
+            } catch { errors[item.id] = InterfaceText(error: error) }
         }
         webImages = webImages.filter { ids.contains($0.key) }
         webImageURLs = webImageURLs.filter { ids.contains($0.key) }
@@ -320,7 +329,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                         }
                     } else { webImages[item.id] = nil }
                 }
-            } catch { errors[item.id] = error.localizedDescription }
+            } catch { errors[item.id] = InterfaceText(error: error) }
         }
         statusChanged?()
     }
@@ -369,10 +378,10 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
         }
     }
     func collectionNameDialog(_ id: UUID? = nil) {
-        let alert = NSAlert(); alert.messageText = id == nil ? "新建收集区" : "重命名收集区"
+        let alert = NSAlert(); alert.messageText = preferences.interfaceLanguage.label(id == nil ? "新建收集区" : "重命名收集区")
         let field = NSTextField(string: id.flatMap { id in index.collections.first { $0.id == id }?.name } ?? "")
         field.frame = NSRect(x: 0, y: 0, width: 260, height: 24); alert.accessoryView = field
-        alert.addButton(withTitle: "确定"); alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: preferences.interfaceLanguage.label("确定")); alert.addButton(withTitle: preferences.interfaceLanguage.label("取消"))
         guard let window = presentationWindow else { return }
         alert.beginSheetModal(for: window) { [weak self] response in
             guard response == .alertFirstButtonReturn, let self else { return }
@@ -401,12 +410,12 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                 case .image(let data): entries = [.image(data, MaterialSource())]
                 case .materials(let materials): entries = materials
                 }
-                var failures: [String] = []
+                var failures: [InterfaceText] = []
                 for entry in entries {
                     do { received.append(try await importMaterial(entry, collection: group, point: point)) }
-                    catch { failures.append(error.localizedDescription) }
+                    catch { failures.append(InterfaceText(error: error)) }
                 }
-                if !failures.isEmpty { message = "\(failures.count) 样材料未收纳：\n" + failures.joined(separator: "\n") }
+                if !failures.isEmpty { messageCopy = "\(failures.count) 样材料未收纳：\n\(lines: failures)" }
                 await refresh()
                 for item in received where item.kind == .link { generateWebPreview(item, manual: false) }
                 if let last = received.last, group == index.currentCollection {
@@ -434,7 +443,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                 return item
             } catch {
                 do { try FileManager.default.removeItem(at: directory) }
-                catch let cleanup { throw LibraryError.invalid("收纳图片失败：\(error.localizedDescription)；临时文件清理失败：\(cleanup.localizedDescription)") }
+                catch let cleanup { throw LibraryError.invalid("收纳图片失败：\(InterfaceText(error: error))；临时文件清理失败：\(InterfaceText(error: cleanup))") }
                 throw error
             }
         }
@@ -560,7 +569,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
         guard !locked, !collectionExporting else { return }
         dismissPreview?()
         collectionDirectDelete = direct; collectionSelection = ids
-        collectionNotice = ("", []); collectionError = false; collectionDeleteFailed = false
+        collectionNotice = ""; collectionError = false; collectionDeleteFailed = false
         collectionExportProgress = nil; collectionExportURL = nil
         performWrite { [self] in
             do {
@@ -571,7 +580,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     }
     func deleteSelectedCollections() {
         guard let expected = collectionConfirmation, !locked, !collectionDeleting, !collectionExporting else { return }
-        collectionDeleting = true; collectionNotice = ("正在删除…", []); collectionError = false; collectionDeleteFailed = false
+        collectionDeleting = true; collectionNotice = "正在删除…"; collectionError = false; collectionDeleteFailed = false
         performWrite { [self] in
             defer { collectionDeleting = false }
             do {
@@ -581,7 +590,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                 case .changed(let changed):
                     collectionConfirmation = changed
                     collectionSelection = changed.ids
-                    collectionNotice = ("内容有变化，请再确认一次。", [])
+                    collectionNotice = "内容有变化，请再确认一次。"
                     collectionExportURL = nil; collectionExportProgress = nil
                 case .removed(let cleanupWarning):
                     for id in expected.itemIDs {
@@ -590,13 +599,13 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                     }
                     selected = []; pasteActions = nil
                     collectionDeletedCount = expected.collections.count
-                    collectionSelection = []; collectionNotice = ("%@", [cleanupWarning ?? ""]); collectionPage = .manager
+                    collectionSelection = []; collectionNotice = cleanupWarning ?? ""; collectionPage = .manager
                     collectionError = cleanupWarning != nil
-                    if let cleanupWarning { message = cleanupWarning }
+                    if let cleanupWarning { messageCopy = cleanupWarning }
                 }
                 await refresh()
             } catch {
-                collectionNotice = ("删除失败：没有删除任何收集区，勾选仍保留。\n%@", [error.localizedDescription])
+                collectionNotice = "删除失败：没有删除任何收集区，勾选仍保留。\n\(InterfaceText(error: error))"
                 collectionError = true; collectionDeleteFailed = true
             }
         }
@@ -604,11 +613,11 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     func exportSelectedCollections() {
         guard let snapshot = collectionConfirmation, !collectionExporting, !collectionDeleting else { return }
         let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
-        panel.canCreateDirectories = true; panel.prompt = "导出到这里"
+        panel.canCreateDirectories = true; panel.prompt = preferences.interfaceLanguage.label("导出到这里")
         presentFilePicker(panel) { [weak self] response in
             guard let self, response == .OK, let url = panel.url else { return }
             self.collectionExporting = true; self.collectionError = false; self.collectionExportURL = nil
-            self.collectionExportProgress = nil; self.collectionNotice = ("正在导出…", [])
+            self.collectionExportProgress = nil; self.collectionNotice = "正在导出…"
             self.collectionExportTask = Task { [weak self] in
                 guard let self else { return }
                 defer { self.collectionExporting = false; self.collectionExportTask = nil }
@@ -616,15 +625,15 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                     let output = try await self.library.exportCollections(snapshot, to: url) { [weak self] progress in
                         await MainActor.run {
                             self?.collectionExportProgress = progress
-                            self?.collectionNotice = ("正在导出 %d / %d 样到‘%@’…", [progress.completed, progress.total, progress.directory.lastPathComponent])
+                            self?.collectionNotice = "正在导出 \(progress.completed) / \(progress.total) 样到‘\(progress.directory.lastPathComponent)’…"
                         }
                     }
                     self.collectionExportURL = output
-                    self.collectionNotice = ("已导出 %d 样，按收集区分文件夹保存。", [snapshot.summary.uniqueIDs.count])
+                    self.collectionNotice = "已导出 \(snapshot.summary.uniqueIDs.count) 样，按收集区分文件夹保存。"
                 } catch is CancellationError {
-                    self.collectionNotice = ("导出已中止，已导出的文件保留。", [])
+                    self.collectionNotice = "导出已中止，已导出的文件保留。"
                 } catch {
-                    self.collectionNotice = ("导出没有完成：%@。没有删除任何内容，勾选仍保留。", [error.localizedDescription])
+                    self.collectionNotice = "导出没有完成：\(InterfaceText(error: error))。没有删除任何内容，勾选仍保留。"
                     self.collectionError = true
                 }
             }
@@ -649,7 +658,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     } catch { fail(error) } } }
     func export(_ ids: Set<UUID>) {
         let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
-        panel.canCreateDirectories = true; panel.prompt = "导出到这里"
+        panel.canCreateDirectories = true; panel.prompt = preferences.interfaceLanguage.label("导出到这里")
         presentFilePicker(panel) { [weak self] response in
             guard response == .OK, let url = panel.url, let self else { return }
             self.performWrite { do { try await self.library.export(ids: ids, to: url) } catch { self.fail(error) } }
@@ -699,7 +708,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
         } catch { fail(error) }
     }
     func linkTitle(_ item: Material) -> String { item.sourceTitle ?? item.linkPreview?.title ?? textPreviews[item.id] ?? item.sourceURL ?? item.name }
-    func linkSiteName(_ item: Material) -> String { item.linkPreview?.siteName ?? openURL(for: item)?.host ?? "链接" }
+    func linkSiteName(_ item: Material) -> String { item.linkPreview?.siteName ?? openURL(for: item)?.host ?? preferences.interfaceLanguage.label("链接地址") }
     func linkPreviewState(_ item: Material) -> LinkPreviewState {
         if webProgress[item.id] != nil { return .pending }
         if webImageURLs[item.id] != nil { return .ready }
@@ -737,7 +746,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                     if self?.webTasks[id] != nil { self?.webProgress[id] = max(0.03, value) }
                 }
                 try Task.checkCancellation()
-                if let warning = try await self.library.saveLinkPreview(id, png: result.png, title: result.title, siteName: result.siteName) { self.notice = warning }
+                if let warning = try await self.library.saveLinkPreview(id, png: result.png, title: result.title, siteName: result.siteName) { self.noticeCopy = warning }
                 await self.refresh()
             } catch is CancellationError { }
             catch {
@@ -776,7 +785,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
             if item.kind == .text, let textAction = TextAction(rawValue: action) {
                 runText(item, action: textAction, activate: !activatedText); activatedText = true; continue
             }
-            guard item.kind == .image else { notice = "“\(item.name)”已保留；\(item.kind == .link ? "链接" : "这类材料")暂不支持“\(action)”，可先粘贴要处理的文字。"; continue }
+            guard item.kind == .image else { noticeCopy = "“\(item.name)”已保留；\(InterfaceText(key: item.kind == .link ? "链接" : "这类材料"))暂不支持“\(InterfaceText(key: action))”，可先粘贴要处理的文字。"; continue }
             busy.insert(item.id); errors[item.id] = nil; statusChanged?()
             tasks[item.id] = Task {
                 defer { busy.remove(item.id); tasks[item.id] = nil; statusChanged?() }
@@ -797,12 +806,12 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                             let added = try await library.importFile(result.url, collection: item.collectionID, kind: .image, derivedFrom: item.id,
                                                                    preferred: CanvasPoint(x: item.rect.maxX + 24, y: item.position.y))
                             scrollTo = added.id
-                        } catch { throw LibraryError.invalid("结果未保存：\(error.localizedDescription)。临时结果保留在 \(result.url.path)") }
+                        } catch { throw LibraryError.invalid("结果未保存：\(InterfaceText(error: error))。临时结果保留在 \(result.url.path)") }
                         cleanSavedTemporary(outputDir)
                     }
                     if !canvasVisible || index.currentCollection != item.collectionID { unseenResults.insert(item.id) }
                     await refresh()
-                } catch { errors[item.id] = error.localizedDescription }
+                } catch { errors[item.id] = InterfaceText(error: error) }
             }
         }
     }
@@ -812,9 +821,9 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
         var draft = drafts[item.id] ?? AnswerDraft(sourceID: item.id)
         if draft.manuallyEdited && !followUp {
             guard let window = presentationWindow else { message = "请先保留或关闭修改后的回答，再重新处理。"; return }
-            let alert = NSAlert(); alert.messageText = "先保留修改后的回答？"
-            alert.informativeText = "重新处理会替换这张卡片里的回答。"
-            alert.addButton(withTitle: "保存并继续"); alert.addButton(withTitle: "取消"); alert.addButton(withTitle: "丢弃修改并继续")
+            let alert = NSAlert(); alert.messageText = preferences.interfaceLanguage.label("先保留修改后的回答？")
+            alert.informativeText = preferences.interfaceLanguage.label("重新处理会替换这张卡片里的回答。")
+            alert.addButton(withTitle: preferences.interfaceLanguage.label("保存并继续")); alert.addButton(withTitle: preferences.interfaceLanguage.label("取消")); alert.addButton(withTitle: preferences.interfaceLanguage.label("丢弃修改并继续"))
             let editedAnswer = draft.answer
             alert.beginSheetModal(for: window) { [weak self] response in
                 guard let self, response != .alertSecondButtonReturn else { return }
@@ -856,7 +865,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                 try await library.saveDraft(updated)
                 if !canvasVisible || index.currentCollection != item.collectionID { unseenResults.insert(item.id) }
                 await refresh()
-            } catch { errors[item.id] = error.localizedDescription }
+            } catch { errors[item.id] = InterfaceText(error: error) }
         }
         textTail = tasks[item.id]
     }
@@ -885,9 +894,9 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     func closeAnswer(_ id: UUID) {
         guard !busy.contains(id) else { message = "处理仍在进行，可收起面板等待。"; return }
         if drafts[id]?.manuallyEdited == true, let window = presentationWindow {
-            let alert = NSAlert(); alert.messageText = "保留修改后的回答？"
-            alert.informativeText = "保存为材料后可以继续使用；未发送的追问会保留。"
-            alert.addButton(withTitle: "放到画布上"); alert.addButton(withTitle: "取消"); alert.addButton(withTitle: "丢弃回答修改")
+            let alert = NSAlert(); alert.messageText = preferences.interfaceLanguage.label("保留修改后的回答？")
+            alert.informativeText = preferences.interfaceLanguage.label("保存为材料后可以继续使用；未发送的追问会保留。")
+            alert.addButton(withTitle: preferences.interfaceLanguage.label("放到画布上")); alert.addButton(withTitle: preferences.interfaceLanguage.label("取消")); alert.addButton(withTitle: preferences.interfaceLanguage.label("丢弃回答修改"))
             alert.beginSheetModal(for: window) { [weak self] response in
                 guard let self else { return }
                 if response == .alertFirstButtonReturn, let item = self.items.first(where: { $0.id == id }) { self.saveAnswer(item, closeAfterSaving: true) }
@@ -926,7 +935,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
             await waitForWrites()
             for directory in pendingPromiseRecovery {
                 do { _ = try await library.retainPromisedFiles(from: directory); pendingPromiseRecovery.remove(directory) }
-                catch { throw LibraryError.invalid("退出已暂停：未入库文件尚未安全保留，请先取回 \(directory.path)。\(error.localizedDescription)") }
+                catch { throw LibraryError.invalid("退出已暂停：未入库文件尚未安全保留，请先取回 \(directory.path)。\(InterfaceText(error: error))") }
             }
             try await flushDrafts(); try linkPreviewDocuments.removeAll(); try await library.finishSession()
         } catch { shuttingDown = false; throw error }

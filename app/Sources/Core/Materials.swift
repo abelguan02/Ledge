@@ -167,19 +167,25 @@ enum CardStacks {
     }
 }
 enum LibraryError: LocalizedError {
-    case invalid(String)
-    var errorDescription: String? { if case let .invalid(value) = self { value } else { nil } }
+    case invalid(InterfaceText)
+    var errorDescription: String? { if case let .invalid(value) = self { value.rendered(.simplified) } else { nil } }
+}
+extension InterfaceText {
+    init(error: Error) {
+        if let text = error as? InterfaceText { self = text }
+        else if case let LibraryError.invalid(text) = error { self = text }
+        else { self.init(key: error.localizedDescription) }
+    }
 }
 struct CapacityLimits: Sendable {
     var collection: Int64 = 5_000_000_000
     var item: Int64 = 2_000_000_000
     var freeDisk: Int64 = 10_000_000_000
     func validate(incoming: Int64, used: Int64, available: Int64, hasCopiedPayload: Bool = false) throws {
-        guard incoming <= item else { throw LibraryError.invalid("单个材料超过 \(Self.format(item)) 上限（\(Self.format(incoming))）。") }
-        guard incoming <= collection - used else { throw LibraryError.invalid("收集区已用 \(Self.format(used))，放入后将超过 \(Self.format(collection)) 上限。") }
-        guard available >= freeDisk, hasCopiedPayload || incoming <= available - freeDisk else { throw LibraryError.invalid("磁盘可用 \(Self.format(available))，需保留 \(Self.format(freeDisk))；暂停接收。") }
+        guard incoming <= item else { throw LibraryError.invalid("单个材料超过 \(bytes: item) 上限（\(bytes: incoming)）。") }
+        guard incoming <= collection - used else { throw LibraryError.invalid("收集区已用 \(bytes: used)，放入后将超过 \(bytes: collection) 上限。") }
+        guard available >= freeDisk, hasCopiedPayload || incoming <= available - freeDisk else { throw LibraryError.invalid("磁盘可用 \(bytes: available)，需保留 \(bytes: freeDisk)；暂停接收。") }
     }
-    static func format(_ count: Int64) -> String { ByteCountFormatter.string(fromByteCount: count, countStyle: .decimal) }
 }
 enum ClearCategory: String, CaseIterable, Sendable {
     case pastedText = "粘贴的文字", result = "处理生成的结果", unsourced = "没有源文件的内容"

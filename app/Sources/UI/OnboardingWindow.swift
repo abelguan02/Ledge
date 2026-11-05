@@ -49,16 +49,17 @@ private struct OnboardingView: View {
     private var spring: Animation { skin.motion.guideSpring(reduced: reduceMotion) }
     private var ease: Animation { skin.motion.guideEase(reduced: reduceMotion) }
     private var title: String {
-        switch session.step { case .welcome: skin.isUnit ? "搁这儿" : AppIdentity.name; case .edge: "它住在屏幕边上"; case .drop: "什么都能丢进来"; case .paste: "复制了，就按 ⌘V"; case .export: "用完，拖走就行"; case .shortcut: "随时叫它出来" }
+        let key = switch session.step { case .welcome: "搁这儿"; case .edge: "它住在屏幕边上"; case .drop: "什么都能丢进来"; case .paste: "复制了，就按 ⌘V"; case .export: "用完，拖走就行"; case .shortcut: "随时叫它出来" }
+        return skin.label(key)
     }
     private var detail: String {
         switch session.step {
-        case .welcome: skin.isUnit || AppIdentity.name == "搁这儿" ? "看中的东西，先搁这儿。" : "Set it here for now."
+        case .welcome: "看中的东西，先搁这儿。"
         case .edge: "平时只是一条细线。把鼠标移过去试试。"
         case .drop: "把这张图拖到右边。"
         case .paste: "文字、网址、截图，按一下就落到画布上。"
         case .export: "拖到桌面、文件夹或聊天框，就是一份完整的文件。"
-        case .shortcut: preferences.shortcut.map { skin.phrase("按 %@，或者把鼠标移到那条细线上。", $0.display) } ?? "把鼠标移到那条细线上就能打开。"
+        case .shortcut: preferences.shortcut.map { skin.phrase("按 %@，或者把鼠标移到那条细线上。", $0.keyCaps.map(skin.label).joined()) } ?? "把鼠标移到那条细线上就能打开。"
         }
     }
     var body: some View {
@@ -166,11 +167,11 @@ private struct OnboardingView: View {
                 sampleImage.frame(width: 140, height: 100).opacity(phase > 0 ? 0.16 : 0).position(target)
                 sampleImage.frame(width: 140, height: 100).scaleEffect(reduceMotion || phase == 0 ? 1 : 1.04).rotationEffect(.degrees(reduceMotion || phase == 0 ? 0 : -2))
                     .position(phase >= 2 ? CGPoint(x: middle.x, y: middle.y + 40) : target).opacity(phase >= 3 ? 0 : 1)
-                VStack(spacing: 8) { Image(systemName: "doc.richtext").font(skin.typography.sampleFile); Text("灵感.png").font(skin.typography.caption) }
+                VStack(spacing: 8) { Image(systemName: "doc.richtext").font(skin.typography.sampleFile); Text(skin.label("灵感.png")).font(skin.typography.caption) }
                     .foregroundStyle(skin.palette.light).scaleEffect(reduceMotion || phase >= 3 ? 1 : 0.7).opacity(phase >= 3 ? 1 : 0).position(CGPoint(x: middle.x, y: middle.y + 40))
             }
             if session.step == .shortcut, let shortcut = preferences.shortcut {
-                keys(shortcut.keyCaps).position(middle)
+                keys(shortcut.keyCaps.map(skin.label)).position(middle)
             }
         }.animation(spring, value: hasPanel).animation(spring, value: session.dropCompleted)
     }
@@ -185,7 +186,7 @@ private struct OnboardingView: View {
     private var sampleNote: some View {
         Group {
             if skin.isUnit { SkinDisplayText("周三 10:00", size: 22).frame(width: 180, height: 130).background(skin.palette.base).overlay(Rectangle().stroke(skin.palette.line)) }
-            else { Text("看中的东西，\n先搁这儿。").font(skin.typography.sampleNote).foregroundStyle(skin.palette.feedbackBackdrop).frame(width: 180, height: 130).background(skin.palette.sampleNote, in: skin.shapes.card) }
+            else { Text(skin.label("看中的东西，\n先搁这儿。")).font(skin.typography.sampleNote).foregroundStyle(skin.palette.feedbackBackdrop).frame(width: 180, height: 130).background(skin.palette.sampleNote, in: skin.shapes.card) }
         }
     }
     private func keys(_ values: [String]) -> some View {

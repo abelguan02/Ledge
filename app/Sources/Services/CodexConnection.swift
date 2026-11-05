@@ -4,7 +4,8 @@ import Foundation
 // A turn is started only by the explicit respond path, never by account checks.
 enum CodexConnectionError: Error, LocalizedError, Equatable {
     case unavailable, launch, closed, timeout, malformed, oversized, rpc(Int), unsupportedAccount, incomplete, busy, backendExit(Int32, String)
-    var errorDescription: String? {
+    var errorDescription: String? { copy.rendered(.simplified) }
+    var copy: InterfaceText {
         switch self {
         case .unavailable: return "未找到已有 Codex；未打开登录页面。"
         case .launch: return "Codex 后台进程未能启动；这不是账号登录失败。"
@@ -16,7 +17,7 @@ enum CodexConnectionError: Error, LocalizedError, Equatable {
         case .unsupportedAccount: return "Codex 尚未确认可复用的 ChatGPT 登录；未切换到 API 计费。"
         case .incomplete: return "Codex 未完成文字回复；未自动重试或重新登录。"
         case .busy: return "当前后台连接已有请求进行中。"
-        case .backendExit(let code, let category): return "Codex 后台退出（\(code)，\(category)）；未启动登录。"
+        case .backendExit(let code, let category): return "Codex 后台退出（\(code)，\(InterfaceText(key: category))）；未启动登录。"
         }
     }
 }
