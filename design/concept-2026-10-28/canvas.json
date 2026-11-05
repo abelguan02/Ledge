@@ -303,6 +303,111 @@
    "w": 1644,
    "h": 1162,
    "title": "图标细化"
+  },
+  "SkinPixel.dc.html": {
+   "x": 0,
+   "y": 23480,
+   "w": 1740,
+   "h": 872,
+   "title": "皮肤草稿 · 像素风"
+  },
+  "SkinEva.dc.html": {
+   "x": 1840,
+   "y": 23480,
+   "w": 2070,
+   "h": 872,
+   "title": "皮肤草稿 · EVA 风格"
+  },
+  "SkinEva2.dc.html": {
+   "x": 1840,
+   "y": 24452,
+   "w": 1564,
+   "h": 968,
+   "title": "皮肤草稿 · EVA 风格 第二版"
+  },
+  "SkinEva3.dc.html": {
+   "x": 1840,
+   "y": 25500,
+   "w": 2312,
+   "h": 968,
+   "title": "皮肤草稿 · EVA 风格 第三版"
+  },
+  "SkinEvaEdge.dc.html": {
+   "x": 0,
+   "y": 26800,
+   "w": 1472,
+   "h": 884,
+   "title": "初号机 · 小舌片与投放面板"
+  },
+  "SkinEvaCanvas.dc.html": {
+   "x": 0,
+   "y": 27774,
+   "w": 1832,
+   "h": 1724,
+   "title": "初号机 · 画布"
+  },
+  "SkinEvaAI.dc.html": {
+   "x": 0,
+   "y": 29588,
+   "w": 1832,
+   "h": 896,
+   "title": "初号机 · 粘贴与文字处理"
+  },
+  "SkinEvaCards.dc.html": {
+   "x": 0,
+   "y": 30574,
+   "w": 1832,
+   "h": 896,
+   "title": "初号机 · 卡片尺寸与堆叠"
+  },
+  "SkinEvaLink.dc.html": {
+   "x": 0,
+   "y": 31560,
+   "w": 1448,
+   "h": 360,
+   "title": "初号机 · 链接卡状态"
+  },
+  "SkinEvaCollections.dc.html": {
+   "x": 0,
+   "y": 32010,
+   "w": 1540,
+   "h": 1468,
+   "title": "初号机 · 收集区与铺开"
+  },
+  "SkinEvaClear.dc.html": {
+   "x": 0,
+   "y": 33568,
+   "w": 1832,
+   "h": 896,
+   "title": "初号机 · 清空"
+  },
+  "SkinEvaSettings.dc.html": {
+   "x": 0,
+   "y": 34554,
+   "w": 1712,
+   "h": 904,
+   "title": "初号机 · 设置"
+  },
+  "SkinEvaAbout.dc.html": {
+   "x": 0,
+   "y": 35548,
+   "w": 804,
+   "h": 696,
+   "title": "初号机 · 关于"
+  },
+  "SkinEvaOnboarding.dc.html": {
+   "x": 0,
+   "y": 36334,
+   "w": 1832,
+   "h": 904,
+   "title": "初号机 · 新手引导"
+  },
+  "SkinEvaMotion.dc.html": {
+   "x": 0,
+   "y": 37328,
+   "w": 1832,
+   "h": 896,
+   "title": "初号机 · 动效"
   }
  },
  "order": [
@@ -347,7 +452,22 @@
   "About.dc.html",
   "Onboarding.dc.html",
   "NameIcon.dc.html",
-  "AppIcon.dc.html"
+  "AppIcon.dc.html",
+  "SkinPixel.dc.html",
+  "SkinEva.dc.html",
+  "SkinEva2.dc.html",
+  "SkinEva3.dc.html",
+  "SkinEvaEdge.dc.html",
+  "SkinEvaCanvas.dc.html",
+  "SkinEvaAI.dc.html",
+  "SkinEvaCards.dc.html",
+  "SkinEvaLink.dc.html",
+  "SkinEvaCollections.dc.html",
+  "SkinEvaClear.dc.html",
+  "SkinEvaSettings.dc.html",
+  "SkinEvaAbout.dc.html",
+  "SkinEvaOnboarding.dc.html",
+  "SkinEvaMotion.dc.html"
  ],
  "notes": {
   "t1": {
@@ -454,6 +574,20 @@
    "text": "⑮ 名字与图标：Ledge／搁这儿（2026-10-31）",
    "kind": "title1",
    "maxW": 2760
+  },
+  "t16": {
+   "x": 0,
+   "y": 23220,
+   "text": "⑯ 皮肤草稿（2026-11-04）",
+   "kind": "title1",
+   "maxW": 3910
+  },
+  "t17": {
+   "x": 0,
+   "y": 26540,
+   "text": "⑰ 初号机皮肤定稿稿（2026-11-04）",
+   "kind": "title1",
+   "maxW": 1832
   }
  },
  "designSystems": []
