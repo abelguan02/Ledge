@@ -15,5 +15,5 @@ cat > "$bundle/Contents/Info.plist" <<'PLIST'
 <key>CFBundlePackageType</key><string>APPL</string>
 </dict></plist>
 PLIST
-xcrun swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors -parse-as-library -target arm64-apple-macosx14.0 -module-cache-path build/module-cache Sources/UI/CoffeePaymentCode.swift Tests/CoffeePaymentCodeTests.swift -o "$bundle/Contents/MacOS/CoffeeTests"
+xcrun swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors -parse-as-library -target arm64-apple-macosx14.0 -module-cache-path build/module-cache Sources/Core/AppLanguage.swift Sources/UI/LedgeSkin.swift Sources/UI/CoffeePaymentCode.swift Tests/CoffeePaymentCodeTests.swift -o "$bundle/Contents/MacOS/CoffeeTests"
 "$bundle/Contents/MacOS/CoffeeTests"

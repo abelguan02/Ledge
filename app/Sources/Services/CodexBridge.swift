@@ -1,9 +1,9 @@
 import Foundation
 
 @objc protocol HUDCodexService {
-    func connect(_ requestID: String, reply: @escaping @Sendable (Data?, String?) -> Void)
+    func connect(_ requestID: String, reply: @escaping @Sendable (Data?, Data?) -> Void)
     func respond(_ input: String, instructions: String, model: String, requestID: String,
-                 reply: @escaping @Sendable (Data?, String?) -> Void)
+                 reply: @escaping @Sendable (Data?, Data?) -> Void)
     func cancel(_ requestID: String)
     func stop()
 }
@@ -75,9 +75,12 @@ struct CodexCatalog: Codable, Sendable { var models: [AccountModel]; var preferr
                     do { try await Task.sleep(for: .seconds(input == nil ? 60 : 180)) } catch { return }
                     self?.cancel(id, error: AIError.problem("后台请求超时；未自动重试或重新登录。"), outcome: .timeout)
                 }
-                let reply: @Sendable (Data?, String?) -> Void = { [weak self] data, error in
+                let reply: @Sendable (Data?, Data?) -> Void = { [weak self] data, error in
                     Task { @MainActor in
-                        if let error { self?.finish(id, .failure(AIError.problem(error))) }
+                        if let error {
+                            let detail = (error.count <= 64 * 1024 ? try? JSONDecoder().decode(InterfaceText.self, from: error) : nil)
+                            self?.finish(id, .failure(detail ?? InterfaceText(key: "后台响应格式异常。")))
+                        }
                         else if let data, data.count <= 2 * 1024 * 1024 { self?.finish(id, .success(data)) }
                         else { self?.finish(id, .failure(AIError.problem("后台响应格式异常。"))) }
                     }

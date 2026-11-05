@@ -62,7 +62,7 @@ private struct StoragePaths: Sendable {
 
 enum CollectionRemovalResult {
     case changed(CollectionRemovalSnapshot)
-    case removed(cleanupWarning: String?)
+    case removed(cleanupWarning: InterfaceText?)
 }
 
 actor Library {
@@ -221,7 +221,7 @@ actor Library {
             var next = index; next.items.append(item); try save(next); return item
         } catch {
             do { try FileManager.default.removeItem(at: target.deletingLastPathComponent()) }
-            catch let cleanup { throw LibraryError.invalid("导入失败，临时副本清理失败：\(cleanup.localizedDescription)") }
+            catch let cleanup { throw LibraryError.invalid("导入失败，临时副本清理失败：\(InterfaceText(error: cleanup))") }
             throw error
         }
     }
@@ -237,7 +237,7 @@ actor Library {
             if values.isDirectory == true { entries[relative] = -1; return }
             entries[relative] = Int64(values.fileSize ?? 0)
             let charge = Int64(max(values.fileSize ?? 0, values.totalFileAllocatedSize ?? 0))
-            guard charge <= itemLimit - bytes else { throw LibraryError.invalid("单个材料超过 \(CapacityLimits.format(itemLimit)) 上限。") }
+            guard charge <= itemLimit - bytes else { throw LibraryError.invalid("单个材料超过 \(bytes: itemLimit) 上限。") }
             bytes += charge
         }
         try record(url, relative: ".")
@@ -275,7 +275,7 @@ actor Library {
             var next = index; next.items.append(item); try save(next); return item
         } catch {
             do { try FileManager.default.removeItem(at: target.deletingLastPathComponent()) }
-            catch let cleanup { throw LibraryError.invalid("文字保存失败，临时副本清理失败：\(cleanup.localizedDescription)") }
+            catch let cleanup { throw LibraryError.invalid("文字保存失败，临时副本清理失败：\(InterfaceText(error: cleanup))") }
             throw error
         }
     }
@@ -298,7 +298,7 @@ actor Library {
     }
     // A new image is written before the manifest changes. A failed refresh
     // cannot overwrite the last good image or its metadata.
-    func saveLinkPreview(_ id: UUID, png: Data, title: String?, siteName: String?) throws -> String? {
+    func saveLinkPreview(_ id: UUID, png: Data, title: String?, siteName: String?) throws -> InterfaceText? {
         guard let n = index.items.firstIndex(where: { $0.id == id && $0.kind == .link }) else { return nil }
         let old = index.items[n], oldURL = try paths.preview(old)
         var next = index
@@ -313,13 +313,13 @@ actor Library {
         } catch {
             if FileManager.default.fileExists(atPath: target.path) {
                 do { try FileManager.default.removeItem(at: target) }
-                catch let cleanup { throw LibraryError.invalid("预览未更新，临时截图清理失败：\(cleanup.localizedDescription)") }
+                catch let cleanup { throw LibraryError.invalid("预览未更新，临时截图清理失败：\(InterfaceText(error: cleanup))") }
             }
             throw error
         }
         if let oldURL, FileManager.default.fileExists(atPath: oldURL.path) {
             do { try FileManager.default.removeItem(at: oldURL) }
-            catch { return "预览已更新，旧缓存清理失败：\(error.localizedDescription)" }
+            catch { return "预览已更新，旧缓存清理失败：\(InterfaceText(error: error))" }
         }
         return nil
     }
@@ -566,7 +566,7 @@ actor Library {
             if !index.garbage.isEmpty { var cleaned = index; cleaned.garbage = []; try save(cleaned) }
             return .removed(cleanupWarning: nil)
         } catch {
-            return .removed(cleanupWarning: "收集区已删除，但文件清理未完成：\(error.localizedDescription)")
+            return .removed(cleanupWarning: "收集区已删除，但文件清理未完成：\(InterfaceText(error: error))")
         }
     }
     func saveDraft(_ draft: AnswerDraft) throws {

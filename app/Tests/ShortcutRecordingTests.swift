@@ -6,7 +6,7 @@ import AppKit
     var suspensions = 0
     var restorations = 0
     var acceptsSuspension = true
-    func requestPermission() { requests += 1 }
+    func requestPermission(language: AppLanguage) { requests += 1 }
     func suspendSystemShortcuts() -> Bool { suspensions += 1; return acceptsSuspension }
     func restoreSystemShortcuts() { restorations += 1 }
 }

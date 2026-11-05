@@ -3,14 +3,16 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct CardResizeHandle: NSViewRepresentable {
+    @Environment(\.ledgeSkin) private var skin
     let model: WorkbenchModel
     let item: Material
     func makeNSView(context: Context) -> CardResizeView { CardResizeView(model: model, item: item) }
-    func updateNSView(_ view: CardResizeView, context: Context) { view.item = item; view.needsDisplay = true }
+    func updateNSView(_ view: CardResizeView, context: Context) { view.skin = skin; view.item = item; view.needsDisplay = true }
     static func dismantleNSView(_ view: CardResizeView, coordinator: ()) { view.cancelOperation(nil) }
 }
 
 @MainActor final class CardResizeView: NSView {
+    var skin = LedgeSkin.classic
     let model: WorkbenchModel
     var item: Material
     private var start: CGPoint?
@@ -22,18 +24,13 @@ struct CardResizeHandle: NSViewRepresentable {
     override func draw(_ dirtyRect: NSRect) {
         let scale = model.canvasCoordinateScale
         NSGraphicsContext.saveGraphicsState()
-        let shadow = NSShadow(); shadow.shadowColor = .black.withAlphaComponent(0.3); shadow.shadowBlurRadius = 2 / scale; shadow.set()
-        let path = NSBezierPath()
-        path.move(to: CGPoint(x: 1 / scale, y: 1.5 / scale))
-        path.line(to: CGPoint(x: 7 / scale, y: 1.5 / scale))
-        path.curve(to: CGPoint(x: 14.5 / scale, y: 9 / scale), controlPoint1: CGPoint(x: 13 / scale, y: 1.5 / scale), controlPoint2: CGPoint(x: 14.5 / scale, y: 3 / scale))
-        path.line(to: CGPoint(x: 14.5 / scale, y: 15 / scale))
-        path.lineWidth = 3 / scale; path.lineCapStyle = .round
-        NSColor.white.setStroke(); path.stroke()
+        let shadow = NSShadow(); shadow.shadowColor = skin.palette.resizeShadow; shadow.shadowBlurRadius = skin.shadows.resizeBlur / scale; shadow.set()
+        let path = skin.shapes.resizeGrip(scale: scale)
+        skin.palette.resizeHandle.setStroke(); path.stroke()
         NSGraphicsContext.restoreGraphicsState()
     }
     override func resetCursorRects() {
-        let image = NSImage(systemSymbolName: "arrow.up.left.and.arrow.down.right", accessibilityDescription: "调整卡片大小")!
+        let image = NSImage(systemSymbolName: "arrow.up.left.and.arrow.down.right", accessibilityDescription: skin.label("调整卡片大小"))!
         addCursorRect(bounds, cursor: NSCursor(image: image, hotSpot: CGPoint(x: image.size.width / 2, y: image.size.height / 2)))
     }
     override func mouseDown(with event: NSEvent) {
@@ -95,7 +92,7 @@ struct MaterialDragSource: NSViewRepresentable {
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = NSMenu(); menu.autoenablesItems = false
         func add(_ title: String, _ action: Selector, enabled: Bool = true) {
-            let entry = NSMenuItem(title: title, action: action, keyEquivalent: "")
+            let entry = NSMenuItem(title: model.preferences.interfaceLanguage.label(title), action: action, keyEquivalent: "")
             entry.target = self; entry.isEnabled = enabled; menu.addItem(entry)
         }
         add(item.stackID != nil && !inTray ? "展开" : "打开", #selector(openMaterial))
@@ -108,7 +105,7 @@ struct MaterialDragSource: NSViewRepresentable {
         if let _ = item.stackID, !inTray { add("解除堆叠", #selector(dissolve), enabled: !model.locked) }
         if item.sourcePath != nil { add("查看原件位置", #selector(revealMaterial)) }
         if let error = model.errors[item.id] {
-            let message = NSMenuItem(title: error, action: nil, keyEquivalent: ""); message.isEnabled = false; menu.addItem(message)
+            let message = NSMenuItem(title: error.rendered(model.preferences.interfaceLanguage), action: nil, keyEquivalent: ""); message.isEnabled = false; menu.addItem(message)
             add("关闭错误提示", #selector(clearError))
         }
         menu.addItem(.separator())
@@ -183,7 +180,14 @@ struct MaterialDragSource: NSViewRepresentable {
         return zip(members, writers).map { member, writer in
             let url = model.payloadURLs[member.id]!
             let dragging = NSDraggingItem(pasteboardWriter: writer)
-            let preview = model.thumbnails[member.id] ?? NSWorkspace.shared.icon(forFile: url.path)
+            var preview = model.thumbnails[member.id] ?? NSWorkspace.shared.icon(forFile: url.path)
+            if model.preferences.skin == .unit01 {
+                let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                let renderer = ImageRenderer(content: Image(nsImage: preview).resizable().scaledToFit()
+                    .frame(width: member.size.width - 12, height: member.size.height - 12)
+                    .rotationEffect(.degrees(reduced ? 0 : -2)).shadow(color: .black.opacity(0.6), radius: 4, y: 3).padding(6))
+                if let image = renderer.nsImage { preview = image }
+            }
             dragging.setDraggingFrame(CGRect(x: bounds.minX + member.position.x - item.position.x,
                 y: bounds.maxY - (member.position.y - item.position.y) - member.size.height,
                 width: member.size.width, height: member.size.height), contents: preview)
@@ -348,27 +352,46 @@ enum PanelMode { case line, drop, canvas }
 }
 
 struct DropView: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
+    private var unitCount: String {
+        let noun = switch model.dropKind { case .image: "张图片"; case .text: "段文字"; case .link: "个链接"; case .file: "个文件" }
+        if model.dropCount == 1 && skin.language == .english {
+            switch model.dropKind { case .image: return "1 image"; case .text: return "1 text item"; case .link: return "1 link"; case .file: return "1 file" }
+        }
+        return "\(model.dropCount) \(skin.label(noun))"
+    }
     var body: some View {
         PanelShell(width: 300, height: 420, edge: model.preferences.dockEdge) {
             VStack(spacing: 12) {
-                Text("\(model.dropCount) \(model.dropKind == .image ? "张图片" : model.dropKind == .text ? "段文字" : model.dropKind == .link ? "个链接" : "个文件") → \(model.collectionName)")
-                    .font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                tile("放进来", zone: 0).frame(maxHeight: .infinity)
+                Text("\(unitCount) → \(model.collectionName)")
+                    .font(skin.isUnit ? .system(size: 15, weight: .semibold) : skin.typography.caption)
+                    .foregroundStyle(skin.isUnit ? AnyShapeStyle(skin.palette.accent) : skin.ink.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    .modifier(UnitBootBlock(index: 0))
+                if skin.isUnit { Rectangle().fill(skin.palette.line).frame(height: 1) }
+                tile("放进来", zone: 0).frame(maxHeight: .infinity).modifier(UnitBootBlock(index: 1))
                 if model.dropKind.hasActions {
                     HStack(spacing: 10) {
                         tile(model.dropKind == .image ? "压缩" : "翻译", zone: 1)
                         tile(model.dropKind == .image ? "识别文字" : "解释", zone: 2)
-                    }.frame(height: 64)
+                    }.frame(height: 64).modifier(UnitBootBlock(index: 2))
                 }
-            }.padding(16)
+            }.padding(.horizontal, skin.isUnit ? 24 : 16).padding(.vertical, 16)
         }
     }
     private func tile(_ text: String, zone: Int) -> some View {
-        Text(text).font(.system(size: zone == 0 ? 19 : 13, weight: .medium)).frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(.primary.opacity(model.dropZone == zone ? 0.12 : 0.03), in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.primary.opacity(model.dropZone == zone ? 0.6 : 0.1), lineWidth: model.dropZone == zone ? 1.5 : 1))
-            .opacity(zone > 0 && model.dropKind == .text && !model.canUseAI ? 0.35 : 1)
-            .help(zone > 0 && model.dropKind == .text ? model.aiHelp : "")
+        Group {
+            if skin.isUnit && zone == 0 { SkinDisplayText(text, size: 72, compression: 0.66) }
+            else { Text(skin.label(text)).font(skin.isUnit ? .system(size: 16, weight: .semibold) : skin.typography.dropLabel(primary: zone == 0)) }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(skin.ink.dropFill(active: model.dropZone == zone), in: skin.shapes.dropZone)
+            .overlay(skin.shapes.dropZone.stroke(skin.ink.dropBorder(active: model.dropZone == zone), lineWidth: model.dropZone == zone ? 1.5 : 1))
+            .overlay {
+                if skin.isUnit && model.dropZone == zone {
+                    UnitLockCorners().stroke(skin.palette.accent, lineWidth: 4).padding(-10).allowsHitTesting(false)
+                }
+            }
+            .opacity(zone > 0 && model.dropKind == .text && !model.canUseAI ? skin.opacity.disabled : 1)
+            .help(zone > 0 && model.dropKind == .text ? skin.label(model.aiHelp) : "")
     }
 }

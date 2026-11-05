@@ -5,100 +5,84 @@ import UniformTypeIdentifiers
 // The macOS 27 SDK also exports a State macro; select the macOS 14 wrapper explicitly.
 private typealias ViewState<Value> = SwiftUI.State<Value>
 
-struct GlassBackground: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView(); view.material = .hudWindow; view.blendingMode = .behindWindow; view.state = .active
-        return view
-    }
-    func updateNSView(_ view: NSVisualEffectView, context: Context) { }
-}
-struct EdgePanelShape: Shape {
-    var edge: DockEdge = .right
-    var wing = 24.0
-    var radius = 26.0
-    func path(in rect: CGRect) -> Path {
-        switch edge {
-        case .right: return rightPath(in: rect)
-        case .left: return rightPath(in: rect).applying(CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: rect.width, ty: 0))
-        case .top: return rightPath(in: CGRect(x: 0, y: 0, width: rect.height, height: rect.width)).applying(CGAffineTransform(a: 0, b: -1, c: 1, d: 0, tx: 0, ty: rect.height))
-        }
-    }
-    private func rightPath(in rect: CGRect) -> Path {
-        let w = rect.width, h = rect.height, s = wing, r = radius
-        var path = Path()
-        path.move(to: CGPoint(x: w, y: 0))
-        path.addCurve(to: CGPoint(x: w-s, y: s), control1: CGPoint(x: w, y: s*0.55), control2: CGPoint(x: w-s*0.45, y: s))
-        path.addLine(to: CGPoint(x: r, y: s))
-        path.addQuadCurve(to: CGPoint(x: 0, y: s+r), control: CGPoint(x: 0, y: s))
-        path.addLine(to: CGPoint(x: 0, y: h-s-r))
-        path.addQuadCurve(to: CGPoint(x: r, y: h-s), control: CGPoint(x: 0, y: h-s))
-        path.addLine(to: CGPoint(x: w-s, y: h-s))
-        path.addCurve(to: CGPoint(x: w, y: h), control1: CGPoint(x: w-s*0.45, y: h-s), control2: CGPoint(x: w, y: h-s*0.55))
-        path.closeSubpath(); return path
-    }
-}
 struct PanelShell<Content: View>: View {
+    @Environment(\.ledgeSkin) private var skin
     var width = 520.0
     var height = 720.0
     var edge: DockEdge = .right
+    var alarm = false
     @ViewBuilder var content: () -> Content
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         ZStack(alignment: .topLeading) {
             GlassBackground()
-                .overlay((scheme == .dark ? Color.black : Color.white).opacity(0.12))
-                .clipShape(EdgePanelShape(edge: edge))
-                .overlay(EdgePanelShape(edge: edge).strokeBorderColor(scheme == .dark ? Color.white.opacity(0.16) : Color.black.opacity(0.08)))
-                .shadow(color: .black.opacity(scheme == .dark ? 0.3 : 0.12), radius: 14, x: edge == .right ? -8 : edge == .left ? 8 : 0, y: edge == .top ? 8 : 6)
+                .overlay(skin.palette.panelTint(dark: scheme == .dark))
+                .clipShape(EdgePanelShape(edge: edge, cut: skin.isUnit))
+                .overlay(EdgePanelShape(edge: edge, cut: skin.isUnit).stroke(skin.isUnit ? (alarm ? skin.palette.destructive : skin.palette.line) : scheme == .dark ? skin.palette.stackFront : skin.palette.lightPanelBorder, lineWidth: skin.isUnit ? 2 : 0.5))
+                .overlay { if skin.isUnit && !alarm { UnitPanelTrim(edge: edge).clipShape(EdgePanelShape(edge: edge, cut: true)) } }
+                .skinShadow(skin.shadows.panel(dark: scheme == .dark, x: edge == .right ? -8 : edge == .left ? 8 : 0, y: edge == .top ? 8 : 6))
                 .frame(width: width + (edge == .top ? 48 : 0), height: height + (edge == .top ? 0 : 48))
                 .offset(x: edge == .right ? 20 : 0)
             content().frame(width: width, height: height).offset(x: edge == .top ? 24 : edge == .right ? 20 : 0, y: edge == .top ? 0 : 24)
+        }.overlay(alignment: .topLeading) {
+            if skin.isUnit {
+                SkinScanlines().frame(width: width + (edge == .top ? 48 : 0), height: height + (edge == .top ? 0 : 48))
+                    .clipShape(EdgePanelShape(edge: edge, cut: true)).offset(x: edge == .right ? 20 : 0)
+            }
         }.frame(width: width + (edge == .top ? 48 : 20), height: height + (edge == .top ? 20 : 48), alignment: .topLeading)
     }
 }
-private extension Shape {
-    func strokeBorderColor(_ color: Color) -> some View { stroke(color, lineWidth: 0.5) }
-}
 struct WorkbenchView: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     var width = 520.0
     var height = 720.0
     @ViewState private var parameterAction: String? = nil
     @ViewState private var imageSettings = ImageSettings()
     var body: some View {
-        PanelShell(width: width, height: height, edge: model.preferences.dockEdge) {
+        PanelShell(width: width, height: height, edge: model.preferences.dockEdge, alarm: model.removal != nil) {
             ZStack(alignment: .top) {
-                canvas.padding(.top, 52)
-                header
+                canvas.padding(.top, skin.isUnit ? 128 : 52).modifier(UnitBootBlock(index: 1))
+                header.modifier(UnitBootBlock(index: 0))
                 VStack {
                     Spacer()
                     if !model.recoveryPaths.isEmpty {
-                        Button("有 \(model.recoveryPaths.count) 批未入库文件，查看取回位置") {
+                        Button(skin.phrase("有 %d 批未入库文件，查看取回位置", model.recoveryPaths.count)) {
                             NSWorkspace.shared.activateFileViewerSelecting(model.recoveryPaths)
-                        }.buttonStyle(.bordered).padding(8).background(.regularMaterial, in: Capsule())
+                        }.buttonStyle(.bordered).padding(8).background(skin.materials.regular, in: skin.shapes.capsule)
                     }
                     if !model.message.isEmpty || !model.notice.isEmpty {
                         HStack(alignment: .top) {
-                            Text(model.message.isEmpty ? model.notice : model.message).font(.system(size: 12)).textSelection(.enabled)
+                            Text(model.message.isEmpty ? model.notice : model.message).font(skin.typography.caption).textSelection(.enabled)
                             Spacer(minLength: 4)
                             Button { if model.message.isEmpty { model.notice = "" } else { model.message = "" }; model.statusChanged?() } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
-                        }.padding(12).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 16)
+                        }.padding(12).background(skin.materials.regular, in: skin.shapes.card).padding(.horizontal, 16)
                     }
                     if let failed = model.selectedItems.first(where: { model.errors[$0.id] != nil }), let error = model.errors[failed.id], model.activeAnswer != failed.id {
                         HStack(alignment: .top) {
-                            Text(error).font(.system(size: 12)).foregroundStyle(.red).textSelection(.enabled)
+                            Text(error.rendered(skin.language)).font(skin.typography.caption).foregroundStyle(skin.palette.destructive).textSelection(.enabled)
                             Spacer(minLength: 4)
                             Button { model.errors[failed.id] = nil; model.statusChanged?() } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
-                        }.padding(12).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 16)
+                        }.padding(12).background(skin.materials.regular, in: skin.shapes.card).padding(.horizontal, 16)
                     }
                     if !model.selectedItems.isEmpty { actionBar }
                     else if model.index.undo != nil || model.index.dissolved != nil {
-                        Button(model.index.dissolved != nil ? "撤销解除堆叠" : "撤销上次删除") { model.undo() }.buttonStyle(.bordered).padding(14).background(.regularMaterial, in: Capsule()).padding(.bottom, 12)
+                        if skin.isUnit {
+                            HStack {
+                                if model.items.isEmpty, model.index.undo?.actionTitle?.hasPrefix("撤销清空") == true {
+                                    Text(skin.phrase("已清空‘%@’", model.collectionName)).lineLimit(1)
+                                }
+                                Button(skin.label("撤销")) { model.undo() }.buttonStyle(.plain).foregroundStyle(skin.palette.accent)
+                            }.font(skin.typography.captionStrong).padding(10).background(skin.palette.inset)
+                                .overlay(Rectangle().stroke(skin.palette.line).allowsHitTesting(false)).padding(.bottom, 12)
+                        } else {
+                        Button(skin.label(model.index.dissolved != nil ? "撤销解除堆叠" : "撤销上次删除")) { model.undo() }.buttonStyle(.bordered).padding(14).background(skin.materials.regular, in: skin.shapes.capsule).padding(.bottom, 12)
+                        }
                     }
-                }
+                }.modifier(UnitBootBlock(index: 2))
                 if let request = model.removal { ClearConfirmation(model: model, request: request) }
                 if model.collectionPage == .confirmation {
-                    Color(red: 10/255, green: 10/255, blue: 14/255).opacity(0.18).allowsHitTesting(false)
+                    skin.palette.collectionDim.allowsHitTesting(false)
                 }
             }.overlay(alignment: .bottomTrailing) {
                 if model.isExpanded && model.removal == nil { zoomControls.padding(.trailing, 18).padding(.bottom, 18) }
@@ -106,84 +90,135 @@ struct WorkbenchView: View {
         }
         .popover(isPresented: Binding(get: { parameterAction != nil }, set: { if !$0 { parameterAction = nil } })) {
             VStack(alignment: .leading, spacing: 14) {
-                Text(parameterAction ?? "图片处理").font(.headline)
-                Text("支持单帧 PNG / JPEG；生成独立副本。").font(.caption).foregroundStyle(.secondary)
-                Toggle("调整宽度", isOn: $imageSettings.resize)
-                if imageSettings.resize { TextField("宽度（像素）", value: $imageSettings.width, format: .number).textFieldStyle(.roundedBorder) }
-                Picker("格式", selection: $imageSettings.format) {
-                    Text("原格式").tag("original"); Text("JPEG").tag("jpeg"); Text("PNG").tag("png")
+                Text(skin.label(parameterAction ?? "图片处理")).font(skin.typography.headline)
+                Text(skin.label("支持单帧 PNG / JPEG；生成独立副本。")).font(skin.typography.systemCaption).foregroundStyle(skin.ink.secondary)
+                if skin.isUnit {
+                    HStack { Text(skin.label("调整宽度")); Spacer(); Toggle(skin.label("调整宽度"), isOn: $imageSettings.resize).labelsHidden().toggleStyle(SkinSwitchToggleStyle()) }
+                    if imageSettings.resize {
+                        TextField(skin.label("宽度（像素）"), value: $imageSettings.width, format: .number)
+                            .textFieldStyle(.plain).padding(6).overlay(Rectangle().stroke(skin.palette.separator))
+                    }
+                    SkinSegments(title: "格式", choices: [("original", "原格式"), ("jpeg", "JPEG"), ("png", "PNG")], selection: $imageSettings.format)
+                } else {
+                Toggle(skin.label("调整宽度"), isOn: $imageSettings.resize)
+                if imageSettings.resize { TextField(skin.label("宽度（像素）"), value: $imageSettings.width, format: .number).textFieldStyle(.roundedBorder) }
+                Picker(skin.label("格式"), selection: $imageSettings.format) {
+                    Text(skin.label("原格式")).tag("original"); Text("JPEG").tag("jpeg"); Text("PNG").tag("png")
                 }.pickerStyle(.segmented)
-                HStack { Text("JPEG 质量"); Slider(value: $imageSettings.quality, in: 0.2...1); Text("\(Int(imageSettings.quality*100))%") }.disabled(imageSettings.format == "png")
-                HStack { Button("取消") { parameterAction = nil }; Spacer(); Button("处理") {
+                }
+                HStack { Text(skin.label("JPEG 质量")); Slider(value: $imageSettings.quality, in: 0.2...1); Text("\(Int(imageSettings.quality*100))%") }.disabled(imageSettings.format == "png")
+                HStack { Button(skin.label("取消")) { parameterAction = nil }; Spacer(); Button(skin.label("处理")) {
                     model.process(model.selectedItems, action: parameterAction ?? "压缩", settings: imageSettings); parameterAction = nil
-                }.buttonStyle(.borderedProminent) }
-            }.padding(20).frame(width: 300)
+                }.buttonStyle(SkinActionButtonStyle(prominent: true)) }
+            }.padding(20).frame(width: 300).background(skin.isUnit ? skin.palette.inset : Color.clear)
         }
     }
-    private var header: some View {
-        HStack(spacing: 8) {
-            Button { if model.collectionPage == .closed { model.collectionPage = .switcher } else { model.closeCollectionMenu() } } label: {
-                HStack(spacing: 5) { Text(model.collectionName).lineLimit(1); Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold)) }
-            }.font(.system(size: 13, weight: .semibold)).buttonStyle(.plain)
-                .background(CollectionPopover(model: model))
-            Spacer()
-            Button("清空") { model.askRemoval(ids: Set(model.items.map(\.id))) }
-                .font(.system(size: 12.5)).foregroundStyle(.secondary).buttonStyle(.plain).disabled(model.items.isEmpty || model.locked)
-            Button { model.toggleExpanded() } label: {
-                Image(systemName: model.isExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                    .font(.system(size: 12, weight: .semibold)).frame(width: 28, height: 28).background(.primary.opacity(0.08), in: Circle())
-            }.buttonStyle(.plain).accessibilityLabel(model.isExpanded ? "收回到屏幕边" : "铺开画布")
-            Button { model.collapse?() } label: { Image(systemName: model.preferences.dockEdge == .top ? "chevron.up" : model.preferences.dockEdge == .left ? "chevron.left" : "chevron.right").font(.system(size: 12, weight: .semibold)).frame(width: 28, height: 28).background(.primary.opacity(0.08), in: Circle()) }
-                .buttonStyle(.plain).accessibilityLabel("收起")
-        }.padding(.horizontal, 16).frame(height: 52)
-    }
+    private var header: some View { WorkbenchHeader(model: model) }
     private var canvas: some View {
         CanvasViewportView(model: model)
             .overlay { if let stack = model.openStackID { StackTrayOverlay(model: model, stack: stack) } }
             .overlay {
-                if model.items.isEmpty { Text("拖进来，或按 ⌘V").font(.system(size: 13)).foregroundStyle(.secondary.opacity(0.65)).allowsHitTesting(false) }
+                if model.items.isEmpty {
+                    Group {
+                        if skin.isUnit { SkinDisplayText("拖进来，或按 ⌘V", size: 44).scaleEffect(0.85) }
+                        else { Text(skin.label("拖进来，或按 ⌘V")).font(skin.typography.body) }
+                    }.foregroundStyle(skin.palette.secondary.opacity(skin.isUnit ? 1 : 0.65)).allowsHitTesting(false)
+                }
             }
     }
     private var zoomControls: some View {
         HStack(spacing: 2) {
             Button { model.changeCanvasZoom?(model.canvasZoom / 1.25) } label: { Image(systemName: "minus").frame(width: 28, height: 28) }
-                .accessibilityLabel("缩小画布").disabled(model.canvasZoom <= CanvasViewportState.zoomRange.lowerBound + 0.001)
+                .accessibilityLabel(skin.label("缩小画布")).disabled(model.canvasZoom <= CanvasViewportState.zoomRange.lowerBound + 0.001)
             Button { model.changeCanvasZoom?(1) } label: {
-                Text("\(Int((model.canvasZoom * 100).rounded()))%").font(.system(size: 12).monospacedDigit()).frame(width: 46, height: 28)
-            }.accessibilityLabel("恢复画布到 100%")
+                Text("\(Int((model.canvasZoom * 100).rounded()))%").font(skin.typography.caption.monospacedDigit()).frame(width: 46, height: 28)
+            }.accessibilityLabel(skin.label("恢复画布到 100%"))
             Button { model.changeCanvasZoom?(model.canvasZoom * 1.25) } label: { Image(systemName: "plus").frame(width: 28, height: 28) }
-                .accessibilityLabel("放大画布").disabled(model.canvasZoom >= CanvasViewportState.zoomRange.upperBound - 0.001)
-        }.buttonStyle(.plain).padding(4).background(.regularMaterial, in: Capsule())
-            .help("双指平移，捏合缩放；按住空格拖动画布")
+                .accessibilityLabel(skin.label("放大画布")).disabled(model.canvasZoom >= CanvasViewportState.zoomRange.upperBound - 0.001)
+        }.buttonStyle(.plain).padding(4).background(skin.materials.regular, in: skin.shapes.capsule)
+            .help(skin.label("双指平移，捏合缩放；按住空格拖动画布"))
     }
     private var actionBar: some View {
-        HStack(spacing: 14) {
-            Text("\(model.selectedItems.count) 样").font(.system(size: 11)).foregroundStyle(.secondary)
-            if model.canStack { Button("创建堆叠") { model.createStack() }.buttonStyle(.plain).font(.system(size: 12)) }
-            Button { model.copySelected() } label: { Image(systemName: "doc.on.doc").font(.system(size: 14)) }
-                .buttonStyle(.plain).accessibilityLabel("复制选中").help("复制选中（⌘C）")
+        HStack(spacing: skin.isUnit ? 7 : 14) {
+            Text(skin.itemCount(model.selectedItems.count)).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
+            if model.canStack { Button(skin.label("创建堆叠")) { model.createStack() }.buttonStyle(.plain).font(skin.typography.caption) }
+            Button { model.copySelected() } label: { if skin.isUnit { Text(skin.label("复制")) } else { Image(systemName: "doc.on.doc").font(skin.typography.actionIcon) } }
+                .buttonStyle(.plain).accessibilityLabel(skin.label("复制选中")).help(skin.label("复制选中（⌘C）"))
             if model.selectedItems.allSatisfy({ $0.kind == .image }) {
                 ForEach([("压缩", "arrow.down.right.and.arrow.up.left"), ("尺寸", "arrow.up.left.and.arrow.down.right"), ("格式", "arrow.triangle.2.circlepath"), ("识别文字", "text.viewfinder")], id: \.0) { name, icon in
                     Button { if name == "识别文字" { model.process(model.selectedItems, action: name) }
                         else { imageSettings = ImageSettings(); imageSettings.resize = name == "尺寸"; parameterAction = name }
-                    } label: { VStack(spacing: 4) { Image(systemName: icon); Text(name).font(.system(size: 10)) } }.buttonStyle(.plain)
+                    } label: { VStack(spacing: 4) { if !skin.isUnit { Image(systemName: icon) }; Text(skin.label(name)).font(skin.typography.tiny) } }.buttonStyle(.plain)
                 }
             } else if model.selectedItems.allSatisfy({ $0.kind == .text }) {
                 ForEach(TextAction.allCases) { action in
-                    Button(action.rawValue) { model.process(model.selectedItems, action: action.rawValue) }.font(.system(size: 11)).buttonStyle(.plain)
-                        .disabled(!model.canUseAI).opacity(model.canUseAI ? 1 : 0.35).help(model.aiHelp)
+                    Button(skin.label(action.rawValue)) { model.process(model.selectedItems, action: action.rawValue) }.font(skin.typography.small).buttonStyle(.plain)
+                        .disabled(!model.canUseAI).opacity(model.canUseAI ? 1 : skin.opacity.disabled).help(skin.label(model.aiHelp))
                 }
             } else {
-                Button("导出…") { model.export(model.selected) }.buttonStyle(.plain).font(.system(size: 12))
+                Button(skin.label("导出…")) { model.export(model.selected) }.buttonStyle(.plain).font(skin.typography.caption)
             }
             Divider().frame(height: 24)
-            Button { model.askRemoval(ids: model.selected) } label: { Image(systemName: "trash").font(.system(size: 14)) }.buttonStyle(.plain).accessibilityLabel("删除选中材料")
+            Button { model.askRemoval(ids: model.selected) } label: {
+                if skin.isUnit { Text(skin.label("删除")).foregroundStyle(skin.palette.destructive) }
+                else { Image(systemName: "trash").font(skin.typography.actionIcon) }
+            }.buttonStyle(.plain).accessibilityLabel(skin.label("删除选中材料"))
         }.disabled(model.locked).padding(.horizontal, 18).padding(.vertical, 12)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22)).shadow(color: .black.opacity(0.15), radius: 14, y: 6).padding(.bottom, 14)
+            .background(skin.materials.regular, in: skin.shapes.dialog).skinShadow(skin.shadows.actionBar).padding(.bottom, 14)
+            .overlay { if skin.isUnit { Rectangle().stroke(skin.palette.line, lineWidth: 1).padding(.bottom, 14).allowsHitTesting(false) } }
+    }
+}
+
+private struct WorkbenchHeader: View {
+    @Environment(\.ledgeSkin) private var skin
+    @ObservedObject var model: WorkbenchModel
+    var body: some View {
+        HStack(spacing: 8) {
+            Button { if model.collectionPage == .closed { model.collectionPage = .switcher } else { model.closeCollectionMenu() } } label: {
+                HStack(spacing: 5) {
+                    if skin.isUnit {
+                        GeometryReader { geometry in
+                            Text(model.collectionName).font(Font(SkinFonts.display(size: 88))).lineLimit(1)
+                                .frame(width: geometry.size.width / 0.62, alignment: .leading)
+                                .scaleEffect(x: 0.62, y: 1, anchor: .leading)
+                        }.frame(height: 108)
+                    } else { Text(model.collectionName).lineLimit(1) }
+                    Image(systemName: "chevron.down").font(skin.typography.disclosure)
+                }
+            }.font(skin.typography.bodyStrong).buttonStyle(.plain)
+                .background(CollectionPopover(model: model))
+                .help(model.collectionName)
+            Spacer()
+            if skin.isUnit {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(String(format: "%02d", model.items.count)).font(.system(size: 40, weight: .light, design: .monospaced))
+                    Text(skin.label("材料数")).font(.system(size: 11, design: .monospaced)).tracking(2).foregroundStyle(skin.palette.accent)
+                    Text(skin.language.size(model.items.reduce(0) { $0 + $1.byteCount + ($1.linkPreview?.byteCount ?? 0) }))
+                        .font(.system(size: 11, design: .monospaced)).foregroundStyle(skin.palette.secondary)
+                }.fixedSize()
+            }
+            Button(skin.label("清空")) { model.askRemoval(ids: Set(model.items.map(\.id))) }
+                .font(skin.typography.note).foregroundStyle(skin.isUnit ? AnyShapeStyle(skin.palette.warning) : skin.ink.secondary).buttonStyle(.plain)
+                .padding(skin.isUnit ? 5 : 0)
+                .overlay { if skin.isUnit { Rectangle().stroke(skin.palette.warning, lineWidth: 1) } }
+                .disabled(model.items.isEmpty || model.locked)
+            Button { model.toggleExpanded() } label: {
+                if skin.isUnit && model.isExpanded {
+                    Text(skin.label("收回到屏幕边")).font(skin.typography.captionStrong).padding(6).overlay(Rectangle().stroke(skin.palette.line).allowsHitTesting(false))
+                } else {
+                    Image(systemName: model.isExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                        .font(skin.typography.captionStrong).frame(width: 28, height: 28).background(skin.ink.headerControl, in: skin.shapes.circle)
+                }
+            }.buttonStyle(.plain).accessibilityLabel(skin.label(model.isExpanded ? "收回到屏幕边" : "铺开画布"))
+            Button { model.collapse?() } label: { Image(systemName: model.preferences.dockEdge == .top ? "chevron.up" : model.preferences.dockEdge == .left ? "chevron.left" : "chevron.right").font(skin.typography.captionStrong).frame(width: 28, height: 28).background(skin.ink.headerControl, in: skin.shapes.circle) }
+                .buttonStyle(.plain).accessibilityLabel(skin.label("收起"))
+        }.padding(.horizontal, skin.isUnit ? 32 : 16).frame(height: skin.isUnit ? 128 : 52)
+            .overlay(alignment: .bottom) { if skin.isUnit { skin.palette.accent.frame(height: 1).padding(.horizontal, 32) } }
     }
 }
 
 struct StackTrayOverlay: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let stack: UUID
     var body: some View {
@@ -197,14 +232,14 @@ struct StackTrayOverlay: View {
                 let origin = CGPoint(x: min(max(8, target.x - 166), max(8, geometry.size.width - 340)),
                                      y: min(max(8, preferredY), max(8, geometry.size.height - height - 16)))
                 ZStack(alignment: .topLeading) {
-                    Color(red: 10/255, green: 10/255, blue: 14/255).opacity(0.25).contentShape(Rectangle()).onTapGesture { model.closeStack() }
+                    skin.palette.trayDim.contentShape(Rectangle()).onTapGesture { model.closeStack() }
                     TrayPointer(target: CGPoint(x: target.x - origin.x, y: target.y - origin.y))
-                        .fill(.regularMaterial).frame(width: 332, height: height).offset(x: origin.x, y: origin.y).allowsHitTesting(false)
+                        .fill(skin.materials.regular).frame(width: 332, height: height).offset(x: origin.x, y: origin.y).allowsHitTesting(false)
                     VStack(spacing: 0) {
                         HStack {
-                            Text("\(members.count) 样").font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
+                            Text(skin.itemCount(members.count)).font(skin.typography.captionMedium).foregroundStyle(skin.ink.secondary)
                             Spacer()
-                            Button("解除堆叠") { model.dissolveStack(stack) }.buttonStyle(.plain).font(.system(size: 12)).disabled(model.locked)
+                            Button(skin.label("解除堆叠")) { model.dissolveStack(stack) }.buttonStyle(.plain).font(skin.typography.caption).disabled(model.locked)
                         }.padding(.horizontal, 18).frame(height: 46)
                         ScrollView {
                             LazyVGrid(columns: Array(repeating: GridItem(.fixed(96), spacing: 8), count: 3), spacing: 8) {
@@ -213,33 +248,13 @@ struct StackTrayOverlay: View {
                                 }
                             }.padding(.horizontal, 14).padding(.bottom, 12)
                         }
-                    }.frame(width: 332, height: height).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-                        .overlay { RoundedRectangle(cornerRadius: 18).stroke(.white.opacity(0.18), lineWidth: 0.5).allowsHitTesting(false) }
+                    }.frame(width: 332, height: height).background(skin.materials.regular, in: skin.shapes.floatingCard)
+                        .overlay { skin.shapes.floatingCard.stroke(skin.palette.trayBorder, lineWidth: 0.5).allowsHitTesting(false) }
                         .background(StackTrayGeometry(model: model))
-                        .shadow(color: .black.opacity(0.25), radius: 18, y: 8).offset(x: origin.x, y: origin.y)
+                        .skinShadow(skin.shadows.tray).offset(x: origin.x, y: origin.y)
                 }
             }
         }
-    }
-}
-
-private struct TrayPointer: Shape {
-    let target: CGPoint
-    func path(in rect: CGRect) -> Path {
-        // Keep the small pointer attached to the nearest tray edge when the
-        // tray is shifted into the visible viewport.
-        let center = CGPoint(x: rect.midX, y: rect.midY)
-        let dx = target.x - center.x, dy = target.y - center.y
-        let vertical = abs(dy) / max(1, rect.height) >= abs(dx) / rect.width
-        var path = Path()
-        if vertical {
-            let x = min(rect.maxX - 22, max(22, target.x)), y = dy < 0 ? rect.minY : rect.maxY
-            path.move(to: CGPoint(x: x - 9, y: y)); path.addLine(to: CGPoint(x: x, y: y + (dy < 0 ? -12 : 12))); path.addLine(to: CGPoint(x: x + 9, y: y))
-        } else {
-            let y = min(rect.maxY - 22, max(22, target.y)), x = dx < 0 ? rect.minX : rect.maxX
-            path.move(to: CGPoint(x: x, y: y - 9)); path.addLine(to: CGPoint(x: x + (dx < 0 ? -12 : 12), y: y)); path.addLine(to: CGPoint(x: x, y: y + 9))
-        }
-        path.closeSubpath(); return path
     }
 }
 
@@ -250,30 +265,34 @@ private struct StackTrayGeometry: NSViewRepresentable {
 }
 
 private struct StackTrayCell: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let item: Material
     var body: some View {
         ZStack {
             if item.kind == .link, let image = model.webImages[item.id] {
                 Image(nsImage: image).resizable().frame(width: 96, height: 60).frame(height: 80, alignment: .top)
+                    .modifier(SkinImageTreatment(selected: model.selected.contains(item.id)))
             } else if let image = model.thumbnails[item.id] {
                 Image(nsImage: image).resizable().scaledToFill()
+                    .modifier(SkinImageTreatment(selected: model.selected.contains(item.id)))
             } else if item.kind == .text || item.kind == .link {
-                Text(item.kind == .link ? model.linkTitle(item) : (model.textPreviews[item.id] ?? item.name)).font(.system(size: 10)).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(8)
+                Text(item.kind == .link ? model.linkTitle(item) : (model.textPreviews[item.id] ?? item.name)).font(skin.typography.tiny).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(8)
             } else {
                 VStack(spacing: 4) {
                     Image(nsImage: NSWorkspace.shared.icon(forFile: model.payloadURLs[item.id]?.path ?? "")).resizable().scaledToFit().frame(height: 42)
-                    Text(item.name).font(.system(size: 9)).lineLimit(1)
+                    Text(item.name).font(skin.typography.micro).lineLimit(1)
                 }.padding(6)
             }
-        }.frame(width: 96, height: 80).background(.quaternary).clipped().clipShape(RoundedRectangle(cornerRadius: 9))
-            .overlay { if model.selected.contains(item.id) { RoundedRectangle(cornerRadius: 9).stroke(Color.accentColor, lineWidth: 2).allowsHitTesting(false) } }
+        }.frame(width: 96, height: 80).background(skin.ink.quaternary).clipped().clipShape(skin.shapes.trayItem)
+            .overlay { if model.selected.contains(item.id) { skin.shapes.trayItem.stroke(skin.palette.accent, lineWidth: 2).allowsHitTesting(false) } }
             .overlay { MaterialDragSource(model: model, item: item, inTray: true) }
             .accessibilityLabel(item.name).accessibilityAddTraits(.isButton).accessibilityAction { model.select(item.id) }
     }
 }
 
 struct MaterialView: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let item: Material
     @Environment(\.colorScheme) private var scheme
@@ -281,29 +300,32 @@ struct MaterialView: View {
     var body: some View {
         ZStack {
             content.frame(width: item.size.width, height: item.size.height)
-                .opacity(!model.selected.isEmpty && !model.selected.contains(item.id) ? 0.4 : 1)
+                .opacity(!skin.isUnit && !model.selected.isEmpty && !model.selected.contains(item.id) ? skin.opacity.unselected : 1)
                 .overlay { MaterialDragSource(model: model, item: item) }
-            if model.busy.contains(item.id) { RoundedRectangle(cornerRadius: 12).fill(.black.opacity(0.35)); ProgressView().controlSize(.small) }
+            if model.busy.contains(item.id) { skin.shapes.card.fill(skin.palette.busyScrim); ProgressView().controlSize(.small) }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .contentShape(.interaction, RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(scheme == .dark ? 0.25 : 0.1), radius: 9, y: 5)
+        .clipShape(skin.shapes.card)
+        .contentShape(.interaction, skin.shapes.card)
+        .skinShadow(skin.shadows.card(dark: scheme == .dark))
         .overlay {
-            if model.selected.contains(item.id) { RoundedRectangle(cornerRadius: 12).stroke(Color.accentColor, lineWidth: 3).allowsHitTesting(false) }
+            if skin.isUnit {
+                Rectangle().stroke(skin.palette.line, lineWidth: 1).allowsHitTesting(false)
+                if model.selected.contains(item.id) { UnitLockCorners().stroke(skin.palette.accent, lineWidth: 4).padding(-10).modifier(UnitSignalPulse()).allowsHitTesting(false) }
+            } else if model.selected.contains(item.id) { skin.shapes.card.stroke(skin.palette.accent, lineWidth: 3).allowsHitTesting(false) }
             else if item.kind == .link, item.linkPreview?.state == .pending, model.webProgress[item.id] != nil {
-                RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.85), lineWidth: 1.5).allowsHitTesting(false)
+                skin.shapes.card.stroke(skin.palette.pendingBorder, lineWidth: 1.5).allowsHitTesting(false)
             }
         }
         .overlay(alignment: .top) {
             if item.kind == .link, item.size.height >= 144, !model.missingCopies.contains(item.id),
                let action = LinkCardContent.actionTitle(model.linkPreviewState(item)) {
-                Button(action) { model.generateWebPreview(item) }
-                    .font(.system(size: 11)).buttonStyle(.plain).foregroundStyle(.white.opacity(0.9))
+                Button(skin.label(action)) { model.generateWebPreview(item) }
+                    .font(skin.typography.small).buttonStyle(.plain).foregroundStyle(skin.palette.linkAction)
                     .padding(.horizontal, 9).frame(height: 22)
-                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(.white.opacity(0.14), lineWidth: 0.5))
+                    .background(skin.palette.insetLight, in: skin.shapes.smallControl)
+                    .overlay(skin.shapes.smallControl.stroke(skin.palette.controlBorder, lineWidth: 0.5))
                     .offset(y: (item.size.height - 72) / 2 + 13.5)
-                    .accessibilityLabel(action + "：" + model.linkTitle(item))
+                    .accessibilityLabel(skin.phrase("%@：%@", skin.label(action), model.linkTitle(item)))
             }
         }
         .overlay(alignment: .bottomTrailing) {
@@ -312,74 +334,98 @@ struct MaterialView: View {
                     .frame(width: 16 / model.canvasCoordinateScale, height: 16 / model.canvasCoordinateScale)
             }
         }
-        .overlay(alignment: .bottom) {
+        .overlay(alignment: skin.isUnit ? .bottomLeading : .bottom) {
             if (hovering || model.selected.contains(item.id)) && item.kind == .image {
-                Text(item.name).font(.system(size: 10)).lineLimit(1).padding(.horizontal, 7).padding(.vertical, 3).background(Color.accentColor, in: Capsule()).foregroundStyle(.white).offset(y: 20).allowsHitTesting(false)
+                Text(item.name).font(skin.typography.tiny).lineLimit(1).padding(.horizontal, 7).padding(.vertical, 3)
+                    .background(skin.isUnit ? skin.palette.base : skin.palette.accent, in: skin.shapes.capsule)
+                    .foregroundStyle(skin.isUnit ? skin.palette.accent : skin.palette.light).offset(x: skin.isUnit ? 4 : 0, y: skin.isUnit ? -4 : 20).allowsHitTesting(false)
             } else if model.selected.contains(item.id), item.kind == .link {
                 Text(model.textPreviews[item.id] ?? item.sourceURL ?? item.name)
-                    .font(.system(size: 10.5, weight: .medium, design: .monospaced)).lineLimit(1).truncationMode(.middle)
+                    .font(skin.typography.linkAddress).lineLimit(1).truncationMode(.middle)
                     .padding(.horizontal, 10).padding(.vertical, 3).frame(maxWidth: item.size.width + 84)
-                    .background(Color.accentColor, in: Capsule()).foregroundStyle(.white).offset(y: 28).allowsHitTesting(false)
+                    .background(skin.palette.accent, in: skin.shapes.capsule).foregroundStyle(skin.isUnit ? skin.palette.base : skin.palette.light).offset(y: 28).allowsHitTesting(false)
             }
         }
         .overlay {
             if let feedback = model.webFeedback[item.id] {
-                Text(feedback).font(.system(size: 11)).multilineTextAlignment(.center).padding(8)
-                    .background(.black.opacity(0.8), in: RoundedRectangle(cornerRadius: 7)).foregroundStyle(.white).allowsHitTesting(false)
+                Text(skin.label(feedback)).font(skin.typography.small).multilineTextAlignment(.center).padding(8)
+                    .background(skin.palette.feedbackBackdrop, in: skin.shapes.compactControl).foregroundStyle(skin.palette.light).allowsHitTesting(false)
             }
         }
-        .overlay(alignment: .topTrailing) { if model.errors[item.id] != nil { Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red).background(.background, in: Circle()).help(model.errors[item.id]!) } }
+        .overlay(alignment: .topTrailing) { if let error = model.errors[item.id] { Image(systemName: "exclamationmark.circle.fill").foregroundStyle(skin.palette.destructive).background(skin.ink.background, in: skin.shapes.circle).help(error.rendered(skin.language)) } }
         .overlay(alignment: .topLeading) {
             if model.drafts[item.id]?.answer.isEmpty == false {
-                Label("回答", systemImage: "text.bubble.fill").font(.system(size: 10)).padding(5).background(.regularMaterial, in: Capsule()).help("点开这张材料查看回答").allowsHitTesting(false)
+                Label(skin.label("回答"), systemImage: "text.bubble.fill").font(skin.typography.tiny).padding(5).background(skin.materials.regular, in: skin.shapes.capsule).help(skin.label("点开这张材料查看回答")).allowsHitTesting(false)
             }
         }
         .onHover { hovering = $0 }
-        .accessibilityElement(children: item.kind == .link ? .contain : .ignore).accessibilityLabel((item.kind == .link ? model.linkTitle(item) : item.name) + (model.missingCopies.contains(item.id) ? "，副本已丢失" : "")).accessibilityAddTraits(.isButton)
+        .opacity(skin.isUnit && !model.selected.isEmpty && !model.selected.contains(item.id) ? skin.opacity.unselected : 1)
+        .accessibilityElement(children: item.kind == .link ? .contain : .ignore).accessibilityLabel((item.kind == .link ? model.linkTitle(item) : item.name) + (model.missingCopies.contains(item.id) ? skin.label("，副本已丢失") : "")).accessibilityAddTraits(.isButton)
         .accessibilityAction { model.select(item.id) }
     }
     @ViewBuilder private var content: some View {
         if model.missingCopies.contains(item.id) {
             VStack(spacing: 8) {
-                Image(systemName: "doc.badge.exclamationmark").font(.title2)
+                Image(systemName: "doc.badge.exclamationmark").font(skin.typography.titleIcon)
                 Text(item.name).lineLimit(2)
-                Text("副本已丢失").foregroundStyle(.secondary)
-            }.font(.system(size: 12)).padding(12).frame(maxWidth: .infinity, maxHeight: .infinity).background(.regularMaterial)
+                Text(skin.label("副本已丢失")).foregroundStyle(skin.ink.secondary)
+            }.font(skin.typography.caption).padding(12).frame(maxWidth: .infinity, maxHeight: .infinity).background(skin.materials.regular)
+        } else if item.kind == .text && skin.isUnit {
+            Text(model.textPreviews[item.id] ?? "").font(Font(SkinFonts.display(size: 30))).lineSpacing(4)
+                .frame(width: (item.size.width - 26) / 0.72, height: item.size.height - 26, alignment: .topLeading).clipped()
+                .scaleEffect(x: 0.72, y: 1, anchor: .leading)
+                .frame(width: item.size.width - 26, height: item.size.height - 26, alignment: .leading).padding(13).background(skin.palette.base)
         } else if item.kind == .text {
             let text = model.textPreviews[item.id] ?? ""
             let paragraph = NSMutableParagraphStyle()
             let _ = paragraph.lineSpacing = 4
-            let measured = (text as NSString).boundingRect(with: CGSize(width: item.size.width - 26, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: NSFont.systemFont(ofSize: 12.5), .paragraphStyle: paragraph])
-            Text(text).font(.system(size: 12.5)).lineSpacing(4).foregroundStyle(Color(white: 0.15))
+            let measured = (text as NSString).boundingRect(with: CGSize(width: item.size.width - 26, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: skin.typography.measuredNote, .paragraphStyle: paragraph])
+            Text(text).font(skin.typography.note).lineSpacing(4).foregroundStyle(skin.palette.noteText)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(width: item.size.width - 26, height: item.size.height - 26, alignment: .topLeading).clipped().padding(13)
                 .mask(alignment: .bottom) {
                     VStack(spacing: 0) {
                         Rectangle()
                         if measured.height > item.size.height - 26 {
-                            LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: 28)
+                            LinearGradient(colors: [skin.palette.shade, skin.palette.clear], startPoint: .top, endPoint: .bottom).frame(height: 28)
                         }
                     }
                 }
-                .background(scheme == .dark ? Color(red: 0.984, green: 0.98, blue: 0.965) : Color(red: 1, green: 0.992, blue: 0.965))
+                .background(scheme == .dark ? skin.palette.noteDark : skin.palette.noteLight)
         } else if item.kind == .link {
             LinkCardContent(model: model, item: item).accessibilityHidden(true)
         } else if let thumbnail = model.thumbnails[item.id] {
             Image(nsImage: thumbnail).resizable().scaledToFill().frame(width: item.size.width, height: item.size.height).clipped()
-                .overlay { if item.kind == .video { Image(systemName: "play.circle.fill").font(.system(size: 30)).foregroundStyle(.white.opacity(0.9)) } }
-                .overlay(alignment: .bottomTrailing) { if let duration = model.durations[item.id] { Text(duration).font(.system(size: 10, design: .monospaced)).padding(4).background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 5)).foregroundStyle(.white).padding(5) } }
+                .modifier(SkinImageTreatment(selected: model.selected.contains(item.id)))
+                .overlay { if item.kind == .video { Image(systemName: "play.circle.fill").font(skin.typography.playIcon).foregroundStyle(skin.palette.linkAction) } }
+                .overlay(alignment: .bottomTrailing) { if let duration = model.durations[item.id] { Text(duration).font(skin.typography.mediaTime).padding(4).background(skin.palette.clearDim, in: skin.shapes.badge).foregroundStyle(skin.palette.light).padding(5) } }
+        } else if item.kind == .audio, skin.isUnit {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 3) {
+                    Image(systemName: "play.fill").frame(width: 24)
+                    ForEach(0..<18) { index in Rectangle().frame(width: 3, height: CGFloat(8 + (index * 17 % 27))) }
+                }.foregroundStyle(skin.palette.accent)
+                Text(item.name).font(skin.typography.small).lineLimit(1)
+                Text(model.durations[item.id] ?? "—").font(.system(size: 12, design: .monospaced))
+            }.padding(12).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading).background(skin.palette.base)
         } else if item.kind == .audio, let duration = model.durations[item.id] {
-            HStack(spacing: 10) { Image(systemName: "play.circle.fill").font(.system(size: 28)); VStack(alignment: .leading) { Text(item.name).font(.system(size: 11)).lineLimit(1); Text(duration).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary) } }
-                .padding(12).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading).background(.regularMaterial)
+            HStack(spacing: 10) { Image(systemName: "play.circle.fill").font(skin.typography.mediaIcon); VStack(alignment: .leading) { Text(item.name).font(skin.typography.small).lineLimit(1); Text(duration).font(skin.typography.measurement).foregroundStyle(skin.ink.secondary) } }
+                .padding(12).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading).background(skin.materials.regular)
         } else {
             VStack(spacing: 6) {
-                Image(nsImage: NSWorkspace.shared.icon(for: item.kind == .folder ? .folder : (UTType(filenameExtension: item.filename.pathExtension) ?? .data))).resizable().scaledToFit().frame(width: 66, height: 80)
-                Text(item.name).font(.system(size: 11)).lineLimit(2).multilineTextAlignment(.center)
+                if skin.isUnit {
+                    Text(item.kind == .folder ? skin.label("目录") : item.filename.pathExtension.isEmpty ? skin.label("文件") : item.filename.pathExtension.uppercased())
+                        .font(.custom("Times-Bold", size: 40)).scaleEffect(x: 0.66, y: 1).frame(height: 80)
+                } else {
+                    Image(nsImage: NSWorkspace.shared.icon(for: item.kind == .folder ? .folder : (UTType(filenameExtension: item.filename.pathExtension) ?? .data))).resizable().scaledToFit().frame(width: 66, height: 80)
+                }
+                Text(item.name).font(skin.typography.small).lineLimit(2).multilineTextAlignment(.center)
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
 private struct LinkCardContent: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let item: Material
     static func actionTitle(_ state: LinkPreviewState) -> String? {
@@ -402,88 +448,143 @@ private struct LinkCardContent: View {
                         // Always retain the full page width. Tall cards leave
                         // their normal background below the first-screen image.
                         Image(nsImage: image).resizable().frame(width: item.size.width, height: item.size.width * 800 / 1280)
+                            .modifier(SkinImageTreatment(selected: model.selected.contains(item.id)))
                             .frame(width: item.size.width, height: item.size.height - 72, alignment: .top).clipped()
                     } else {
-                        LinearGradient(colors: [.white.opacity(0.10), .white.opacity(0.04)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        if skin.isUnit { skin.palette.inset }
+                        else { LinearGradient(colors: [skin.palette.stackRear, skin.palette.placeholderLow], startPoint: .topLeading, endPoint: .bottomTrailing) }
                         VStack(spacing: 7) {
-                            Image(systemName: "globe").font(.system(size: 22, weight: .regular)).frame(height: 22)
-                            Text(status).font(.system(size: 11)).lineLimit(1).frame(height: 13)
-                            if Self.actionTitle(state) != nil { Color.clear.frame(height: 22) }
-                        }.foregroundStyle(.white.opacity(0.6)).frame(maxWidth: .infinity, maxHeight: .infinity)
+                            Image(systemName: skin.isUnit && state == .failed ? "exclamationmark.circle" : skin.isUnit && state == .needsLogin ? "lock" : "globe")
+                                .font(skin.typography.linkPlaceholder).frame(height: 22)
+                            Text(skin.label(status)).font(skin.typography.small).lineLimit(1).frame(height: 13)
+                            if Self.actionTitle(state) != nil { skin.palette.clear.frame(height: 22) }
+                        }.foregroundStyle(skin.isUnit && state == .failed ? skin.palette.destructive : skin.palette.linkSecondary).frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }.frame(width: item.size.width, height: item.size.height - 72).clipped()
                     .overlay(alignment: .bottomLeading) {
                         if let progress = model.webProgress[item.id] {
-                            Rectangle().fill(.white.opacity(0.5)).frame(width: item.size.width * progress, height: 2)
+                            Rectangle().fill(skin.palette.previewProgress).frame(width: item.size.width * progress, height: 2)
                         }
                     }
             }
             VStack(alignment: .leading, spacing: 5) {
-                Text(model.linkTitle(item)).font(.system(size: 12.5, weight: .semibold)).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                Text(model.linkTitle(item)).font(skin.typography.cardTitle).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                 Spacer(minLength: 0)
-                Label(model.linkSiteName(item), systemImage: "globe").font(.system(size: 11)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+                Label(skin.isUnit ? model.linkSiteName(item).uppercased() : model.linkSiteName(item), systemImage: "globe")
+                    .font(skin.isUnit ? .system(size: 10, design: .monospaced) : skin.typography.small)
+                    .tracking(skin.isUnit ? 1 : 0).foregroundStyle(skin.isUnit ? skin.palette.accent : skin.palette.linkSecondary).lineLimit(1)
             }.padding(.horizontal, 12).padding(.top, 9).padding(.bottom, 10)
                 .frame(width: item.size.width, height: item.size.height >= 144 ? 72 : item.size.height, alignment: .topLeading)
-        }.foregroundStyle(.white.opacity(0.95)).background(Color(red: 58/255, green: 58/255, blue: 62/255).opacity(0.88))
+        }.foregroundStyle(skin.palette.linkText).background(skin.palette.link)
     }
 }
 private extension String { var pathExtension: String { (self as NSString).pathExtension } }
 
 struct AnswerCard: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let item: Material
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack { Text(model.drafts[item.id]?.action ?? "解释").font(.system(size: 17, weight: .bold)); Spacer(); Button { model.closeAnswer(item.id) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain).accessibilityLabel("关闭回答") }
-            Picker("动作", selection: Binding(get: { model.drafts[item.id]?.action ?? "解释" }, set: { value in if let action = TextAction(rawValue: value) { model.runText(item, action: action) } })) {
-                ForEach(TextAction.allCases) { Text($0.rawValue).tag($0.rawValue) }
-            }.pickerStyle(.segmented).labelsHidden().disabled(model.busy.contains(item.id) || !model.canUseAI)
-                .opacity(model.canUseAI ? 1 : 0.35).help(model.aiHelp)
+            HStack { Group { if skin.isUnit { SkinDisplayText(model.drafts[item.id]?.action ?? "解释", size: 44) } else { Text(skin.label(model.drafts[item.id]?.action ?? "解释")).font(skin.typography.answerTitle) } }; Spacer(); Button { model.closeAnswer(item.id) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(skin.ink.secondary) }.buttonStyle(.plain).accessibilityLabel(skin.label("关闭回答")) }
+            SkinSegments(title: "动作", choices: TextAction.allCases.map { ($0.rawValue, $0.rawValue) }, selection: Binding(get: { model.drafts[item.id]?.action ?? "解释" }, set: { value in if let action = TextAction(rawValue: value) { model.runText(item, action: action) } })).disabled(model.busy.contains(item.id) || !model.canUseAI)
+                .opacity(model.canUseAI ? 1 : skin.opacity.disabled).help(skin.label(model.aiHelp))
             if model.busy.contains(item.id) { ProgressView().frame(maxWidth: .infinity).padding(20) }
-            if let error = model.errors[item.id] { Text(error).font(.system(size: 12)).foregroundStyle(.red).textSelection(.enabled) }
+            if let error = model.errors[item.id] { Text(error.rendered(skin.language)).font(skin.typography.caption).foregroundStyle(skin.palette.destructive).textSelection(.enabled) }
             TextEditor(text: Binding(get: { model.drafts[item.id]?.answer ?? "" }, set: { model.editDraft(item.id, answer: $0) }))
-                .font(.system(size: 13.5)).scrollContentBackground(.hidden).frame(height: 220).disabled(model.busy.contains(item.id))
-                .accessibilityLabel("回答内容")
+                .font(skin.typography.answer).scrollContentBackground(.hidden).frame(height: 220).disabled(model.busy.contains(item.id))
+                .accessibilityLabel(skin.label("回答内容"))
             HStack {
-                TextField("继续追问…", text: Binding(get: { model.drafts[item.id]?.followUp ?? "" }, set: { model.editDraft(item.id, followUp: $0) }))
+                TextField(skin.label("继续追问…"), text: Binding(get: { model.drafts[item.id]?.followUp ?? "" }, set: { model.editDraft(item.id, followUp: $0) }))
                     .textFieldStyle(.plain).onSubmit { followUp() }
-                    .accessibilityLabel("继续追问")
-                Button { followUp() } label: { Image(systemName: "arrow.up.circle.fill") }.buttonStyle(.plain).accessibilityLabel("发送追问")
-            }.padding(10).background(.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10)).disabled(model.busy.contains(item.id) || !model.canUseAI)
-                .opacity(model.canUseAI ? 1 : 0.35).help(model.aiHelp)
+                    .accessibilityLabel(skin.label("继续追问"))
+                Button { followUp() } label: { Image(systemName: "arrow.up.circle.fill") }.buttonStyle(.plain).accessibilityLabel(skin.label("发送追问"))
+            }.padding(10).background(skin.ink.sectionInset, in: skin.shapes.field).disabled(model.busy.contains(item.id) || !model.canUseAI)
+                .opacity(model.canUseAI ? 1 : skin.opacity.disabled).help(skin.label(model.aiHelp))
             HStack {
-                Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.drafts[item.id]?.answer ?? "", forType: .string) } label: { Image(systemName: "doc.on.doc") }.accessibilityLabel("复制回答")
+                Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.drafts[item.id]?.answer ?? "", forType: .string) } label: { Image(systemName: "doc.on.doc") }.accessibilityLabel(skin.label("复制回答"))
                 Spacer()
-                Button("放到画布上") { model.saveAnswer(item) }.buttonStyle(.borderedProminent).tint(.primary)
+                Button(skin.label("放到画布上")) { model.saveAnswer(item) }.buttonStyle(SkinActionButtonStyle(prominent: true)).tint(skin.palette.primary)
             }.disabled((model.drafts[item.id]?.answer.isEmpty ?? true) || model.busy.contains(item.id))
-        }.padding(16).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(.primary.opacity(0.12), lineWidth: 0.5)).shadow(color: .black.opacity(0.2), radius: 18, y: 10)
+        }.padding(16).background(skin.materials.regular, in: skin.shapes.floatingCard)
+            .overlay(skin.shapes.floatingCard.stroke(skin.isUnit ? AnyShapeStyle(skin.palette.line) : skin.ink.floatingBorder, lineWidth: skin.isUnit ? 1 : 0.5)).skinShadow(skin.shadows.answer)
     }
     private func followUp() { if let action = TextAction(rawValue: model.drafts[item.id]?.action ?? "解释") { model.runText(item, action: action, followUp: true) } }
 }
 
 struct ClearConfirmation: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let request: RemovalRequest
-    var body: some View {
+    @ViewBuilder var body: some View {
+        if skin.isUnit { unitConfirmation } else { classicConfirmation }
+    }
+    private var classicConfirmation: some View {
         ZStack {
-            Color.black.opacity(0.5).contentShape(Rectangle())
+            skin.palette.clearDim.contentShape(Rectangle())
             VStack(alignment: .leading, spacing: 15) {
-                Text(request.title).font(.system(size: 19, weight: .semibold))
-                if !request.summary.uniqueIDs.isEmpty {
-                    Text("其中 \(request.summary.uniqueIDs.count) 样只存在于这里，清空后将移除。").font(.system(size: 13))
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(ClearCategory.allCases, id: \.self) { category in
-                            if let values = request.summary.unique[category], !values.isEmpty { HStack { Text(category.rawValue); Spacer(); Text("\(values.count)") } }
-                        }
-                    }.font(.system(size: 12)).padding(12).background(.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
-                    Text("其余 \(request.summary.backedUp) 样是副本，原件不受影响。").font(.system(size: 12)).foregroundStyle(.secondary)
-                } else { Text("这 \(request.summary.backedUp) 样都是导入文件的副本，原件不受影响。").font(.system(size: 13)) }
-                Text("可撤销一次，直到下次清空、删除收集区或退出应用。").font(.system(size: 11)).foregroundStyle(.secondary)
-                Button(role: .destructive) { model.confirmRemoval() } label: { Text(request.collection == nil ? "清空" : "删除收集区").frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).tint(.red).disabled(model.locked)
-                if !request.summary.uniqueIDs.isEmpty { Button { model.export(request.summary.uniqueIDs) } label: { Text("先导出这 \(request.summary.uniqueIDs.count) 样…").frame(maxWidth: .infinity) }.buttonStyle(.bordered) }
-                Button { model.removal = nil } label: { Text("取消").frame(maxWidth: .infinity) }.buttonStyle(.bordered).keyboardShortcut(.cancelAction)
-            }.padding(24).frame(width: 400).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22))
+                Text(skin.language == .simplified ? request.title : request.collection == nil ? skin.phrase("清空“%@”中的%d样材料？", model.collectionName, request.summary.total) : skin.phrase("删除收集区“%@”？", model.index.collections.first { $0.id == request.collection }?.name ?? model.collectionName)).font(skin.typography.confirmationTitle)
+                explanation
+                Button(role: .destructive) { model.confirmRemoval() } label: { Text(skin.label(request.collection == nil ? "清空" : "删除收集区")).frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).tint(skin.palette.destructive).disabled(model.locked)
+                if !request.summary.uniqueIDs.isEmpty { Button { model.export(request.summary.uniqueIDs) } label: { Text(skin.phrase("先导出这 %d 样…", request.summary.uniqueIDs.count)).frame(maxWidth: .infinity) }.buttonStyle(.bordered) }
+                Button { model.removal = nil } label: { Text(skin.label("取消")).frame(maxWidth: .infinity) }.buttonStyle(.bordered).keyboardShortcut(.cancelAction)
+            }.padding(24).frame(width: 400).background(skin.materials.regular, in: skin.shapes.dialog)
         }
     }
+    private var unitConfirmation: some View {
+        GeometryReader { geometry in
+            let headingSize = min(190, max(80, (geometry.size.height - 430) / 2))
+            VStack(alignment: .leading, spacing: 10) {
+                UnitWarningStripe(color: skin.palette.alarm).frame(height: 10)
+                Text(skin.label("警报")).font(.system(size: 15, weight: .bold, design: .monospaced)).tracking(6).foregroundStyle(skin.palette.destructive)
+                    .modifier(UnitSignalPulse(alarm: true))
+                Text(skin.phrase("清空“%@”中的%d样材料？", model.collectionName, request.summary.total)).font(.system(size: 13, design: .monospaced)).lineLimit(2)
+                HStack { Spacer(); VStack(spacing: 0) {
+                    SkinDisplayText(wordmark: .all, size: headingSize).foregroundStyle(skin.palette.primary)
+                    SkinDisplayText(wordmark: .clear, size: headingSize).foregroundStyle(skin.palette.base)
+                        .padding(.horizontal, 12).background(skin.palette.alarm)
+                }; Spacer() }
+                ViewThatFits(in: .vertical) {
+                    VStack(alignment: .leading, spacing: 10) { explanation }.fixedSize(horizontal: false, vertical: true)
+                    ScrollView { VStack(alignment: .leading, spacing: 10) { explanation } }
+                }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                if !request.summary.uniqueIDs.isEmpty {
+                    Button { model.export(request.summary.uniqueIDs) } label: { Text(skin.phrase("先导出这 %d 样…", request.summary.uniqueIDs.count)).frame(maxWidth: .infinity) }
+                        .buttonStyle(SkinActionButtonStyle(destructive: true))
+                }
+                HStack(spacing: 12) {
+                    Button { model.removal = nil } label: { SkinDisplayText("取消", size: 38).foregroundStyle(skin.palette.primary).frame(maxWidth: .infinity) }
+                        .buttonStyle(SkinActionButtonStyle(destructive: true)).keyboardShortcut(.cancelAction)
+                    Button(role: .destructive) { model.confirmRemoval() } label: {
+                        SkinDisplayText(request.collection == nil ? "清空" : "删除收集区", size: 38).frame(maxWidth: .infinity)
+                    }.buttonStyle(SkinActionButtonStyle(prominent: true, destructive: true)).disabled(model.locked)
+                }
+            }.padding(24).frame(width: geometry.size.width, height: geometry.size.height)
+                .background {
+                    skin.palette.base
+                    Path { path in
+                        let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                        for i in 0..<6 {
+                            let angle = Double(i) * .pi / 3
+                            let point = CGPoint(x: center.x + cos(angle) * 180, y: center.y + sin(angle) * 180)
+                            if i == 0 { path.move(to: point) } else { path.addLine(to: point) }
+                        }
+                        path.closeSubpath()
+                    }.stroke(skin.palette.destructive.opacity(0.4), lineWidth: 1)
+                }
+        }.modifier(UnitAlarmFlash())
+    }
+    @ViewBuilder private var explanation: some View {
+                if !request.summary.uniqueIDs.isEmpty {
+                    (skin.language != .simplified || skin.isUnit ? Text(skin.phrase("其中 %d 样只存在于这里，清空后将移除。", request.summary.uniqueIDs.count)) : Text("其中 \(request.summary.uniqueIDs.count) 样只存在于这里，清空后将移除。")).font(skin.typography.body)
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(ClearCategory.allCases, id: \.self) { category in
+                            if let values = request.summary.unique[category], !values.isEmpty { HStack { Text(skin.label(category.rawValue)); Spacer(); Text("\(values.count)") } }
+                        }
+                    }.font(skin.typography.caption).padding(12).background(skin.ink.clearCategories, in: skin.shapes.field)
+                    (skin.language != .simplified || skin.isUnit ? Text(skin.phrase("其余 %d 样是副本，原件不受影响。", request.summary.backedUp)) : Text("其余 \(request.summary.backedUp) 样是副本，原件不受影响。")).font(skin.typography.caption).foregroundStyle(skin.ink.secondary)
+                } else { (skin.language != .simplified || skin.isUnit ? Text(skin.phrase("这 %d 样都是导入文件的副本，原件不受影响。", request.summary.backedUp)) : Text("这 \(request.summary.backedUp) 样都是导入文件的副本，原件不受影响。")).font(skin.typography.body) }
+                (skin.language != .simplified || skin.isUnit ? Text(skin.label("可撤销一次，直到下次清空、删除收集区或退出应用。")) : Text("可撤销一次，直到下次清空、删除收集区或退出应用。")).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
+    }
+
 }

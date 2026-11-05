@@ -1,19 +1,21 @@
 import AppKit
 import SwiftUI
 import Combine
+import QuartzCore
 
 private typealias EdgeViewState<Value> = SwiftUI.State<Value>
 
 @MainActor final class PanelController {
     let model: WorkbenchModel
     var edge: DockEdge
-    func setEdge(_ value: DockEdge) { edge = value; reposition() }
+    func setEdge(_ value: DockEdge) { guard edge != value else { return }; edge = value; reposition() }
     let panel: DumpPanel
     let surface: DropSurface
     var screen: NSScreen
     private var suspended = false
+    private var transitionGeneration = 0
     func suspend() {
-        suspended = true; edgeTimer?.invalidate(); edgeTimer = nil; edgeDrag = nil
+        suspended = true; transitionGeneration += 1; edgeTimer?.invalidate(); edgeTimer = nil; edgeDrag = nil
         panel.dismissPreview(); panel.orderOut(nil)
     }
     func resume(_ mode: PanelMode) { suspended = false; show(mode) }
@@ -100,8 +102,31 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
     }
     func show(_ mode: PanelMode) {
         guard !suspended else { return }
+        let previous = surface.mode
+        transitionGeneration += 1
+        surface.host.layer?.removeAnimation(forKey: "skin-panel")
+        panel.ignoresMouseEvents = false
         surface.mode = mode
         model.canvasVisible = mode == .canvas
+        if model.preferences.skin == .unit01 && mode == .line && previous != .line {
+            let generation = transitionGeneration
+            let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            panel.resignKey(); panel.ignoresMouseEvents = true
+            if !reduced {
+                let frame = panel.frame
+                surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) {
+                    PanelShell(width: max(1, frame.width - (edge == .top ? 48 : 20)), height: max(1, frame.height - (edge == .top ? 20 : 48)), edge: edge) { Color.clear }
+                })
+            }
+            animatePanel(opening: false, reduced: reduced)
+            Task { [weak self] in
+                do { try await Task.sleep(for: .milliseconds(200)) }
+                catch { return }
+                guard let self, self.transitionGeneration == generation, !self.suspended else { return }
+                self.show(.line)
+            }
+            return
+        }
         reposition()
         if mode == .canvas {
             NSApp.activate(ignoringOtherApps: true)
@@ -110,6 +135,23 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
             panel.makeKeyAndOrderFront(nil)
         }
         else { panel.resignKey(); panel.orderFrontRegardless() }
+        if previous == .line && mode != .line && model.preferences.skin == .unit01 {
+            animatePanel(opening: true, reduced: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion)
+        }
+    }
+    private func animatePanel(opening: Bool, reduced: Bool) {
+        // Animate only the presentation layer. AppKit's drag destination stays
+        // under the pointer throughout the slide, including fast Finder drops.
+        surface.host.wantsLayer = true
+        let animation = CABasicAnimation(keyPath: reduced ? "opacity" : edge == .top ? "transform.translation.y" : "transform.translation.x")
+        let travel = edge == .top ? (surface.isFlipped ? -panel.frame.height : panel.frame.height) : edge == .right ? panel.frame.width : -panel.frame.width
+        animation.fromValue = reduced ? (opening ? 0.0 : 1.0) : (opening ? travel : 0)
+        animation.toValue = reduced ? (opening ? 1.0 : 0.0) : (opening ? 0 : travel)
+        animation.duration = opening && !reduced ? 0.32 : 0.2
+        animation.timingFunction = CAMediaTimingFunction(controlPoints: 0.9, 0, 0.1, 1)
+        animation.isRemovedOnCompletion = opening
+        animation.fillMode = .forwards
+        surface.host.layer?.add(animation, forKey: "skin-panel")
     }
     private func reposition() {
         func identifier(_ screen: NSScreen) -> Int { (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.intValue ?? -1 }
@@ -135,9 +177,9 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
     }
     private func updateRoot() {
         switch surface.mode {
-        case .canvas: surface.host.rootView = AnyView(WorkbenchView(model: model, width: max(1, panel.frame.width - (edge == .top ? 48 : 20)), height: max(1, panel.frame.height - (edge == .top ? 20 : 48))))
-        case .drop: surface.host.rootView = AnyView(DropView(model: model))
-        case .line: surface.host.rootView = AnyView(EdgeLineView(model: model, open: { [weak self] in self?.show(.canvas) }))
+        case .canvas: surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) { WorkbenchView(model: model, width: max(1, panel.frame.width - (edge == .top ? 48 : 20)), height: max(1, panel.frame.height - (edge == .top ? 20 : 48))) })
+        case .drop: surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) { DropView(model: model) })
+        case .line: surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) { EdgeLineView(model: model, open: { [weak self] in self?.show(.canvas) }) })
         }
     }
     private func handle(_ event: NSEvent) -> NSEvent? {
@@ -180,16 +222,17 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
 }
 
 struct EdgeLineView: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     let open: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @SkinReducedMotion private var reduceMotion
     @EdgeViewState private var hovering = false
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1/30, paused: reduceMotion || model.edgeState == .quiet)) { context in
+        TimelineView(.animation(minimumInterval: LedgeSkin.classic.motion.edgeFrameInterval, paused: reduceMotion || model.edgeState == .quiet)) { context in
             EdgeLineIndicator(state: model.edgeState, time: context.date.timeIntervalSinceReferenceDate, reduceMotion: reduceMotion, hovering: hovering, edge: model.preferences.dockEdge)
         }.frame(width: model.preferences.dockEdge == .top ? 160 : 48, height: model.preferences.dockEdge == .top ? 48 : 160, alignment: model.preferences.dockEdge == .top ? .top : model.preferences.dockEdge == .left ? .leading : .trailing).contentShape(Rectangle()).onTapGesture(perform: open)
             .onHover { hovering = $0 }
-            .accessibilityElement(children: .ignore).accessibilityLabel("打开 \(AppIdentity.name) 收集区").accessibilityAddTraits(.isButton).accessibilityAction { open() }
+            .accessibilityElement(children: .ignore).accessibilityLabel(skin.phrase("打开 %@ 收集区", skin.label("搁这儿"))).accessibilityAddTraits(.isButton).accessibilityAction { open() }
     }
 }
 
@@ -214,9 +257,9 @@ struct EdgeLineView: View {
     private var preferenceObservation: AnyCancellable?
     func applicationDidFinishLaunching(_ notification: Notification) {
         UIFocusTrace.start()
+        let preferences = AppPreferences(defaults: .standard)
         do {
-            let root = try LibraryLocation.open()
-            let preferences = AppPreferences(defaults: .standard)
+            let root = try LibraryLocation.open(language: preferences.interfaceLanguage)
             let library = try Library(root: root, limits: preferences.capacity)
             let model = WorkbenchModel(library: library, webSnapshot: { url, manual, progress in
                 try await WebSnapshotCapture().capture(url, permitsOneTime: manual, progress: progress)
@@ -231,7 +274,7 @@ struct EdgeLineView: View {
             shortcut.start()
             let settingsWindow = SettingsController(model: model, shortcut: shortcut, login: LoginPreference())
             settingsController = settingsWindow; settingsAction = { [weak settingsWindow] in settingsWindow?.present() }
-            let aboutWindow = AboutController { [weak self] in self?.presentOnboarding(automatic: false) }
+            let aboutWindow = AboutController(preferences: preferences) { [weak self] in self?.presentOnboarding(automatic: false) }
             aboutController = aboutWindow; aboutAction = { [weak aboutWindow] in aboutWindow?.present() }
             preferenceObservation = preferences.objectWillChange.sink { [weak self, weak model] in
                 Task { @MainActor in
@@ -267,7 +310,7 @@ struct EdgeLineView: View {
                 }
             }
         } catch {
-            let alert = NSAlert(); alert.messageText = "\(AppIdentity.name)无法打开收集区"; alert.informativeText = error.localizedDescription
+            let alert = NSAlert(); alert.messageText = preferences.interfaceLanguage.phrase("%@无法打开收集区", preferences.interfaceLanguage.label("搁这儿")); alert.informativeText = InterfaceText(error: error).rendered(preferences.interfaceLanguage)
             alert.runModal(); NSApp.terminate(nil)
         }
     }
@@ -288,7 +331,7 @@ struct EdgeLineView: View {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         let icon = NSImage(named: "MenuBarTemplate")
         icon?.isTemplate = true; icon?.size = NSSize(width: 16, height: 16)
-        item.button?.image = icon; item.button?.setAccessibilityLabel(AppIdentity.name)
+        item.button?.image = icon
         let menu = NSMenu()
         menu.autoenablesItems = false
         for (entry, selector) in [(showItem, #selector(open)), (addItem, #selector(addFiles)), (undoItem, #selector(undo))] {
@@ -297,25 +340,31 @@ struct EdgeLineView: View {
         menu.addItem(.separator())
         if let model {
             let aiItem = NSMenuItem()
-            let host = NSHostingView(rootView: AIMenuRow(model: model)); host.frame = NSRect(x: 0, y: 0, width: 260, height: 57)
+            let host = NSHostingView(rootView: AIMenuRow(model: model, preferences: model.preferences)); host.frame = NSRect(x: 0, y: 0, width: 260, height: 57)
             aiItem.view = host; menu.addItem(aiItem)
         }
-        recheckItem.title = "重新检查"; recheckItem.action = #selector(recheck); recheckItem.target = self; menu.addItem(recheckItem)
+        recheckItem.action = #selector(recheck); recheckItem.target = self; menu.addItem(recheckItem)
         menu.addItem(.separator())
-        let settings = NSMenuItem(title: "设置…", action: #selector(settings), keyEquivalent: ","); settings.target = self; menu.addItem(settings)
-        let about = NSMenuItem(title: "关于 \(AppIdentity.name)", action: #selector(about), keyEquivalent: ""); about.target = self; menu.addItem(about)
+        let settings = NSMenuItem(title: "", action: #selector(settings), keyEquivalent: ","); settings.tag = 1; settings.target = self; menu.addItem(settings)
+        let about = NSMenuItem(title: "", action: #selector(about), keyEquivalent: ""); about.tag = 2; about.target = self; menu.addItem(about)
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "退出 \(AppIdentity.name)", action: #selector(quit), keyEquivalent: "q"); quit.target = self; menu.addItem(quit)
+        let quit = NSMenuItem(title: "", action: #selector(quit), keyEquivalent: "q"); quit.tag = 3; quit.target = self; menu.addItem(quit)
         menu.delegate = self; item.menu = menu; statusItem = item
         updateMenu()
     }
     private func updateMenu() {
         guard let model else { return }
-        showItem.title = "\(model.canvasVisible ? "收起" : "显示") \(AppIdentity.name)"
+        let language = model.preferences.interfaceLanguage, name = language.label("搁这儿")
+        statusItem?.button?.setAccessibilityLabel(name)
+        statusItem?.menu?.item(withTag: 1)?.title = language.label("设置…")
+        statusItem?.menu?.item(withTag: 2)?.title = language.phrase("关于 %@", name)
+        statusItem?.menu?.item(withTag: 3)?.title = language.phrase("退出 %@", name)
+        recheckItem.title = language.label("重新检查")
+        showItem.title = language.phrase(model.canvasVisible ? "收起 %@" : "显示 %@", name)
         showItem.keyEquivalent = model.preferences.shortcut?.menuKey ?? ""
         showItem.keyEquivalentModifierMask = NSEvent.ModifierFlags(rawValue: model.preferences.shortcut?.modifiers ?? 0)
-        addItem.title = "添加文件到「\(model.collectionName)」…"
-        undoItem.title = model.undoTitle ?? "撤销"; undoItem.isHidden = model.undoTitle == nil; undoItem.isEnabled = !model.locked
+        addItem.title = language.phrase("添加文件到「%@」…", model.collectionName)
+        undoItem.title = model.undoTitle ?? language.label("撤销"); undoItem.isHidden = model.undoTitle == nil; undoItem.isEnabled = !model.locked
         recheckItem.isHidden = model.codexAvailable != false; recheckItem.isEnabled = !model.checkingCodex
     }
     func menuWillOpen(_ menu: NSMenu) { updateMenu() }

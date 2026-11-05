@@ -284,17 +284,22 @@ struct ScaledCanvasContent: View {
     let size: CGSize
     let zoom: Double
     var body: some View {
-        CanvasContent(model: model, size: size)
+        SkinRoot(preferences: model.preferences, scanlines: false, decorateWindow: false) { CanvasContent(model: model, size: size) }
             .scaleEffect(zoom, anchor: .topLeading)
             .frame(width: size.width * zoom, height: size.height * zoom, alignment: .topLeading)
     }
 }
 
 struct CanvasContent: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     @CanvasLocalState private var capsuleWidth: CGFloat = 0
+    @CanvasLocalState private var landing: Set<UUID> = []
+    @SkinReducedMotion private var reduced
     let size: CGSize
     var body: some View {
+        let items = model.canvasItems
+        let ids = items.map(\.id)
         ZStack(alignment: .topLeading) {
             CanvasSelectionSurface(model: model).frame(width: size.width, height: size.height)
             if model.dragging != nil || model.resizing != nil {
@@ -302,47 +307,51 @@ struct CanvasContent: View {
                     let visible = model.visibleCanvasRect
                     for x in stride(from: max(24, floor(visible.minX / 24) * 24), through: visible.maxX, by: 24) {
                         for y in stride(from: max(24, floor(visible.minY / 24) * 24), through: visible.maxY, by: 24) {
-                            context.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 2, height: 2)), with: .color(.primary.opacity(0.14)))
+                            context.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 2, height: 2)), with: .color(skin.palette.gridDot))
                         }
                     }
                 }.allowsHitTesting(false)
             }
             if let point = model.dragPoint, let id = model.dragging, let item = model.items.first(where: { $0.id == id }) {
                 ForEach(CardStacks.visible(model.dragMembers)) { member in
-                    RoundedRectangle(cornerRadius: 12).stroke(.primary.opacity(0.45), style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                    skin.shapes.card.stroke(skin.ink.dragOutline, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
                         .frame(width: member.size.width, height: member.size.height)
-                        .offset(x: member.position.x + point.x - item.position.x, y: member.position.y + point.y - item.position.y).allowsHitTesting(false)
+                        .offset(x: member.position.x + (skin.isUnit ? 0 : point.x - item.position.x), y: member.position.y + (skin.isUnit ? 0 : point.y - item.position.y)).allowsHitTesting(false).zIndex(skin.isUnit ? 2 : 0)
                 }
             }
-            ForEach(model.canvasItems) { item in
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                 ZStack(alignment: .topTrailing) {
                     if item.stackID != nil {
-                        RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.10))
-                            .overlay { RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.28), lineWidth: 0.5) }.offset(x: 12, y: 12)
-                        RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.16))
-                            .overlay { RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.28), lineWidth: 0.5) }.offset(x: 6, y: 6)
+                        skin.shapes.card.fill(skin.palette.stackRear)
+                            .overlay { skin.shapes.card.stroke(skin.palette.stackBorder, lineWidth: 0.5) }.offset(x: 12, y: 12)
+                        skin.shapes.card.fill(skin.palette.stackFront)
+                            .overlay { skin.shapes.card.stroke(skin.palette.stackBorder, lineWidth: 0.5) }.offset(x: 6, y: 6)
                     }
                     MaterialView(model: model, item: item)
+                    if skin.isUnit && landing.contains(item.id) { UnitLandingLock() }
                     if let stack = item.stackID {
-                        Text("\(model.stackMembers(stack).count)").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
-                            .padding(.horizontal, 7).frame(height: 22).background(Color(red: 60/255, green: 60/255, blue: 66/255).opacity(0.88), in: Capsule())
+                        Text("\(model.stackMembers(stack).count)").font(skin.typography.captionStrong).foregroundStyle(skin.palette.light)
+                            .padding(.horizontal, 7).frame(height: 22).background(skin.palette.stackBadge, in: skin.shapes.capsule)
                             .offset(x: 7, y: -9).allowsHitTesting(false)
                         if model.stackHoverID == stack && model.stackDropReady {
-                            RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.24), lineWidth: 12)
-                                .overlay { RoundedRectangle(cornerRadius: 12).stroke(.white, lineWidth: 2) }.allowsHitTesting(false)
+                            skin.shapes.card.stroke(skin.palette.stackHalo, lineWidth: 12)
+                                .overlay { skin.shapes.card.stroke(skin.isUnit ? skin.palette.accent : skin.palette.light, lineWidth: 2) }.allowsHitTesting(false)
                         }
                     }
                 }.frame(width: item.size.width, height: item.size.height)
-                    .opacity(item.stackID != nil && model.openStackID == item.stackID ? 0.35 : 1)
+                    .opacity(item.stackID != nil && model.openStackID == item.stackID ? skin.opacity.disabled : 1)
+                    .opacity(skin.isUnit && model.dragging != nil && (model.dragging == item.id || model.draggedIDs.contains(item.id)) ? 0.15 : 1)
                     .offset(x: item.position.x, y: item.position.y)
                     .zIndex(model.resizing?.id == item.id ? 1 : 0)
+                    .transition(!skin.isUnit ? .identity : .asymmetric(insertion: .identity, removal: reduced ? .opacity : .modifier(active: UnitRemovalEffect(phase: 1), identity: UnitRemovalEffect(phase: 0)).animation(.linear(duration: 0.27).delay(Double(min(index, 5)) * 0.05))))
             }
             if let original = model.resizing, let current = model.resizeSize {
-                RoundedRectangle(cornerRadius: 12).stroke(.white, style: StrokeStyle(lineWidth: 1 / model.canvasCoordinateScale, dash: [5, 4]))
+                skin.shapes.card.stroke(skin.palette.light, style: StrokeStyle(lineWidth: 1 / model.canvasCoordinateScale, dash: [5, 4]))
                     .frame(width: original.size.width, height: original.size.height)
                     .offset(x: original.position.x, y: original.position.y).allowsHitTesting(false).zIndex(2)
                 Text("\(Int(current.width.rounded())) × \(Int(current.height.rounded()))")
-                    .font(.system(size: 11, design: .monospaced)).padding(6).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+                    .font(skin.typography.measurement).padding(6).background(skin.materials.regular, in: skin.shapes.smallControl)
+                    .overlay { if skin.isUnit { Rectangle().stroke(skin.palette.accent, lineWidth: 1) } }
                     .scaleEffect(1 / model.canvasCoordinateScale, anchor: .topLeading)
                     .offset(x: model.resizePointer.x + 14 / model.canvasCoordinateScale, y: model.resizePointer.y + 14 / model.canvasCoordinateScale)
                     .allowsHitTesting(false).zIndex(30)
@@ -350,15 +359,21 @@ struct CanvasContent: View {
             if let id = model.pasteActions, let item = model.items.first(where: { $0.id == id }) {
                 HStack(spacing: 2) {
                     ForEach(TextAction.allCases) { action in
-                        Button(action.rawValue) { model.runText(item, action: action) }
-                            .font(.system(size: 11)).buttonStyle(.bordered).tint(action == .explain ? .primary : nil)
-                            .disabled(!model.canUseAI).opacity(model.canUseAI ? 1 : 0.35).help(model.aiHelp)
+                        Button(skin.label(action.rawValue)) { model.runText(item, action: action) }
+                            .font(skin.typography.small).buttonStyle(SkinActionButtonStyle(prominent: skin.isUnit && action == .explain)).tint(action == .explain ? skin.palette.primary : nil)
+                            .disabled(!model.canUseAI).opacity(model.canUseAI ? 1 : skin.opacity.disabled).help(skin.label(model.aiHelp))
                     }
-                    Button("只放进来") { model.pasteActions = nil }.buttonStyle(.plain).font(.system(size: 11))
-                    if model.canUseAI { Text("↩").font(.system(size: 10)).foregroundStyle(.secondary) }
-                }.padding(6).background(.regularMaterial, in: Capsule())
+                    Button(skin.label("只放进来")) { model.pasteActions = nil }.buttonStyle(.plain).font(skin.typography.small)
+                    if model.canUseAI { Text("↩").font(skin.typography.tiny).foregroundStyle(skin.ink.secondary) }
+                }.padding(6).background(skin.materials.regular, in: skin.shapes.capsule)
+                    .overlay(alignment: .bottomLeading) {
+                        if skin.isUnit && !model.canUseAI {
+                            Text(skin.label(model.aiHelp)).font(skin.typography.small).foregroundStyle(skin.palette.secondary)
+                                .padding(3).background(skin.palette.base).offset(y: 18).allowsHitTesting(false)
+                        }
+                    }
                     .fixedSize()
-                    .background { GeometryReader { geometry in Color.clear.onAppear { capsuleWidth = geometry.size.width }.onChange(of: geometry.size.width) { _, width in capsuleWidth = width } } }
+                    .background { GeometryReader { geometry in skin.palette.clear.onAppear { capsuleWidth = geometry.size.width }.onChange(of: geometry.size.width) { _, width in capsuleWidth = width } } }
                     .offset(x: max(4, min(item.position.x, size.width - capsuleWidth - 4)), y: max(4, item.position.y - 44))
             }
             if let id = model.activeAnswer, let item = model.items.first(where: { $0.id == id }), model.drafts[id] != nil {
@@ -372,15 +387,25 @@ struct CanvasContent: View {
                         path.move(to: CGPoint(x: point.x < anchor.position.x ? anchor.position.x : anchor.rect.maxX, y: anchor.position.y + 32))
                         path.addLine(to: CGPoint(x: point.x < anchor.position.x ? point.x + 284 : point.x, y: point.y + 32))
                     }
-                }.stroke(.primary.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [3, 3])).allowsHitTesting(false)
+                }.stroke(skin.ink.answerConnector, style: StrokeStyle(lineWidth: 1, dash: [3, 3])).allowsHitTesting(false)
                 AnswerCard(model: model, item: item).frame(width: 284).offset(x: point.x, y: point.y).zIndex(10)
             }
             if let rect = model.selectionRect {
-                Rectangle().fill(Color.accentColor.opacity(0.1))
-                    .overlay { Rectangle().stroke(Color.accentColor, lineWidth: 1 / model.canvasCoordinateScale) }
+                Rectangle().fill(skin.palette.marquee)
+                    .overlay { Rectangle().stroke(skin.palette.accent, lineWidth: 1 / model.canvasCoordinateScale) }
                     .frame(width: rect.size.width, height: rect.size.height)
                     .offset(x: rect.origin.x, y: rect.origin.y).allowsHitTesting(false).zIndex(20)
             }
         }.frame(width: size.width, height: size.height, alignment: .topLeading)
+            .onChange(of: ids) { previous, current in
+                if skin.isUnit { landing = Set(current).subtracting(previous) }
+            }
+            .task(id: landing) {
+                guard !landing.isEmpty else { return }
+                do { try await Task.sleep(for: .milliseconds(reduced ? 200 : 350)); landing = [] } catch { }
+            }
+            .transaction(value: ids) { transaction in
+                if skin.isUnit { transaction.animation = .linear(duration: reduced ? 0.2 : 0.27) }
+            }
     }
 }

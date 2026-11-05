@@ -31,14 +31,30 @@ import AppKit
         defer { try? FileManager.default.removeItem(at: root) }
         let domain = "local.ledge.test.\(UUID())", defaults = UserDefaults(suiteName: domain)!
         defer { defaults.removePersistentDomain(forName: domain) }
-        let prefs = AppPreferences(defaults: defaults), backend = SettingsBackend()
+        let prefs = AppPreferences(defaults: defaults, preferredLanguages: ["zh-Hant-TW"]), backend = SettingsBackend()
+        precondition(prefs.skin == .classic)
+        precondition(prefs.interfaceLanguage == .traditional)
+        prefs.language = .english
+        precondition(AppPreferences(defaults: defaults, preferredLanguages: ["zh"]).interfaceLanguage == .english)
+        prefs.skin = .unit01
+        prefs.language = .chinese
+        precondition(prefs.skin == .unit01 && prefs.interfaceLanguage == .traditional)
+        defaults.set("unknown", forKey: "interfaceLanguage")
+        precondition(AppPreferences(defaults: defaults, preferredLanguages: ["fr"]).interfaceLanguage == .english)
+        precondition(AppPreferences(defaults: defaults).skin == .unit01)
+        defaults.set("unknown", forKey: "skin")
+        precondition(AppPreferences(defaults: defaults).skin == .classic)
+        prefs.skin = .classic
+        precondition(SkinChoice.unit01.title(language: "zh-Hans") == "初号机")
+        precondition(SkinChoice.unit01.title(language: "zh-Hant") == "初號機")
+        precondition(SkinChoice.unit01.title(language: "en") == "Unit-01")
         let library = try Library(root: root)
         let item = try await library.importText("synthetic", collection: await library.index.currentCollection)
         let model = WorkbenchModel(library: library, bridge: backend, preferences: prefs)
         await model.refresh()
         prefs.aiEnabled = false
         model.runText(item, action: .explain)
-        precondition(model.busy.isEmpty && backend.calls == 0 && model.aiHelp == "AI 已关闭")
+        precondition(model.busy.isEmpty && backend.calls == 0 && model.aiHelp == "智能处理已关闭")
         precondition(!AppPreferences(defaults: defaults).aiEnabled)
         prefs.aiEnabled = true
         await model.checkCodex()
@@ -58,6 +74,9 @@ import AppKit
         model.runText(item, action: .explain)
         while backend.waiting == nil { try await Task.sleep(for: .milliseconds(10)) }
         model.runText(queued, action: .explain)
+        let inFlightItems = model.items, inFlightBusy = model.busy
+        for skin in [SkinChoice.unit01, .classic, .unit01] { prefs.skin = skin }
+        precondition(model.items == inFlightItems && model.busy == inFlightBusy && backend.calls == 2)
         prefs.aiEnabled = false
         backend.waiting?.resume(returning: "in-flight reply completed"); backend.waiting = nil
         while !model.busy.isEmpty { try await Task.sleep(for: .milliseconds(10)) }
@@ -88,12 +107,18 @@ import AppKit
         model.askRemoval(ids: [queued.id]); await model.waitForWrites()
         model.confirmRemoval(); await model.waitForWrites()
         precondition(model.undoTitle == "撤销删除 1 样材料")
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let undo = try encoder.encode(model.index.undo), current = model.index.currentCollection
+        prefs.skin = .classic; prefs.skin = .unit01
+        let switchedUndo = try encoder.encode(model.index.undo)
+        precondition(switchedUndo == undo && model.index.currentCollection == current)
         model.undo(); await model.waitForWrites(); precondition(model.undoTitle == nil)
         model.askRemoval(ids: Set(model.items.map(\.id))); await model.waitForWrites()
         model.confirmRemoval(); await model.waitForWrites()
         precondition(model.undoTitle == "撤销清空「\(model.collectionName)」")
         model.undo(); await model.waitForWrites()
         precondition(model.undoTitle == nil && model.items.count == preserved.items.count)
+        print("PASS skin default, persistence, unknown-value fallback, labels, switching during processing and undo preservation")
         print("PASS conditional menu undo labels and shared material/clear undo")
         print("PASS shortcut registration conflict preserves old binding, replacement, clearing persistence; live capacity reduction preserves old materials")
         print("PASS AI toggle persistence, disabled gating, unavailable state and recheck; synthetic backend only")
