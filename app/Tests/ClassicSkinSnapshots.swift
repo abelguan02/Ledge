@@ -26,6 +26,9 @@ import CryptoKit
         try FileManager.default.createDirectory(at: fixture, withIntermediateDirectories: true)
         let library = try Library(root: fixture, makeBookmark: { _ in Data() })
         let preferences = AppPreferences()
+        #if UNIT_SKIN
+        preferences.skin = .unit01
+        #endif
         preferences.automaticWebPreviews = false
         let model = WorkbenchModel(library: library, bridge: SnapshotBackend(), preferences: preferences)
         model.index.collections[0].name = "灵感 · Classic"
@@ -50,7 +53,12 @@ import CryptoKit
             for scale: CGFloat in [1, 2] {
                 preferences.aiEnabled = true
                 func save<V: View>(_ name: String, _ view: V, _ width: CGFloat, _ height: CGFloat) throws {
-                    let renderer = ImageRenderer(content: view.frame(width: width, height: height)
+                    #if UNIT_SKIN
+                    let presented = AnyView(SkinRoot(preferences: preferences, scanlines: !(view is DropView)) { view }.environment(\.skinMotionOverride, true))
+                    #else
+                    let presented = AnyView(view)
+                    #endif
+                    let renderer = ImageRenderer(content: presented.frame(width: width, height: height)
                         .environment(\.colorScheme, scheme).environment(\.displayScale, scale)
                         .transaction { $0.animation = nil })
                     renderer.scale = scale
@@ -64,7 +72,11 @@ import CryptoKit
                 for edge in DockEdge.allCases {
                     for (name, state) in [("quiet", EdgeState.quiet), ("processing", .processing), ("attention", .attention), ("failed", .failed)] {
                         for reduced in [false, true] {
+                            #if UNIT_SKIN
+                            try save("tab-\(edge)-\(name)-\(reduced)", EdgeLineIndicator(state: state, time: 0.6, reduceMotion: reduced, hovering: true, edge: edge), 160, 160)
+                            #else
                             try save("tab-\(edge)-\(name)-\(reduced)", EdgeLineIndicator(state: state, time: 0.6, reduceMotion: reduced, hovering: true, edge: edge), 100, 100)
+                            #endif
                         }
                     }
                     preferences.dockEdge = edge

@@ -27,6 +27,29 @@ private struct SkinProbe: NSViewRepresentable {
     static func main() async throws {
         NSApplication.shared.setActivationPolicy(.prohibited)
         NSApp.appearance = NSAppearance(named: .aqua)
+        let motion = LedgeSkin.unit01.motion
+        for time in [0.0, 0.36, 0.7, 1.06, 2.25, 4.65] {
+            precondition(motion.signalOpacity(time: time, alarm: true, reduced: true) == 1)
+            precondition(motion.signalOpacity(time: time, alarm: false, reduced: true) == 1)
+        }
+        for time in [2.25, 4.65] { precondition(motion.signalOpacity(time: time, alarm: false, reduced: false) < 1) }
+        for time in [0.36, 1.06] { precondition(motion.signalOpacity(time: time, alarm: true, reduced: false) < 1) }
+        func luminance(_ color: Color) -> Double {
+            let rgb = NSColor(color).usingColorSpace(.sRGB)!
+            func channel(_ c: CGFloat) -> Double { c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
+            return 0.2126 * channel(rgb.redComponent) + 0.7152 * channel(rgb.greenComponent) + 0.0722 * channel(rgb.blueComponent)
+        }
+        func contrast(_ a: Color, _ b: Color) -> Double {
+            let x = luminance(a), y = luminance(b)
+            return (max(x, y) + 0.05) / (min(x, y) + 0.05)
+        }
+        let palette = LedgeSkin.unit01.palette
+        for color in [palette.primary, palette.secondary, palette.warning, palette.accent, palette.destructive] {
+            precondition(contrast(color, palette.inset) >= 4.5)
+        }
+        precondition(contrast(palette.base, palette.alarm) >= 3)
+        precondition(contrast(palette.primary, palette.armor) >= 4.5)
+        print("PASS signal periods, steady reduced-motion signals and text palette contrast")
         let root = URL(fileURLWithPath: CommandLine.arguments[1])
         let library = try Library(root: root.appendingPathComponent("library"), makeBookmark: { _ in Data() })
         let group = await library.index.currentCollection
@@ -39,6 +62,8 @@ private struct SkinProbe: NSViewRepresentable {
         let stack = model.items.first!.stackID!
         model.openStack(stack)
         model.drafts[a.id] = AnswerDraft(sourceID: a.id, answer: "uncommitted synthetic input")
+        model.isExpanded = true
+        model.viewportStates[model.viewportKey] = CanvasViewportState(zoom: 1.25, origin: CGPoint(x: 120, y: 80))
         let probe = ProbeState()
         let host = NSHostingView(rootView: SkinRoot(preferences: preferences, scanlines: false) {
             WorkbenchView(model: model)
@@ -62,6 +87,7 @@ private struct SkinProbe: NSViewRepresentable {
         let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
         let index = try encoder.encode(model.index)
         let viewport = scroll.visibleCanvasRect
+        precondition(viewport.minX > 0 && viewport.minY > 0 && scroll.zoom == 1.25)
         // Preserve a real native text editor's in-progress state as well as the
         // canvas identity. Local first-responder changes never activate a window.
         guard let editor = descendants(host).compactMap({ $0 as? NSTextView }).first(where: { $0.isEditable && $0.string == "uncommitted synthetic input" }) else { fatalError("Missing production answer editor") }
@@ -72,7 +98,8 @@ private struct SkinProbe: NSViewRepresentable {
             try await settle()
             precondition(model.canvasDocumentView === document && scroll.documentView === document)
             precondition(descendants(host).contains { $0 === scroll })
-            precondition(scroll.visibleCanvasRect == viewport && model.openStackID == stack)
+            precondition(scroll.visibleCanvasRect.origin == viewport.origin && scroll.visibleCanvasRect.width == viewport.width && model.openStackID == stack)
+            precondition(scroll.zoom == 1.25)
             let currentIndex = try encoder.encode(model.index)
             precondition(currentIndex == index)
             precondition(editor.string == "uncommitted synthetic input" && editor.selectedRange() == NSRange(location: 3, length: 4))
@@ -154,7 +181,52 @@ private struct SkinProbe: NSViewRepresentable {
                 .write(to: root.appendingPathComponent("settings-\(choice).png"))
         }
         try checkCoffee(preferences: preferences, root: root)
+        let photo = Bundle.main.url(forResource: "SyntheticTabletop", withExtension: "jpg")!
+        let item = try await library.importFile(photo, collection: group, kind: .image)
+        await model.refresh()
+        let stored = model.payloadURLs[item.id]!
+        let original = try Data(contentsOf: photo)
+        var renders: [Data] = []
+        for (choice, selected) in [(SkinChoice.classic, true), (.unit01, false), (.unit01, true)] {
+            preferences.skin = choice; model.selected = selected ? [item.id] : []
+            let renderer = ImageRenderer(content: SkinRoot(preferences: preferences, scanlines: false) {
+                MaterialView(model: model, item: item).snapshotArtwork
+            })
+            let image = renderer.cgImage!
+            let png = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!
+            renders.append(png)
+            try png.write(to: root.appendingPathComponent("tabletop-\(choice)-\(selected).png"))
+        }
+        let payload = try Data(contentsOf: stored)
+        precondition(renders[0] == renders[2] && renders[0] != renders[1] && payload == original)
+        print("PASS production imported thumbnail: Unit idle toned, selected matches original rendering; stored copy unchanged")
+        try checkLanguages(preferences: preferences, model: model, root: root)
         print("PASS bundled renamed Black font, Songti fallback, identical fixed-dark renders, both General settings; no visible windows or network")
+    }
+
+    static func checkLanguages(preferences: AppPreferences, model: WorkbenchModel, root: URL) throws {
+        preferences.skin = .unit01
+        model.index.collections[0].name = String(String(repeating: "海貓 · Collection 龘 ", count: 8).prefix(80))
+        for (id, expected) in [("en-US", "General"), ("zh-Hant-TW", "通用"), ("zh-Hans-CN", "通用")] {
+            let locale = Locale(identifier: id)
+            let skin = LedgeSkin.selected(.unit01, locale: locale)
+            precondition(skin.label("通用") == expected)
+            precondition(skin.phrase("清空“%@”中的%d样材料？", "海貓", 7).contains("海貓"))
+            if skin.language == .traditional { precondition(skin.label("皮肤") == "皮膚") }
+            func save<V: View>(_ view: V, _ name: String, _ width: CGFloat, _ height: CGFloat) throws {
+                let renderer = ImageRenderer(content: SkinRoot(preferences: preferences) { view.frame(width: width, height: height) }
+                    .environment(\.locale, locale).environment(\.skinMotionOverride, true))
+                guard let image = renderer.cgImage else { fatalError("Missing locale render") }
+                try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!
+                    .write(to: root.appendingPathComponent("locale-\(id)-\(name).png"))
+            }
+            try save(WorkbenchView(model: model).snapshotHeader, "long-header", 520, 128)
+            try save(skinSnapshotSettings(model: model, tab: 0), "settings", 520, 291)
+            try save(skinSnapshotAbout(coffee: false), "about", 340, 470)
+            let request = RemovalRequest(ids: Set(model.items.map(\.id)), title: "清空", summary: ClearSummary(backedUp: 1, unique: [.pastedText: [UUID()]]))
+            try save(ClearConfirmation(model: model, request: request), "clear", 520, 720)
+        }
+        print("PASS three language tables and production layout fixtures; custom collection names preserved")
     }
 
     static func checkCoffee(preferences: AppPreferences, root: URL) throws {

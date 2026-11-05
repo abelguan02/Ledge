@@ -92,7 +92,7 @@ struct MaterialDragSource: NSViewRepresentable {
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = NSMenu(); menu.autoenablesItems = false
         func add(_ title: String, _ action: Selector, enabled: Bool = true) {
-            let entry = NSMenuItem(title: title, action: action, keyEquivalent: "")
+            let entry = NSMenuItem(title: LedgeSkin.selected(model.preferences.skin, locale: .current).label(title), action: action, keyEquivalent: "")
             entry.target = self; entry.isEnabled = enabled; menu.addItem(entry)
         }
         add(item.stackID != nil && !inTray ? "展开" : "打开", #selector(openMaterial))
@@ -180,7 +180,14 @@ struct MaterialDragSource: NSViewRepresentable {
         return zip(members, writers).map { member, writer in
             let url = model.payloadURLs[member.id]!
             let dragging = NSDraggingItem(pasteboardWriter: writer)
-            let preview = model.thumbnails[member.id] ?? NSWorkspace.shared.icon(forFile: url.path)
+            var preview = model.thumbnails[member.id] ?? NSWorkspace.shared.icon(forFile: url.path)
+            if model.preferences.skin == .unit01 {
+                let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                let renderer = ImageRenderer(content: Image(nsImage: preview).resizable().scaledToFit()
+                    .frame(width: member.size.width - 12, height: member.size.height - 12)
+                    .rotationEffect(.degrees(reduced ? 0 : -2)).shadow(color: .black.opacity(0.6), radius: 4, y: 3).padding(6))
+                if let image = renderer.nsImage { preview = image }
+            }
             dragging.setDraggingFrame(CGRect(x: bounds.minX + member.position.x - item.position.x,
                 y: bounds.maxY - (member.position.y - item.position.y) - member.size.height,
                 width: member.size.width, height: member.size.height), contents: preview)
@@ -350,23 +357,34 @@ struct DropView: View {
     var body: some View {
         PanelShell(width: 300, height: 420, edge: model.preferences.dockEdge) {
             VStack(spacing: 12) {
-                Text("\(model.dropCount) \(model.dropKind == .image ? "张图片" : model.dropKind == .text ? "段文字" : model.dropKind == .link ? "个链接" : "个文件") → \(model.collectionName)")
-                    .font(skin.typography.caption).foregroundStyle(skin.ink.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                tile("放进来", zone: 0).frame(maxHeight: .infinity)
+                Text("\(model.dropCount) \(skin.label(model.dropKind == .image ? "张图片" : model.dropKind == .text ? "段文字" : model.dropKind == .link ? "个链接" : "个文件")) → \(model.collectionName)")
+                    .font(skin.isUnit ? .system(size: 15, weight: .semibold) : skin.typography.caption)
+                    .foregroundStyle(skin.isUnit ? AnyShapeStyle(skin.palette.accent) : skin.ink.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    .modifier(UnitBootBlock(index: 0))
+                if skin.isUnit { Rectangle().fill(skin.palette.line).frame(height: 1) }
+                tile("放进来", zone: 0).frame(maxHeight: .infinity).modifier(UnitBootBlock(index: 1))
                 if model.dropKind.hasActions {
                     HStack(spacing: 10) {
                         tile(model.dropKind == .image ? "压缩" : "翻译", zone: 1)
                         tile(model.dropKind == .image ? "识别文字" : "解释", zone: 2)
-                    }.frame(height: 64)
+                    }.frame(height: 64).modifier(UnitBootBlock(index: 2))
                 }
-            }.padding(16)
+            }.padding(.horizontal, skin.isUnit ? 24 : 16).padding(.vertical, 16)
         }
     }
     private func tile(_ text: String, zone: Int) -> some View {
-        Text(text).font(skin.typography.dropLabel(primary: zone == 0)).frame(maxWidth: .infinity, maxHeight: .infinity)
+        Group {
+            if skin.isUnit && zone == 0 { SkinDisplayText(text, size: 72, compression: 0.66) }
+            else { Text(skin.label(text)).font(skin.isUnit ? .system(size: 16, weight: .semibold) : skin.typography.dropLabel(primary: zone == 0)) }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(skin.ink.dropFill(active: model.dropZone == zone), in: skin.shapes.dropZone)
             .overlay(skin.shapes.dropZone.stroke(skin.ink.dropBorder(active: model.dropZone == zone), lineWidth: model.dropZone == zone ? 1.5 : 1))
+            .overlay {
+                if skin.isUnit && model.dropZone == zone {
+                    UnitLockCorners().stroke(skin.palette.accent, lineWidth: 4).padding(-10).allowsHitTesting(false)
+                }
+            }
             .opacity(zone > 0 && model.dropKind == .text && !model.canUseAI ? skin.opacity.disabled : 1)
-            .help(zone > 0 && model.dropKind == .text ? model.aiHelp : "")
+            .help(zone > 0 && model.dropKind == .text ? skin.label(model.aiHelp) : "")
     }
 }

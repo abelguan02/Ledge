@@ -22,6 +22,7 @@ xcrun swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors -
     "$source_copy"/Core/*.swift "$source_copy"/Services/*.swift "$source_copy"/UI/*.swift \
     Tools/SkinReview.swift -framework AVKit -framework QuickLookUI -o "$bundle/Contents/MacOS/SkinReview"
 cp -R Resources "$bundle/Contents/"
+cp Tests/Fixtures/SyntheticTabletop.jpg "$bundle/Contents/Resources/"
 cp Info.plist "$bundle/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier local.ledge.skin-review' "$bundle/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleExecutable SkinReview' "$bundle/Contents/Info.plist"

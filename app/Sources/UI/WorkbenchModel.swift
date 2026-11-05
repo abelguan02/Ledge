@@ -91,7 +91,13 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     @Published var collectionConfirmation: CollectionRemovalSnapshot?
     @Published var collectionDeleting = false
     @Published var collectionExporting = false
-    @Published var collectionStatus = ""
+    // Keep arguments separate so an open confirmation can change language/skin
+    // without translating collection names, paths, or operating-system errors.
+    @Published private var collectionNotice: (format: String, arguments: [any CVarArg]) = ("", [])
+    var collectionStatus: String { collectionStatusText { $0 } }
+    func collectionStatusText(_ localize: (String) -> String) -> String {
+        String(format: localize(collectionNotice.format), arguments: collectionNotice.arguments)
+    }
     @Published var collectionError = false
     @Published var collectionDeleteFailed = false
     @Published var collectionExportProgress: CollectionExportProgress?
@@ -554,7 +560,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
         guard !locked, !collectionExporting else { return }
         dismissPreview?()
         collectionDirectDelete = direct; collectionSelection = ids
-        collectionStatus = ""; collectionError = false; collectionDeleteFailed = false
+        collectionNotice = ("", []); collectionError = false; collectionDeleteFailed = false
         collectionExportProgress = nil; collectionExportURL = nil
         performWrite { [self] in
             do {
@@ -565,7 +571,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     }
     func deleteSelectedCollections() {
         guard let expected = collectionConfirmation, !locked, !collectionDeleting, !collectionExporting else { return }
-        collectionDeleting = true; collectionStatus = "正在删除…"; collectionError = false; collectionDeleteFailed = false
+        collectionDeleting = true; collectionNotice = ("正在删除…", []); collectionError = false; collectionDeleteFailed = false
         performWrite { [self] in
             defer { collectionDeleting = false }
             do {
@@ -575,7 +581,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                 case .changed(let changed):
                     collectionConfirmation = changed
                     collectionSelection = changed.ids
-                    collectionStatus = "内容有变化，请再确认一次。"
+                    collectionNotice = ("内容有变化，请再确认一次。", [])
                     collectionExportURL = nil; collectionExportProgress = nil
                 case .removed(let cleanupWarning):
                     for id in expected.itemIDs {
@@ -584,13 +590,13 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                     }
                     selected = []; pasteActions = nil
                     collectionDeletedCount = expected.collections.count
-                    collectionSelection = []; collectionStatus = cleanupWarning ?? ""; collectionPage = .manager
+                    collectionSelection = []; collectionNotice = ("%@", [cleanupWarning ?? ""]); collectionPage = .manager
                     collectionError = cleanupWarning != nil
                     if let cleanupWarning { message = cleanupWarning }
                 }
                 await refresh()
             } catch {
-                collectionStatus = "删除失败：没有删除任何收集区，勾选仍保留。\n" + error.localizedDescription
+                collectionNotice = ("删除失败：没有删除任何收集区，勾选仍保留。\n%@", [error.localizedDescription])
                 collectionError = true; collectionDeleteFailed = true
             }
         }
@@ -602,7 +608,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
         presentFilePicker(panel) { [weak self] response in
             guard let self, response == .OK, let url = panel.url else { return }
             self.collectionExporting = true; self.collectionError = false; self.collectionExportURL = nil
-            self.collectionExportProgress = nil; self.collectionStatus = "正在导出…"
+            self.collectionExportProgress = nil; self.collectionNotice = ("正在导出…", [])
             self.collectionExportTask = Task { [weak self] in
                 guard let self else { return }
                 defer { self.collectionExporting = false; self.collectionExportTask = nil }
@@ -610,15 +616,15 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                     let output = try await self.library.exportCollections(snapshot, to: url) { [weak self] progress in
                         await MainActor.run {
                             self?.collectionExportProgress = progress
-                            self?.collectionStatus = "正在导出 \(progress.completed) / \(progress.total) 样到‘\(progress.directory.lastPathComponent)’…"
+                            self?.collectionNotice = ("正在导出 %d / %d 样到‘%@’…", [progress.completed, progress.total, progress.directory.lastPathComponent])
                         }
                     }
                     self.collectionExportURL = output
-                    self.collectionStatus = "已导出 \(snapshot.summary.uniqueIDs.count) 样，按收集区分文件夹保存。"
+                    self.collectionNotice = ("已导出 %d 样，按收集区分文件夹保存。", [snapshot.summary.uniqueIDs.count])
                 } catch is CancellationError {
-                    self.collectionStatus = "导出已中止，已导出的文件保留。"
+                    self.collectionNotice = ("导出已中止，已导出的文件保留。", [])
                 } catch {
-                    self.collectionStatus = "导出没有完成：\(error.localizedDescription)。没有删除任何内容，勾选仍保留。"
+                    self.collectionNotice = ("导出没有完成：%@。没有删除任何内容，勾选仍保留。", [error.localizedDescription])
                     self.collectionError = true
                 }
             }

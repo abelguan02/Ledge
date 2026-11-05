@@ -5,6 +5,7 @@ test_root="$(mktemp -d /private/tmp/ledge-skin-switch.XXXXXX)"
 bundle="$test_root/SkinSwitchTests.app"
 mkdir -p "$bundle/Contents/MacOS" build/module-cache
 cp -R Resources "$bundle/Contents/"
+cp Tests/Fixtures/SyntheticTabletop.jpg "$bundle/Contents/Resources/"
 cp Info.plist "$bundle/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier local.ledge.skin-switch-tests' "$bundle/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleExecutable SkinSwitchTests' "$bundle/Contents/Info.plist"

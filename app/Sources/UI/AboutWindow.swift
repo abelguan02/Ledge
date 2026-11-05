@@ -29,7 +29,7 @@ private struct AboutView: View {
     let replay: () -> Void
     @AboutState private var coffee = false
     @Environment(\.colorScheme) private var scheme
-    private var chinese: Bool { AppIdentity.name == "搁这儿" }
+    private var chinese: Bool { skin.isUnit ? skin.language != .english : AppIdentity.name == "搁这儿" }
     var body: some View {
         ZStack {
             GlassBackground()
@@ -40,12 +40,21 @@ private struct AboutView: View {
     }
     private var mainPage: some View {
         VStack(spacing: 0) {
-            Image(nsImage: NSImage(named: "Ledge") ?? NSImage()).resizable().frame(width: 84, height: 84).skinShadow(skin.shadows.appIcon)
-            Text(AppIdentity.name).font(skin.typography.applicationTitle).padding(.top, 16)
-            if chinese { Text("Ledge").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 2) }
-            Text(chinese ? "看中的东西，先搁这儿" : "Set it here for now.").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 6)
+            if skin.isUnit {
+                HStack(alignment: .bottom, spacing: 12) {
+                    if chinese {
+                        VStack(spacing: -16) { SkinDisplayText(wordmark: .appName, size: 120, fragment: 0..<1); SkinDisplayText(wordmark: .appName, size: 74, fragment: 1..<3) }
+                    } else { SkinDisplayText("Ledge", size: 72, compression: 0.62) }
+                    Text("LEDGE").font(.system(size: 14, design: .monospaced)).tracking(4).foregroundStyle(skin.palette.accent).padding(.bottom, 10)
+                }.frame(height: chinese ? 180 : 100)
+            } else {
+                Image(nsImage: NSImage(named: "Ledge") ?? NSImage()).resizable().frame(width: 84, height: 84).skinShadow(skin.shadows.appIcon)
+                Text(AppIdentity.name).font(skin.typography.applicationTitle).padding(.top, 16)
+                if chinese { Text("Ledge").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 2) }
+            }
+            Text(chinese ? skin.label("看中的东西，先搁这儿") : "Set it here for now.").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 6)
             HStack(spacing: 10) {
-                Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")（\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")）").font(skin.typography.caption).monospacedDigit().foregroundStyle(skin.ink.secondary)
+                (skin.isUnit ? Text(skin.phrase("版本 %@（%@）", Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")) : Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")（\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")）")).font(skin.typography.caption).monospacedDigit().foregroundStyle(skin.ink.secondary)
                 updateButton
             }.frame(height: 24).padding(.top, 14)
             VStack(spacing: 0) {
@@ -55,37 +64,41 @@ private struct AboutView: View {
                 Divider()
                 linkRow("自愿赞赏", detail: "请作者喝杯咖啡", symbol: "cup.and.saucer.fill", color: skin.palette.coffee, arrow: "chevron.right") { coffee = true }
             }.background(skin.ink.sectionInset, in: skin.shapes.card).padding(.top, 20)
-            Button("重新观看新手引导", action: replay).buttonStyle(.plain).foregroundStyle(skin.palette.accent).font(skin.typography.caption).padding(.top, 18)
+            Button(skin.label("重新观看新手引导"), action: replay).buttonStyle(.plain).foregroundStyle(skin.palette.accent).font(skin.typography.caption).padding(.top, 18)
             Spacer(minLength: 0)
         }.padding(.horizontal, 20).padding(.top, 44)
     }
     @ViewBuilder private var updateButton: some View {
         switch update.status {
-        case .checking: HStack(spacing: 4) { ProgressView().controlSize(.mini); Text("正在检查…") }.font(skin.typography.detail)
-        case .current: Label("已是最新版本", systemImage: "checkmark").font(skin.typography.detail)
-        case .unreleased: Text("暂无正式发布").font(skin.typography.detail).foregroundStyle(skin.ink.secondary)
-        case .available(let version, let url): Button("新版本 \(version) · 前往下载 ↗") { NSWorkspace.shared.open(url) }.buttonStyle(.borderedProminent).controlSize(.mini)
+        case .checking: HStack(spacing: 4) { ProgressView().controlSize(.mini); Text(skin.label("正在检查…")) }.font(skin.typography.detail)
+        case .current: Label(skin.label("已是最新版本"), systemImage: "checkmark").font(skin.typography.detail)
+        case .unreleased: Text(skin.label("暂无正式发布")).font(skin.typography.detail).foregroundStyle(skin.ink.secondary)
+        case .available(let version, let url): Button(skin.phrase("新版本 %@ · 前往下载 ↗", version)) { NSWorkspace.shared.open(url) }.buttonStyle(.borderedProminent).controlSize(.mini)
         case .idle, .failed:
-            Button(update.status == .failed ? "无法连接 · 重试" : "检查更新") { Task { await update.check() } }.buttonStyle(.bordered).clipShape(skin.shapes.capsule).controlSize(.mini)
+            Button(skin.label(update.status == .failed ? "无法连接 · 重试" : "检查更新")) { Task { await update.check() } }.buttonStyle(.bordered).clipShape(skin.shapes.capsule).controlSize(.mini)
         }
     }
     private func linkRow(_ title: String, detail: String, symbol: String, color: Color, arrow: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 11) {
-                Image(systemName: symbol).font(skin.typography.actionIcon).foregroundStyle(skin.palette.light).frame(width: 26, height: 26).background(color, in: skin.shapes.compactControl)
-                Text(title).font(skin.typography.body); Spacer(minLength: 2)
-                Text(detail).font(skin.typography.detail).foregroundStyle(skin.ink.secondary)
+                if !skin.isUnit { Image(systemName: symbol).font(skin.typography.actionIcon).foregroundStyle(skin.palette.light).frame(width: 26, height: 26).background(color, in: skin.shapes.compactControl) }
+                Text(skin.label(title)).font(skin.typography.body); Spacer(minLength: 2)
+                Text(skin.label(detail)).font(skin.typography.detail).foregroundStyle(skin.ink.secondary)
                 Image(systemName: arrow).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
-            }.padding(.horizontal, 12).frame(height: 46).contentShape(Rectangle())
+            }.padding(.horizontal, 12).frame(height: skin.isUnit ? 38 : 46).contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
     private var coffeePage: some View {
         VStack(spacing: 0) {
-            Button { coffee = false } label: { Label("关于", systemImage: "chevron.left").font(skin.typography.body) }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
-            Image(systemName: "cup.and.saucer.fill").font(skin.typography.mediaIcon).foregroundStyle(skin.palette.light).frame(width: 56, height: 56).background(skin.palette.coffee, in: skin.shapes.payment).padding(.top, 24)
-            Text("请作者喝杯咖啡").font(skin.typography.sectionTitle).padding(.top, 14)
+            Button { coffee = false } label: { Label(skin.label("关于"), systemImage: "chevron.left").font(skin.typography.body) }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
+            if skin.isUnit {
+                VStack(spacing: -6) { SkinDisplayText("请作者", size: 60, compression: 0.62); SkinDisplayText("喝杯咖啡", size: 60, compression: 0.62) }.padding(.top, 14)
+            } else {
+                Image(systemName: "cup.and.saucer.fill").font(skin.typography.mediaIcon).foregroundStyle(skin.palette.light).frame(width: 56, height: 56).background(skin.palette.coffee, in: skin.shapes.payment).padding(.top, 24)
+                Text(skin.label("请作者喝杯咖啡")).font(skin.typography.sectionTitle).padding(.top, 14)
+            }
             CoffeePaymentCode().padding(.top, 20)
-            Text("完全自愿，不影响任何功能").font(skin.typography.caption).foregroundStyle(skin.ink.secondary).padding(.top, 16)
+            (skin.isUnit ? Text(skin.label("完全自愿，不影响任何功能")) : Text("完全自愿，不影响任何功能")).font(skin.typography.caption).foregroundStyle(skin.ink.secondary).padding(.top, 16)
             Spacer(minLength: 0)
         }.padding(.horizontal, 20).padding(.top, 44)
     }

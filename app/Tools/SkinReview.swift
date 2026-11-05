@@ -33,13 +33,10 @@ import SwiftUI
         let group = await library.index.currentCollection
         _ = try await library.importText("看中的东西，先搁这儿。\n\n这是一张合成便签。\nClassic appearance review", collection: group)
         _ = try await library.importText("https://example.invalid/skin-review", collection: group)
-        let renderer = ImageRenderer(content: LinearGradient(colors: [.blue, .orange], startPoint: .topLeading, endPoint: .bottomTrailing).frame(width: 320, height: 240))
-        guard let image = renderer.cgImage,
-              let data = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) else { throw CocoaError(.fileWriteUnknown) }
-        let picture = root.appendingPathComponent("synthetic.png")
-        try data.write(to: picture)
+        guard let picture = Bundle.main.url(forResource: "SyntheticTabletop", withExtension: "jpg") else { throw CocoaError(.fileNoSuchFile) }
         _ = try await library.importFile(picture, collection: group, kind: .image)
         _ = try await library.createCollection("合成收集区")
+        _ = try await library.createCollection(String(String(repeating: "海貓與龘 · Synthetic Collection · ", count: 4).prefix(80)))
         let preferences = AppPreferences()
         preferences.automaticWebPreviews = false
         model = WorkbenchModel(library: library, bridge: SkinReviewBackend(), preferences: preferences)
@@ -54,9 +51,9 @@ import SwiftUI
         model.requestSettings = { [weak self] in self?.settings.present() }
         model.requestQuit = { NSApp.terminate(nil) }
         let menu = NSMenu()
-        let item = NSMenuItem(title: "经典验收", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: "皮肤验收", action: nil, keyEquivalent: "")
         let commands = NSMenu()
-        for title in ["画布", "投放面板", "小舌片", "清空确认", "设置", "关于", "新手引导", "右侧", "左侧", "上方", "浅色", "深色", "退出验收"] {
+        for title in ["画布", "投放面板", "投放文字", "投放文件", "小舌片", "清空确认", "设置", "关于", "新手引导", "右侧", "左侧", "上方", "浅色", "深色", "退出验收"] {
             let entry = NSMenuItem(title: title, action: #selector(choose(_:)), keyEquivalent: title == "退出验收" ? "q" : "")
             entry.target = self; commands.addItem(entry)
         }
@@ -68,6 +65,8 @@ import SwiftUI
         switch sender.title {
         case "画布": panel.show(.canvas)
         case "投放面板": model.dropKind = .image; model.dropCount = 3; panel.show(.drop)
+        case "投放文字": model.dropKind = .text; model.dropCount = 1; panel.show(.drop)
+        case "投放文件": model.dropKind = .file; model.dropCount = 2; panel.show(.drop)
         case "小舌片": panel.show(.line)
         case "清空确认": panel.show(.canvas); model.askRemoval(ids: Set(model.items.map(\.id)))
         case "设置": settings.present()

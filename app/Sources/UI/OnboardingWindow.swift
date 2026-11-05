@@ -38,7 +38,7 @@ private struct OnboardingView: View {
     @ObservedObject var session: OnboardingSession
     @ObservedObject var preferences: AppPreferences
     let finish: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @SkinReducedMotion private var reduceMotion
     @GuideState private var phase = 0
     @GuideState private var cursorDemo = false
     @GuideState private var drag = CGSize.zero
@@ -49,16 +49,16 @@ private struct OnboardingView: View {
     private var spring: Animation { skin.motion.guideSpring(reduced: reduceMotion) }
     private var ease: Animation { skin.motion.guideEase(reduced: reduceMotion) }
     private var title: String {
-        switch session.step { case .welcome: AppIdentity.name; case .edge: "它住在屏幕边上"; case .drop: "什么都能丢进来"; case .paste: "复制了，就按 ⌘V"; case .export: "用完，拖走就行"; case .shortcut: "随时叫它出来" }
+        switch session.step { case .welcome: skin.isUnit ? "搁这儿" : AppIdentity.name; case .edge: "它住在屏幕边上"; case .drop: "什么都能丢进来"; case .paste: "复制了，就按 ⌘V"; case .export: "用完，拖走就行"; case .shortcut: "随时叫它出来" }
     }
     private var detail: String {
         switch session.step {
-        case .welcome: AppIdentity.name == "搁这儿" ? "看中的东西，先搁这儿。" : "Set it here for now."
+        case .welcome: skin.isUnit || AppIdentity.name == "搁这儿" ? "看中的东西，先搁这儿。" : "Set it here for now."
         case .edge: "平时只是一条细线。把鼠标移过去试试。"
         case .drop: "把这张图拖到右边。"
         case .paste: "文字、网址、截图，按一下就落到画布上。"
         case .export: "拖到桌面、文件夹或聊天框，就是一份完整的文件。"
-        case .shortcut: preferences.shortcut.map { "按 \($0.display)，或者把鼠标移到那条细线上。" } ?? "把鼠标移到那条细线上就能打开。"
+        case .shortcut: preferences.shortcut.map { skin.phrase("按 %@，或者把鼠标移到那条细线上。", $0.display) } ?? "把鼠标移到那条细线上就能打开。"
         }
     }
     var body: some View {
@@ -72,9 +72,11 @@ private struct OnboardingView: View {
                         } else { skin.palette.shade }
                     }
                 scene(size)
-                Button("跳过", action: exitGuide).buttonStyle(.plain).font(skin.typography.body).foregroundStyle(skin.palette.guideSkip).padding(32)
+                Button(skin.label("跳过"), action: exitGuide).buttonStyle(.plain).font(skin.typography.body).foregroundStyle(skin.palette.guideSkip).padding(32)
                 VStack(alignment: .leading, spacing: 14) {
-                    if session.step == .welcome {
+                    if skin.isUnit {
+                        SkinDisplayText(title, size: 52, compression: 0.62).opacity(session.step != .welcome || phase > 0 ? 1 : 0)
+                    } else if session.step == .welcome {
                         Image(nsImage: NSImage(named: "Ledge") ?? NSImage()).resizable().frame(width: 84, height: 84)
                             .opacity(phase > 0 ? 1 : 0).offset(y: reduceMotion || phase > 0 ? 0 : 14)
                         HStack(spacing: 0) {
@@ -87,13 +89,13 @@ private struct OnboardingView: View {
                         Text(title).font(skin.typography.onboardingTitle).id(title)
                             .transition(skin.motion.guideTitle(reduced: reduceMotion))
                     }
-                    Text(detail).font(skin.typography.answer).foregroundStyle(skin.palette.guideDetail).opacity(session.step != .welcome || phase == 20 ? 1 : 0)
+                    Text(skin.label(detail)).font(skin.typography.answer).foregroundStyle(skin.palette.guideDetail).opacity(session.step != .welcome || phase == 20 ? 1 : 0)
                     HStack(spacing: 18) {
-                        Button(session.step == .welcome ? "开始" : session.step == .shortcut ? "开始使用" : "继续") {
+                        Button(skin.label(session.step == .welcome ? "开始" : session.step == .shortcut ? "开始使用" : "继续")) {
                             withAnimation(ease) { session.next() }
                             if session.finished { exitGuide() }
                         }.buttonStyle(.plain).font(skin.typography.bodyStrong).foregroundStyle(skin.palette.shade)
-                            .padding(.horizontal, 24).frame(height: 36).background(skin.palette.light, in: skin.shapes.capsule)
+                            .padding(.horizontal, 24).frame(height: 36).background(skin.isUnit ? skin.palette.accent : skin.palette.light, in: skin.shapes.capsule)
                             .opacity(session.canContinue ? 1 : skin.opacity.disabled).disabled(!session.canContinue)
                         HStack(spacing: 6) { ForEach(0..<6) { n in skin.shapes.capsule.fill(skin.palette.light.opacity(n == session.step.rawValue ? 1 : 0.3)).frame(width: n == session.step.rawValue ? 18 : 6, height: 6) } }
                     }.padding(.top, 8).opacity(session.step != .welcome || phase == 20 ? 1 : 0)
@@ -109,8 +111,14 @@ private struct OnboardingView: View {
         let hasPanel = session.step.rawValue >= 2 && (session.step != .drop || targeted || session.dropCompleted || drag.width > size.width * 0.16) && (session.step != .shortcut || phase < 4)
         ZStack {
             if hasPanel {
-                skin.shapes.dialog.fill(skin.materials.ultraThin).frame(width: 300, height: min(460, size.height * 0.58))
-                    .overlay(alignment: .topLeading) { Text("示例画布").font(skin.typography.captionStrong).foregroundStyle(skin.palette.guideDetail).padding(18) }
+                Group {
+                    if skin.isUnit {
+                        EdgePanelShape(edge: .right, cut: true).fill(skin.palette.base)
+                            .overlay { UnitPanelTrim(edge: .right).clipShape(EdgePanelShape(edge: .right, cut: true)) }
+                            .overlay { EdgePanelShape(edge: .right, cut: true).stroke(skin.palette.line, lineWidth: 2) }
+                    } else { skin.shapes.dialog.fill(skin.materials.ultraThin) }
+                }.frame(width: 300, height: min(460, size.height * 0.58))
+                    .overlay(alignment: .topLeading) { Text(skin.label("示例画布")).font(skin.typography.captionStrong).foregroundStyle(skin.palette.guideDetail).padding(18) }
                     .position(target).transition(skin.motion.guidePanel(reduced: reduceMotion))
             }
             if session.step == .welcome || session.step == .edge || session.step == .shortcut || session.step == .drop {
@@ -120,8 +128,8 @@ private struct OnboardingView: View {
                     .contentShape(Rectangle()).onHover { hover in if hover { withAnimation(spring) { session.hoveredEdge() } } }
                     .position(x: size.width - 24, y: size.height * 0.5)
                     .skinShadow(skin.shadows.guideGlow(glow))
-                    .accessibilityLabel("示例屏幕边缘")
-                if session.step == .shortcut, phase == 4, !reduceMotion {
+                    .accessibilityLabel(skin.label("示例屏幕边缘"))
+                if session.step == .shortcut, phase == 4, !reduceMotion && !skin.isUnit {
                     skin.shapes.capsule.fill(skin.palette.light).frame(width: 3, height: 28).blur(radius: 3)
                         .position(x: size.width - 5, y: size.height * 0.5 - 64).offset(y: glow ? 128 : 0).opacity(glow ? 0 : 1)
                 }
@@ -132,7 +140,7 @@ private struct OnboardingView: View {
                     .allowsHitTesting(false)
             }
             if session.step == .drop {
-                sampleImage.frame(width: 180, height: 130).overlay(alignment: .bottom) { Text("试试拖我").font(skin.typography.captionMedium).foregroundStyle(skin.palette.light).padding(8) }
+                sampleImage.frame(width: 180, height: 130).overlay(alignment: .bottom) { Text(skin.label("试试拖我")).font(skin.typography.captionMedium).foregroundStyle(skin.palette.light).padding(8) }
                     .scaleEffect(session.dropCompleted && !reduceMotion ? 0.62 : 1)
                     .position(session.dropCompleted ? target : middle).offset(session.dropCompleted ? .zero : drag)
                     .gesture(DragGesture().onChanged { value in drag = value.translation }.onEnded { value in
@@ -140,7 +148,7 @@ private struct OnboardingView: View {
                             if middle.x + value.translation.width > size.width - 320 { session.dropped() }
                             drag = .zero
                         }
-                    }).accessibilityLabel("试试拖我")
+                    }).accessibilityLabel(skin.label("试试拖我"))
                     .id(reduceMotion && session.dropCompleted).transition(.opacity)
                 skin.palette.clear.frame(width: 320, height: size.height * 0.65).contentShape(Rectangle()).position(target)
                     .onDrop(of: [UTType.fileURL.identifier, UTType.image.identifier], isTargeted: $targeted) { providers in
@@ -171,9 +179,15 @@ private struct OnboardingView: View {
             LinearGradient(colors: [skin.palette.sampleSkyTop, skin.palette.sampleSkyMiddle, skin.palette.sampleSkyBottom], startPoint: .topLeading, endPoint: .bottomTrailing)
             skin.shapes.circle.fill(skin.palette.sampleSun).frame(width: 24, height: 24).offset(x: -42, y: -22)
             GeometryReader { g in Path { p in p.move(to: CGPoint(x: 0, y: g.size.height)); p.addLine(to: CGPoint(x: g.size.width*0.3,y:g.size.height*0.5)); p.addLine(to: CGPoint(x:g.size.width*0.5,y:g.size.height*0.7)); p.addLine(to: CGPoint(x:g.size.width*0.7,y:g.size.height*0.4)); p.addLine(to: CGPoint(x:g.size.width,y:g.size.height*0.8)); p.addLine(to: CGPoint(x:g.size.width,y:g.size.height)); p.closeSubpath() }.fill(skin.palette.sampleMountain) }
-        }.clipShape(skin.shapes.control).padding(5).background(skin.palette.light, in: skin.shapes.card).skinShadow(skin.shadows.sample)
+        }.clipShape(skin.shapes.control).modifier(SkinImageTreatment(selected: false)).padding(5)
+            .background(skin.isUnit ? skin.palette.line : skin.palette.light, in: skin.shapes.card).skinShadow(skin.shadows.sample)
     }
-    private var sampleNote: some View { Text("看中的东西，\n先搁这儿。").font(skin.typography.sampleNote).foregroundStyle(skin.palette.feedbackBackdrop).frame(width: 180, height: 130).background(skin.palette.sampleNote, in: skin.shapes.card) }
+    private var sampleNote: some View {
+        Group {
+            if skin.isUnit { SkinDisplayText("周三 10:00", size: 22).frame(width: 180, height: 130).background(skin.palette.base).overlay(Rectangle().stroke(skin.palette.line)) }
+            else { Text("看中的东西，\n先搁这儿。").font(skin.typography.sampleNote).foregroundStyle(skin.palette.feedbackBackdrop).frame(width: 180, height: 130).background(skin.palette.sampleNote, in: skin.shapes.card) }
+        }
+    }
     private func keys(_ values: [String]) -> some View {
         HStack(spacing: 10) {
             ForEach(Array(values.enumerated()), id: \.offset) { index, key in
@@ -186,6 +200,7 @@ private struct OnboardingView: View {
     private func animateStep() async {
         phase = 0; cursorDemo = false; drag = .zero; glow = false; keyDown = -1
         if reduceMotion { phase = 20; return }
+        if skin.isUnit && session.step == .welcome { phase = 20; return }
         do {
             switch session.step {
             case .welcome:

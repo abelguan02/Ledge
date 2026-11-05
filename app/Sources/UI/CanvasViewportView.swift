@@ -294,8 +294,12 @@ struct CanvasContent: View {
     @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     @CanvasLocalState private var capsuleWidth: CGFloat = 0
+    @CanvasLocalState private var landing: Set<UUID> = []
+    @SkinReducedMotion private var reduced
     let size: CGSize
     var body: some View {
+        let items = model.canvasItems
+        let ids = items.map(\.id)
         ZStack(alignment: .topLeading) {
             CanvasSelectionSurface(model: model).frame(width: size.width, height: size.height)
             if model.dragging != nil || model.resizing != nil {
@@ -312,10 +316,10 @@ struct CanvasContent: View {
                 ForEach(CardStacks.visible(model.dragMembers)) { member in
                     skin.shapes.card.stroke(skin.ink.dragOutline, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
                         .frame(width: member.size.width, height: member.size.height)
-                        .offset(x: member.position.x + point.x - item.position.x, y: member.position.y + point.y - item.position.y).allowsHitTesting(false)
+                        .offset(x: member.position.x + (skin.isUnit ? 0 : point.x - item.position.x), y: member.position.y + (skin.isUnit ? 0 : point.y - item.position.y)).allowsHitTesting(false).zIndex(skin.isUnit ? 2 : 0)
                 }
             }
-            ForEach(model.canvasItems) { item in
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                 ZStack(alignment: .topTrailing) {
                     if item.stackID != nil {
                         skin.shapes.card.fill(skin.palette.stackRear)
@@ -324,19 +328,22 @@ struct CanvasContent: View {
                             .overlay { skin.shapes.card.stroke(skin.palette.stackBorder, lineWidth: 0.5) }.offset(x: 6, y: 6)
                     }
                     MaterialView(model: model, item: item)
+                    if skin.isUnit && landing.contains(item.id) { UnitLandingLock() }
                     if let stack = item.stackID {
                         Text("\(model.stackMembers(stack).count)").font(skin.typography.captionStrong).foregroundStyle(skin.palette.light)
                             .padding(.horizontal, 7).frame(height: 22).background(skin.palette.stackBadge, in: skin.shapes.capsule)
                             .offset(x: 7, y: -9).allowsHitTesting(false)
                         if model.stackHoverID == stack && model.stackDropReady {
                             skin.shapes.card.stroke(skin.palette.stackHalo, lineWidth: 12)
-                                .overlay { skin.shapes.card.stroke(skin.palette.light, lineWidth: 2) }.allowsHitTesting(false)
+                                .overlay { skin.shapes.card.stroke(skin.isUnit ? skin.palette.accent : skin.palette.light, lineWidth: 2) }.allowsHitTesting(false)
                         }
                     }
                 }.frame(width: item.size.width, height: item.size.height)
                     .opacity(item.stackID != nil && model.openStackID == item.stackID ? skin.opacity.disabled : 1)
+                    .opacity(skin.isUnit && model.dragging != nil && (model.dragging == item.id || model.draggedIDs.contains(item.id)) ? 0.15 : 1)
                     .offset(x: item.position.x, y: item.position.y)
                     .zIndex(model.resizing?.id == item.id ? 1 : 0)
+                    .transition(!skin.isUnit ? .identity : .asymmetric(insertion: .identity, removal: reduced ? .opacity : .modifier(active: UnitRemovalEffect(phase: 1), identity: UnitRemovalEffect(phase: 0)).animation(.linear(duration: 0.27).delay(Double(min(index, 5)) * 0.05))))
             }
             if let original = model.resizing, let current = model.resizeSize {
                 skin.shapes.card.stroke(skin.palette.light, style: StrokeStyle(lineWidth: 1 / model.canvasCoordinateScale, dash: [5, 4]))
@@ -344,6 +351,7 @@ struct CanvasContent: View {
                     .offset(x: original.position.x, y: original.position.y).allowsHitTesting(false).zIndex(2)
                 Text("\(Int(current.width.rounded())) × \(Int(current.height.rounded()))")
                     .font(skin.typography.measurement).padding(6).background(skin.materials.regular, in: skin.shapes.smallControl)
+                    .overlay { if skin.isUnit { Rectangle().stroke(skin.palette.accent, lineWidth: 1) } }
                     .scaleEffect(1 / model.canvasCoordinateScale, anchor: .topLeading)
                     .offset(x: model.resizePointer.x + 14 / model.canvasCoordinateScale, y: model.resizePointer.y + 14 / model.canvasCoordinateScale)
                     .allowsHitTesting(false).zIndex(30)
@@ -351,13 +359,19 @@ struct CanvasContent: View {
             if let id = model.pasteActions, let item = model.items.first(where: { $0.id == id }) {
                 HStack(spacing: 2) {
                     ForEach(TextAction.allCases) { action in
-                        Button(action.rawValue) { model.runText(item, action: action) }
-                            .font(skin.typography.small).buttonStyle(.bordered).tint(action == .explain ? skin.palette.primary : nil)
-                            .disabled(!model.canUseAI).opacity(model.canUseAI ? 1 : skin.opacity.disabled).help(model.aiHelp)
+                        Button(skin.label(action.rawValue)) { model.runText(item, action: action) }
+                            .font(skin.typography.small).buttonStyle(SkinActionButtonStyle(prominent: skin.isUnit && action == .explain)).tint(action == .explain ? skin.palette.primary : nil)
+                            .disabled(!model.canUseAI).opacity(model.canUseAI ? 1 : skin.opacity.disabled).help(skin.label(model.aiHelp))
                     }
-                    Button("只放进来") { model.pasteActions = nil }.buttonStyle(.plain).font(skin.typography.small)
+                    Button(skin.label("只放进来")) { model.pasteActions = nil }.buttonStyle(.plain).font(skin.typography.small)
                     if model.canUseAI { Text("↩").font(skin.typography.tiny).foregroundStyle(skin.ink.secondary) }
                 }.padding(6).background(skin.materials.regular, in: skin.shapes.capsule)
+                    .overlay(alignment: .bottomLeading) {
+                        if skin.isUnit && !model.canUseAI {
+                            Text(skin.label(model.aiHelp)).font(skin.typography.small).foregroundStyle(skin.palette.secondary)
+                                .padding(3).background(skin.palette.base).offset(y: 18).allowsHitTesting(false)
+                        }
+                    }
                     .fixedSize()
                     .background { GeometryReader { geometry in skin.palette.clear.onAppear { capsuleWidth = geometry.size.width }.onChange(of: geometry.size.width) { _, width in capsuleWidth = width } } }
                     .offset(x: max(4, min(item.position.x, size.width - capsuleWidth - 4)), y: max(4, item.position.y - 44))
@@ -383,5 +397,15 @@ struct CanvasContent: View {
                     .offset(x: rect.origin.x, y: rect.origin.y).allowsHitTesting(false).zIndex(20)
             }
         }.frame(width: size.width, height: size.height, alignment: .topLeading)
+            .onChange(of: ids) { previous, current in
+                if skin.isUnit { landing = Set(current).subtracting(previous) }
+            }
+            .task(id: landing) {
+                guard !landing.isEmpty else { return }
+                do { try await Task.sleep(for: .milliseconds(reduced ? 200 : 350)); landing = [] } catch { }
+            }
+            .transaction(value: ids) { transaction in
+                if skin.isUnit { transaction.animation = .linear(duration: reduced ? 0.2 : 0.27) }
+            }
     }
 }

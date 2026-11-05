@@ -15,6 +15,7 @@ struct LedgeSkin: Sendable {
     static let classic = LedgeSkin()
     static let unit01 = LedgeSkin(isUnit: true)
     var isUnit = false
+    var language = SkinLanguage(identifier: Locale.preferredLanguages.first ?? "en")
     var typography: Typography { Typography(isUnit: isUnit) }
     var materials: Materials { Materials(isUnit: isUnit) }
     var palette: Palette { Palette(isUnit: isUnit) }
@@ -58,7 +59,7 @@ struct LedgeSkin: Sendable {
         var isUnit = false
         var hover: Animation { .easeOut(duration: 0.15) }
         func guideSpring(reduced: Bool) -> Animation {
-            reduced ? .easeInOut(duration: 0.2) : .spring(response: 0.45, dampingFraction: 0.75)
+            reduced ? .easeInOut(duration: 0.2) : isUnit ? .timingCurve(0.9, 0, 0.1, 1, duration: 0.27) : .spring(response: 0.45, dampingFraction: 0.75)
         }
         func guideEase(reduced: Bool) -> Animation {
             reduced ? .easeInOut(duration: 0.2) : .timingCurve(0.25, 0.8, 0.25, 1, duration: 0.35)
@@ -86,8 +87,13 @@ struct LedgeSkin: Sendable {
         func tabPulse(time: TimeInterval, reduced: Bool) -> Double {
             reduced ? 1 : 0.775 - 0.225 * cos(time * 2 * Double.pi / 2.4)
         }
+        func signalOpacity(time: TimeInterval, alarm: Bool, reduced: Bool) -> Double {
+            guard isUnit, !reduced else { return 1 }
+            let phase = time.truncatingRemainder(dividingBy: alarm ? 0.7 : 2.4)
+            return alarm ? (phase < 0.35 ? 1 : 0.12) : (phase > 2.2 && phase < 2.3 ? 0.35 : 1)
+        }
         func tabFlow(time: TimeInterval) -> Double { -14 + time.truncatingRemainder(dividingBy: 1.6) / 1.6 * 54 }
-        func animateSettingsResize(reduced: Bool) -> Bool { !reduced }
+        func animateSettingsResize(reduced: Bool) -> Bool { !isUnit && !reduced }
     }
 
     // Keep hierarchical text styles distinct from Color.primary/secondary.
@@ -279,6 +285,28 @@ struct LedgeSkin: Sendable {
         var blending: NSVisualEffectView.BlendingMode { .behindWindow }
         var state: NSVisualEffectView.State { .active }
         var tabAppearance: NSAppearance.Name { .darkAqua }
+    }
+}
+
+enum SkinLanguage: String, Sendable {
+    case simplified = "zh-Hans", traditional = "zh-Hant", english = "en"
+    init(identifier: String) {
+        let id = identifier.lowercased()
+        self = !id.hasPrefix("zh") ? .english : id.contains("hant") || id.contains("tw") || id.contains("hk") || id.contains("mo") ? .traditional : .simplified
+    }
+}
+
+extension LedgeSkin {
+    // Only fixed interface copy uses this table. Material contents, user names,
+    // action identifiers and persisted strings never pass through translation.
+    func label(_ key: String) -> String {
+        guard isUnit, language != .simplified,
+              let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj"),
+              let bundle = Bundle(path: path) else { return key }
+        return bundle.localizedString(forKey: key, value: key, table: "Unit")
+    }
+    func phrase(_ key: String, _ values: CVarArg...) -> String {
+        String(format: label(key), arguments: values)
     }
 }
 

@@ -9,7 +9,36 @@ struct EdgeLineIndicator: View {
     var hovering = false
     var edge: DockEdge = .right
 
-    var body: some View {
+    @ViewBuilder var body: some View {
+        if skin.isUnit { unitTab } else { classicTab }
+    }
+    private var unitTab: some View {
+        let width = hovering ? 22.0 : 18.0
+        let phase = time.truncatingRemainder(dividingBy: 0.7) / 0.7
+        let opacity = reduceMotion ? 1 : state == .failed ? (phase < 0.5 ? 1 : 0.12) : skin.motion.tabPulse(time: time, reduced: false)
+        return VStack(alignment: .trailing, spacing: 4) {
+            UnitWarningStripe(band: 5).frame(height: 10)
+            ZStack {
+                skin.palette.armor
+                Rectangle().fill(state == .failed ? skin.palette.destructive : state == .attention ? skin.palette.light : skin.palette.accent)
+                    .opacity(state == .processing && !reduceMotion ? 0.35 : state == .attention || state == .failed ? opacity : 1)
+                    .frame(width: 4, height: 56)
+                    .overlay {
+                        if state == .processing && !reduceMotion {
+                            Rectangle().fill(skin.palette.accent).frame(width: 4, height: 16)
+                                .offset(y: -36 + time.truncatingRemainder(dividingBy: 1.6) / 1.6 * 72)
+                                .frame(width: 4, height: 56).clipped()
+                        }
+                    }
+            }.frame(width: width, height: 112).clipShape(GlassTabShape(cut: true))
+            UnitWarningStripe(band: 5).frame(height: 10)
+        }.frame(width: width + 2).overlay { SkinScanlines() }
+            .scaleEffect(x: edge == .left ? -1 : 1)
+            .rotationEffect(.degrees(edge == .top ? -90 : 0))
+            .frame(width: edge == .top ? 140 : width + 2, height: edge == .top ? width + 2 : 140)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: hovering)
+    }
+    @ViewBuilder private var classicTab: some View {
         let width = hovering && !reduceMotion ? 18.0 : 14.0
         let pulse = skin.motion.tabPulse(time: time, reduced: reduceMotion)
         ZStack {

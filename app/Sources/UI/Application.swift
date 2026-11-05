@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import Combine
+import QuartzCore
 
 private typealias EdgeViewState<Value> = SwiftUI.State<Value>
 
@@ -12,8 +13,9 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
     let surface: DropSurface
     var screen: NSScreen
     private var suspended = false
+    private var transitionGeneration = 0
     func suspend() {
-        suspended = true; edgeTimer?.invalidate(); edgeTimer = nil; edgeDrag = nil
+        suspended = true; transitionGeneration += 1; edgeTimer?.invalidate(); edgeTimer = nil; edgeDrag = nil
         panel.dismissPreview(); panel.orderOut(nil)
     }
     func resume(_ mode: PanelMode) { suspended = false; show(mode) }
@@ -100,8 +102,31 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
     }
     func show(_ mode: PanelMode) {
         guard !suspended else { return }
+        let previous = surface.mode
+        transitionGeneration += 1
+        surface.host.layer?.removeAnimation(forKey: "skin-panel")
+        panel.ignoresMouseEvents = false
         surface.mode = mode
         model.canvasVisible = mode == .canvas
+        if model.preferences.skin == .unit01 && mode == .line && previous != .line {
+            let generation = transitionGeneration
+            let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            panel.resignKey(); panel.ignoresMouseEvents = true
+            if !reduced {
+                let frame = panel.frame
+                surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) {
+                    PanelShell(width: max(1, frame.width - (edge == .top ? 48 : 20)), height: max(1, frame.height - (edge == .top ? 20 : 48)), edge: edge) { Color.clear }
+                })
+            }
+            animatePanel(opening: false, reduced: reduced)
+            Task { [weak self] in
+                do { try await Task.sleep(for: .milliseconds(200)) }
+                catch { return }
+                guard let self, self.transitionGeneration == generation, !self.suspended else { return }
+                self.show(.line)
+            }
+            return
+        }
         reposition()
         if mode == .canvas {
             NSApp.activate(ignoringOtherApps: true)
@@ -110,6 +135,23 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
             panel.makeKeyAndOrderFront(nil)
         }
         else { panel.resignKey(); panel.orderFrontRegardless() }
+        if previous == .line && mode != .line && model.preferences.skin == .unit01 {
+            animatePanel(opening: true, reduced: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion)
+        }
+    }
+    private func animatePanel(opening: Bool, reduced: Bool) {
+        // Animate only the presentation layer. AppKit's drag destination stays
+        // under the pointer throughout the slide, including fast Finder drops.
+        surface.host.wantsLayer = true
+        let animation = CABasicAnimation(keyPath: reduced ? "opacity" : edge == .top ? "transform.translation.y" : "transform.translation.x")
+        let travel = edge == .top ? (surface.isFlipped ? -panel.frame.height : panel.frame.height) : edge == .right ? panel.frame.width : -panel.frame.width
+        animation.fromValue = reduced ? (opening ? 0.0 : 1.0) : (opening ? travel : 0)
+        animation.toValue = reduced ? (opening ? 1.0 : 0.0) : (opening ? 0 : travel)
+        animation.duration = opening && !reduced ? 0.32 : 0.2
+        animation.timingFunction = CAMediaTimingFunction(controlPoints: 0.9, 0, 0.1, 1)
+        animation.isRemovedOnCompletion = opening
+        animation.fillMode = .forwards
+        surface.host.layer?.add(animation, forKey: "skin-panel")
     }
     private func reposition() {
         func identifier(_ screen: NSScreen) -> Int { (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.intValue ?? -1 }
@@ -182,7 +224,7 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
 struct EdgeLineView: View {
     @ObservedObject var model: WorkbenchModel
     let open: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @SkinReducedMotion private var reduceMotion
     @EdgeViewState private var hovering = false
     var body: some View {
         TimelineView(.animation(minimumInterval: LedgeSkin.classic.motion.edgeFrameInterval, paused: reduceMotion || model.edgeState == .quiet)) { context in

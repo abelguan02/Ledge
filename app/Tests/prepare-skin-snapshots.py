@@ -7,6 +7,12 @@ source, destination = map(pathlib.Path, sys.argv[1:3])
 shutil.copytree(source, destination)
 (destination / "UI/Application.swift").unlink()  # The fixture supplies @main.
 adapters = {
+    "WorkbenchView.swift": r'''
+// Expose the production artwork beneath the transparent native drag surface.
+// ImageRenderer otherwise substitutes a yellow unsupported-AppKit placeholder.
+extension MaterialView { var snapshotArtwork: some View { content } }
+extension WorkbenchView { var snapshotHeader: some View { header } }
+''',
     "AboutWindow.swift": r'''
 extension AboutView {
     static func snapshot(coffee: Bool) -> Self {

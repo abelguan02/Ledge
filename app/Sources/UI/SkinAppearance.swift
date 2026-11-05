@@ -2,7 +2,11 @@ import SwiftUI
 import AppKit
 
 extension LedgeSkin {
-    static func selected(_ choice: SkinChoice) -> LedgeSkin { choice == .classic ? .classic : .unit01 }
+    static func selected(_ choice: SkinChoice, locale: Locale? = nil) -> LedgeSkin {
+        var skin = choice == .classic ? LedgeSkin.classic : .unit01
+        if let locale { skin.language = SkinLanguage(identifier: locale.identifier) }
+        return skin
+    }
 }
 
 // Stable view identity: only environment values change. In particular this does
@@ -10,6 +14,7 @@ extension LedgeSkin {
 struct SkinRoot<Content: View>: View {
     @ObservedObject var preferences: AppPreferences
     @Environment(\.colorScheme) private var systemScheme
+    @Environment(\.locale) private var locale
     let content: Content
     var scanlines: Bool
     var decorateWindow: Bool
@@ -17,7 +22,7 @@ struct SkinRoot<Content: View>: View {
         self.preferences = preferences; self.scanlines = scanlines; self.decorateWindow = decorateWindow; self.content = content()
     }
     var body: some View {
-        let skin = LedgeSkin.selected(preferences.skin)
+        let skin = LedgeSkin.selected(preferences.skin, locale: locale)
         content
             .background { if decorateWindow { SkinWindowChrome(isUnit: skin.isUnit).frame(width: 0, height: 0) } }
             .foregroundStyle(skin.ink.primary)
@@ -28,7 +33,7 @@ struct SkinRoot<Content: View>: View {
                         .allowsHitTesting(false).accessibilityHidden(true)
                 }
             }
-            .environment(\.ledgeSkin, LedgeSkin.selected(preferences.skin))
+            .environment(\.ledgeSkin, skin)
             .environment(\.colorScheme, preferences.skin == .unit01 ? .dark : systemScheme)
     }
 }
