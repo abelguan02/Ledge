@@ -12,7 +12,10 @@ private typealias AboutState<Value> = SwiftUI.State<Value>
         window.standardWindowButton(.miniaturizeButton)?.isHidden = true
         window.standardWindowButton(.zoomButton)?.isHidden = true
         super.init(window: window)
-        let host = NSHostingView(rootView: SkinRoot(preferences: preferences) { AboutView(update: UpdateCheck(), replay: { [weak window] in window?.orderOut(nil); replay() }) })
+        let host = NSHostingView(rootView: SkinRoot(preferences: preferences) {
+            AboutView(update: UpdateCheck(), replay: { [weak window] in window?.orderOut(nil); replay() },
+                      setWindowTitle: { [weak window] in window?.title = $0 })
+        })
         host.sizingOptions = []
         host.safeAreaRegions = []
         window.contentView = host
@@ -27,6 +30,7 @@ private struct AboutView: View {
     @Environment(\.ledgeSkin) private var skin
     @ObservedObject var update: UpdateCheck
     let replay: () -> Void
+    var setWindowTitle: (String) -> Void = { _ in }
     @AboutState private var coffee = false
     @Environment(\.colorScheme) private var scheme
     private var chinese: Bool { skin.isUnit ? skin.language != .english : AppIdentity.name == "搁这儿" }
@@ -37,6 +41,9 @@ private struct AboutView: View {
             if coffee { coffeePage } else { mainPage }
         }.frame(maxWidth: .infinity, maxHeight: .infinity).ignoresSafeArea().clipShape(skin.shapes.dialog)
             .overlay(skin.shapes.dialog.stroke(skin.ink.floatingBorder, lineWidth: 0.5))
+            .onChange(of: skin.isUnit ? skin.phrase("关于 %@", skin.label("搁这儿")) : "关于 \(AppIdentity.name)", initial: true) { _, title in
+                setWindowTitle(title)
+            }
     }
     private var mainPage: some View {
         VStack(spacing: 0) {

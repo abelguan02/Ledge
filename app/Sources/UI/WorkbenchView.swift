@@ -140,7 +140,7 @@ struct WorkbenchView: View {
     }
     private var actionBar: some View {
         HStack(spacing: skin.isUnit ? 7 : 14) {
-            Text(skin.phrase("%d 样", model.selectedItems.count)).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
+            Text(skin.itemCount(model.selectedItems.count)).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
             if model.canStack { Button(skin.label("创建堆叠")) { model.createStack() }.buttonStyle(.plain).font(skin.typography.caption) }
             Button { model.copySelected() } label: { if skin.isUnit { Text(skin.label("复制")) } else { Image(systemName: "doc.on.doc").font(skin.typography.actionIcon) } }
                 .buttonStyle(.plain).accessibilityLabel(skin.label("复制选中")).help(skin.label("复制选中（⌘C）"))
@@ -237,7 +237,7 @@ struct StackTrayOverlay: View {
                         .fill(skin.materials.regular).frame(width: 332, height: height).offset(x: origin.x, y: origin.y).allowsHitTesting(false)
                     VStack(spacing: 0) {
                         HStack {
-                            Text(skin.phrase("%d 样", members.count)).font(skin.typography.captionMedium).foregroundStyle(skin.ink.secondary)
+                            Text(skin.itemCount(members.count)).font(skin.typography.captionMedium).foregroundStyle(skin.ink.secondary)
                             Spacer()
                             Button(skin.label("解除堆叠")) { model.dissolveStack(stack) }.buttonStyle(.plain).font(skin.typography.caption).disabled(model.locked)
                         }.padding(.horizontal, 18).frame(height: 46)

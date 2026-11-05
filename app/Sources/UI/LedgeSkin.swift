@@ -305,6 +305,9 @@ extension LedgeSkin {
               let bundle = Bundle(path: path) else { return key }
         return bundle.localizedString(forKey: key, value: key, table: "Unit")
     }
+    func itemCount(_ count: Int) -> String {
+        isUnit && language == .english && count == 1 ? "1 item" : phrase("%d 样", count)
+    }
     func phrase(_ key: String, _ values: CVarArg...) -> String {
         String(format: label(key), arguments: values)
     }

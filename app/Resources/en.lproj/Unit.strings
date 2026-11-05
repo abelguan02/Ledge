@@ -193,3 +193,4 @@
 "处理仍在进行，可收起面板等待。" = "Still processing. You can collapse the panel while you wait.";
 "这个拖入内容没有可读取的文件、文字或图片。" = "Nothing in this drop can be read as a file, text or image.";
 "剪贴板中没有可接收的文件、文字或图片。" = "The clipboard contains no files, text or images to collect.";
+"关于 %@" = "About %@";

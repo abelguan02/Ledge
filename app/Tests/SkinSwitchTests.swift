@@ -200,8 +200,40 @@ private struct SkinProbe: NSViewRepresentable {
         let payload = try Data(contentsOf: stored)
         precondition(renders[0] == renders[2] && renders[0] != renders[1] && payload == original)
         print("PASS production imported thumbnail: Unit idle toned, selected matches original rendering; stored copy unchanged")
+        try await checkUnitDrop(item: item, model: model)
         try checkLanguages(preferences: preferences, model: model, root: root)
         print("PASS bundled renamed Black font, Songti fallback, identical fixed-dark renders, both General settings; no visible windows or network")
+    }
+
+    // Exercise the callbacks delivered by AppKit separately from real pointer
+    // delivery. A synthetic NSDraggingInfo is not evidence of a physical drag.
+    static func checkUnitDrop(item: Material, model: WorkbenchModel) async throws {
+        model.collectionPage = .closed; model.selected = [item.id]; model.isExpanded = false
+        model.preferences.skin = .unit01
+        let surface = DropSurface(model: model)
+        surface.mode = .canvas
+        surface.frame = CGRect(x: 0, y: 0, width: 540, height: 768)
+        let window = DumpPanel(contentRect: surface.frame, styleMask: .borderless, backing: .buffered, defer: false)
+        window.contentView = surface; window.receiveDrops(on: surface)
+        surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences) { WorkbenchView(model: model) })
+        surface.layoutSubtreeIfNeeded()
+        try await Task.sleep(for: .milliseconds(120))
+        let source = MaterialDragView(model: model, item: item)
+        let drag = SyntheticDrag(); defer { drag.draggingPasteboard.releaseGlobally() }
+        drag.draggingSource = source; drag.draggingDestinationWindow = window
+        let writers = try source.makeDraggingItems().map { $0.item as! NSPasteboardItem }
+        precondition(drag.draggingPasteboard.writeObjects(writers))
+        model.dragging = item.id; model.draggedIDs = [item.id]
+        drag.draggingLocation = surface.convert(CGPoint(x: 330, y: 480), to: nil)
+        precondition(window.draggingEntered(drag) == .move && window.draggingUpdated(drag) == .move)
+        let preview = model.dragPoint
+        precondition(preview != nil && preview != item.position)
+        precondition(window.performDragOperation(drag)); await model.waitForWrites()
+        precondition(model.items.first(where: { $0.id == item.id })?.position == preview)
+        precondition(!window.isVisible)
+        model.dragging = nil; model.draggedIDs = []; model.dragPoint = nil
+        window.contentView = nil
+        print("PASS Unit native drag writer, hidden panel enter/update/drop and persisted move at the previewed position (synthetic sender)")
     }
 
     static func checkLanguages(preferences: AppPreferences, model: WorkbenchModel, root: URL) throws {
@@ -211,6 +243,9 @@ private struct SkinProbe: NSViewRepresentable {
             let locale = Locale(identifier: id)
             let skin = LedgeSkin.selected(.unit01, locale: locale)
             precondition(skin.label("通用") == expected)
+            if skin.language == .english {
+                precondition(skin.itemCount(1) == "1 item" && skin.itemCount(2) == "2 items")
+            }
             precondition(skin.phrase("清空“%@”中的%d样材料？", "海貓", 7).contains("海貓"))
             if skin.language == .traditional { precondition(skin.label("皮肤") == "皮膚") }
             func save<V: View>(_ view: V, _ name: String, _ width: CGFloat, _ height: CGFloat) throws {

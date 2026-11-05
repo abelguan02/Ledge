@@ -176,7 +176,7 @@ struct CollectionMenuView: View {
                             HStack {
                                 Text(group.name).lineLimit(1).help(group.name); current(group.id); Spacer()
                                 let count = snapshot.members[group.id]?.count ?? 0
-                                Text(count == 0 ? skin.label("空") : skin.phrase("%d 样", count)).foregroundStyle(skin.ink.secondary).fixedSize()
+                                Text(count == 0 ? skin.label("空") : skin.itemCount(count)).foregroundStyle(skin.ink.secondary).fixedSize()
                             }.frame(height: 24)
                         }
                     }.padding(.horizontal, 8)

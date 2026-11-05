@@ -354,10 +354,17 @@ enum PanelMode { case line, drop, canvas }
 struct DropView: View {
     @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
+    private var unitCount: String {
+        let noun = switch model.dropKind { case .image: "张图片"; case .text: "段文字"; case .link: "个链接"; case .file: "个文件" }
+        if model.dropCount == 1 && skin.language == .english {
+            switch model.dropKind { case .image: return "1 image"; case .text: return "1 text item"; case .link: return "1 link"; case .file: return "1 file" }
+        }
+        return "\(model.dropCount) \(skin.label(noun))"
+    }
     var body: some View {
         PanelShell(width: 300, height: 420, edge: model.preferences.dockEdge) {
             VStack(spacing: 12) {
-                Text("\(model.dropCount) \(skin.label(model.dropKind == .image ? "张图片" : model.dropKind == .text ? "段文字" : model.dropKind == .link ? "个链接" : "个文件")) → \(model.collectionName)")
+                (skin.isUnit ? Text("\(unitCount) → \(model.collectionName)") : Text("\(model.dropCount) \(skin.label(model.dropKind == .image ? "张图片" : model.dropKind == .text ? "段文字" : model.dropKind == .link ? "个链接" : "个文件")) → \(model.collectionName)"))
                     .font(skin.isUnit ? .system(size: 15, weight: .semibold) : skin.typography.caption)
                     .foregroundStyle(skin.isUnit ? AnyShapeStyle(skin.palette.accent) : skin.ink.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                     .modifier(UnitBootBlock(index: 0))

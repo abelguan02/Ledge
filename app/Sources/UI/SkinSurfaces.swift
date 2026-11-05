@@ -212,9 +212,9 @@ struct SkinSegments<Value: Hashable>: View {
                             .frame(maxWidth: .infinity).padding(.horizontal, choices.count >= 5 ? 2 : 6).frame(height: 28)
                             .foregroundStyle(selection == value ? skin.palette.base : skin.palette.primary)
                             .background(selection == value ? skin.palette.accent : skin.palette.inset)
-                    }.buttonStyle(.plain).accessibilityAddTraits(selection == value ? .isSelected : [])
+                    }.buttonStyle(.plain).accessibilityLabel(skin.label(label)).accessibilityAddTraits(selection == value ? .isSelected : [])
                 }
-            }.overlay(Rectangle().stroke(skin.palette.line, lineWidth: 1).allowsHitTesting(false)).accessibilityLabel(skin.label(title))
+            }.overlay(Rectangle().stroke(skin.palette.line, lineWidth: 1).allowsHitTesting(false)).accessibilityElement(children: .contain).accessibilityLabel(skin.label(title))
         } else {
             Picker(title, selection: $selection) { ForEach(choices, id: \.0) { value, label in Text(label).tag(value) } }
                 .labelsHidden().pickerStyle(.segmented)

@@ -80,7 +80,7 @@ private struct SettingsView: View {
                             SkinSegments(title: "皮肤", choices: SkinChoice.allCases.map { ($0, skin.isUnit ? $0.title(language: skin.language.rawValue) : $0.title()) }, selection: $preferences.skin).frame(width: 180)
                         }
                         Divider()
-                        row("登录时启动") { Toggle("登录时启动", isOn: Binding(get: { login.enabled }, set: { login.set($0) })).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small) }
+                        row("登录时启动") { Toggle(skin.label("登录时启动"), isOn: Binding(get: { login.enabled }, set: { login.set($0) })).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small) }
                         Divider()
                         row(skin.phrase("显示／收起 %@", skin.isUnit ? skin.label("搁这儿") : AppIdentity.name)) { ShortcutRecorder(shortcut: shortcut, preferences: preferences).frame(width: 182, height: 28) }
                         if !shortcut.error.isEmpty { Text(skin.label(shortcut.error)).font(skin.typography.small).foregroundStyle(skin.palette.destructive).frame(maxWidth: .infinity, alignment: .trailing).padding(.horizontal, 12).padding(.bottom, 6) }
@@ -108,7 +108,7 @@ private struct SettingsView: View {
                     }
                 case .ai:
                     group {
-                        row("AI 处理") { Toggle("AI 处理", isOn: $preferences.aiEnabled).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small).disabled(model.codexAvailable == false) }
+                        row("AI 处理") { Toggle(skin.label("AI 处理"), isOn: $preferences.aiEnabled).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small).disabled(model.codexAvailable == false) }
                         HStack(spacing: 6) {
                             skin.shapes.circle.fill(model.codexAvailable == false ? skin.palette.destructive : preferences.aiEnabled && model.codexAvailable == true ? skin.palette.connected : skin.palette.inactive).frame(width: 6, height: 6)
                             Text(skin.label(model.aiStatus)).foregroundStyle(skin.ink.secondary); Spacer()
@@ -116,7 +116,7 @@ private struct SettingsView: View {
                         }.padding(.horizontal, 12).padding(.bottom, 12)
                     }
                 case .web:
-                    group { row("自动生成网页截图") { Toggle("自动生成网页截图", isOn: $preferences.automaticWebPreviews).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small) } }
+                    group { row("自动生成网页截图") { Toggle(skin.label("自动生成网页截图"), isOn: $preferences.automaticWebPreviews).labelsHidden().toggleStyle(SkinSwitchToggleStyle()).controlSize(.small) } }
                 }
             }.padding(.horizontal, 24)
             Spacer(minLength: 0)
