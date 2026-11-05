@@ -26,4 +26,4 @@ for version in baseline candidate; do
 done
 xcrun swiftc -swift-version 6 -warnings-as-errors -parse-as-library \
     -module-cache-path "$test_root/module-cache" Tests/CompareSkinSnapshots.swift -o "$test_root/compare"
-"$test_root/compare" "$test_root"
+"$test_root/compare" "$test_root" "${2:-}"

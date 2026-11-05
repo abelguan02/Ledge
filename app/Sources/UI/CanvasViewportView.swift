@@ -284,7 +284,7 @@ struct ScaledCanvasContent: View {
     let size: CGSize
     let zoom: Double
     var body: some View {
-        CanvasContent(model: model, size: size)
+        SkinRoot(preferences: model.preferences, scanlines: false, decorateWindow: false) { CanvasContent(model: model, size: size) }
             .scaleEffect(zoom, anchor: .topLeading)
             .frame(width: size.width * zoom, height: size.height * zoom, alignment: .topLeading)
     }

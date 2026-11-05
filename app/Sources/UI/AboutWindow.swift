@@ -4,7 +4,7 @@ import SwiftUI
 private typealias AboutState<Value> = SwiftUI.State<Value>
 
 @MainActor final class AboutController: NSWindowController {
-    init(replay: @escaping () -> Void) {
+    init(preferences: AppPreferences = AppPreferences(), replay: @escaping () -> Void) {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 340, height: 470), styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
         window.title = "关于 \(AppIdentity.name)"; window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true; window.isOpaque = false; window.backgroundColor = .clear
@@ -12,7 +12,7 @@ private typealias AboutState<Value> = SwiftUI.State<Value>
         window.standardWindowButton(.miniaturizeButton)?.isHidden = true
         window.standardWindowButton(.zoomButton)?.isHidden = true
         super.init(window: window)
-        let host = NSHostingView(rootView: AboutView(update: UpdateCheck(), replay: { [weak window] in window?.orderOut(nil); replay() }))
+        let host = NSHostingView(rootView: SkinRoot(preferences: preferences) { AboutView(update: UpdateCheck(), replay: { [weak window] in window?.orderOut(nil); replay() }) })
         host.sizingOptions = []
         host.safeAreaRegions = []
         window.contentView = host

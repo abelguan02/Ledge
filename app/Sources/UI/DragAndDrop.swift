@@ -3,15 +3,16 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct CardResizeHandle: NSViewRepresentable {
+    @Environment(\.ledgeSkin) private var skin
     let model: WorkbenchModel
     let item: Material
     func makeNSView(context: Context) -> CardResizeView { CardResizeView(model: model, item: item) }
-    func updateNSView(_ view: CardResizeView, context: Context) { view.item = item; view.needsDisplay = true }
+    func updateNSView(_ view: CardResizeView, context: Context) { view.skin = skin; view.item = item; view.needsDisplay = true }
     static func dismantleNSView(_ view: CardResizeView, coordinator: ()) { view.cancelOperation(nil) }
 }
 
 @MainActor final class CardResizeView: NSView {
-    private let skin = LedgeSkin.classic
+    var skin = LedgeSkin.classic
     let model: WorkbenchModel
     var item: Material
     private var start: CGPoint?

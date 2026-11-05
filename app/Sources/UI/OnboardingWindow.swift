@@ -23,7 +23,7 @@ private final class GuidePanel: NSPanel {
         panel.backgroundColor = .clear; panel.isOpaque = false; panel.isReleasedWhenClosed = false
         panel.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
         panel.collectionBehavior = [.fullScreenAuxiliary]; panel.delegate = self
-        panel.contentView = NSHostingView(rootView: OnboardingView(session: session, preferences: preferences, finish: { [weak self] in self?.close() }))
+        panel.contentView = NSHostingView(rootView: SkinRoot(preferences: preferences) { OnboardingView(session: session, preferences: preferences, finish: { [weak self] in self?.close() }) })
         self.panel = panel; NSApp.activate(ignoringOtherApps: true); panel.makeKeyAndOrderFront(nil)
     }
     private func close() { panel?.close() }

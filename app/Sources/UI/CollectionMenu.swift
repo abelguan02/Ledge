@@ -10,11 +10,11 @@ struct CollectionPopover: NSViewRepresentable {
     @MainActor final class Coordinator: NSObject, NSPopoverDelegate {
         let model: WorkbenchModel
         let popover = NSPopover()
-        let host: NSHostingController<CollectionMenuView>
+        let host: NSHostingController<SkinRoot<CollectionMenuView>>
         var monitor: Any?
         weak var anchor: NSView?
         init(_ model: WorkbenchModel) {
-            self.model = model; host = NSHostingController(rootView: CollectionMenuView(model: model))
+            self.model = model; host = NSHostingController(rootView: SkinRoot(preferences: model.preferences) { CollectionMenuView(model: model) })
             super.init()
             host.sizingOptions = [.preferredContentSize]
             popover.contentViewController = host; popover.behavior = .applicationDefined; popover.delegate = self

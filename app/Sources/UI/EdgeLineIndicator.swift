@@ -16,7 +16,7 @@ struct EdgeLineIndicator: View {
             ZStack {
                 TabGlass()
                 skin.palette.tab
-            }.opacity(0.62)
+            }.opacity(skin.isUnit ? 1 : 0.62)
             ZStack(alignment: .top) {
                 switch state {
                 case .quiet: skin.palette.tabQuiet
@@ -33,9 +33,10 @@ struct EdgeLineIndicator: View {
             }.frame(width: 3, height: 28).clipShape(skin.shapes.capsule)
         }
         .frame(width: width, height: 80)
-        .clipShape(GlassTabShape())
+        .overlay { if skin.isUnit { SkinScanlines() } }
+        .clipShape(GlassTabShape(cut: skin.isUnit))
         .overlay {
-            GlassTabShape(closed: false).stroke(
+            GlassTabShape(closed: false, cut: skin.isUnit).stroke(
                 LinearGradient(stops: [.init(color: skin.palette.tabBorderTop, location: 0),
                                        .init(color: skin.palette.stackBorder, location: 0.3),
                                        .init(color: skin.palette.stackBorder, location: 0.7),

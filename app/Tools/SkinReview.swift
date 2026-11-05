@@ -50,7 +50,7 @@ import SwiftUI
         panel = PanelController(model: model)
         settings = SettingsController(model: model, shortcut: GlobalShortcut(preferences: preferences, registry: SkinReviewShortcuts()), login: LoginPreference())
         guide = OnboardingController(preferences: preferences) { [weak self] in self?.panel.resume(.canvas) }
-        about = AboutController { [weak self] in self?.showGuide() }
+        about = AboutController(preferences: preferences) { [weak self] in self?.showGuide() }
         model.requestSettings = { [weak self] in self?.settings.present() }
         let menu = NSMenu()
         let item = NSMenuItem(title: "经典验收", action: nil, keyEquivalent: "")

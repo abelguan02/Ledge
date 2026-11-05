@@ -33,8 +33,12 @@ import ImageIO
         guard !before.isEmpty, Set(before.keys) == Set(after.keys) else {
             print("FAIL snapshot inventory differs or is empty"); exit(1)
         }
-        var exact = 0, rounded = 0, failures: [String] = []
+        // The skin selector is an explicitly requested change to General only.
+        // Still compare inventory and every other screen; report the exception.
+        let newSelector = CommandLine.arguments.contains("--new-skin-selector")
+        var exact = 0, rounded = 0, expectedChanges = 0, failures: [String] = []
         for name in before.keys.sorted() {
+            if newSelector && name.hasSuffix("-settings-0") { expectedChanges += 1; continue }
             if before[name] == after[name] { exact += 1; continue }
             let a = try Bitmap(root.appendingPathComponent("baseline/\(name).png"))
             let b = try Bitmap(root.appendingPathComponent("candidate/\(name).png"))
@@ -45,6 +49,6 @@ import ImageIO
             else { failures.append("\(name): maximum channel difference \(delta)/255") }
         }
         guard failures.isEmpty else { print("FAIL Classic render differences:\n" + failures.joined(separator: "\n")); exit(1) }
-        print("PASS \(before.count) Classic production renders: \(exact) pixel-identical, \(rounded) within measured baseline rounding (1/255 per channel)")
+        print("PASS \(exact + rounded) Classic production renders: \(exact) pixel-identical, \(rounded) within measured baseline rounding (1/255 per channel); \(expectedChanges) General renders excluded for the new skin selector")
     }
 }

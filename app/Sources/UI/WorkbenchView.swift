@@ -16,17 +16,20 @@ struct PanelShell<Content: View>: View {
         ZStack(alignment: .topLeading) {
             GlassBackground()
                 .overlay(skin.palette.panelTint(dark: scheme == .dark))
-                .clipShape(EdgePanelShape(edge: edge))
-                .overlay(EdgePanelShape(edge: edge).strokeBorderColor(scheme == .dark ? skin.palette.stackFront : skin.palette.lightPanelBorder))
+                .clipShape(EdgePanelShape(edge: edge, cut: skin.isUnit))
+                .overlay(EdgePanelShape(edge: edge, cut: skin.isUnit).stroke(skin.isUnit ? skin.palette.line : scheme == .dark ? skin.palette.stackFront : skin.palette.lightPanelBorder, lineWidth: skin.isUnit ? 2 : 0.5))
+                .overlay { if skin.isUnit { UnitPanelTrim(edge: edge).clipShape(EdgePanelShape(edge: edge, cut: true)) } }
                 .skinShadow(skin.shadows.panel(dark: scheme == .dark, x: edge == .right ? -8 : edge == .left ? 8 : 0, y: edge == .top ? 8 : 6))
                 .frame(width: width + (edge == .top ? 48 : 0), height: height + (edge == .top ? 0 : 48))
                 .offset(x: edge == .right ? 20 : 0)
             content().frame(width: width, height: height).offset(x: edge == .top ? 24 : edge == .right ? 20 : 0, y: edge == .top ? 0 : 24)
+        }.overlay(alignment: .topLeading) {
+            if skin.isUnit {
+                SkinScanlines().frame(width: width + (edge == .top ? 48 : 0), height: height + (edge == .top ? 0 : 48))
+                    .clipShape(EdgePanelShape(edge: edge, cut: true)).offset(x: edge == .right ? 20 : 0)
+            }
         }.frame(width: width + (edge == .top ? 48 : 20), height: height + (edge == .top ? 20 : 48), alignment: .topLeading)
     }
-}
-private extension Shape {
-    func strokeBorderColor(_ color: Color) -> some View { stroke(color, lineWidth: 0.5) }
 }
 struct WorkbenchView: View {
     @Environment(\.ledgeSkin) private var skin
@@ -105,7 +108,7 @@ struct WorkbenchView: View {
             }.buttonStyle(.plain).accessibilityLabel(model.isExpanded ? "收回到屏幕边" : "铺开画布")
             Button { model.collapse?() } label: { Image(systemName: model.preferences.dockEdge == .top ? "chevron.up" : model.preferences.dockEdge == .left ? "chevron.left" : "chevron.right").font(skin.typography.captionStrong).frame(width: 28, height: 28).background(skin.ink.headerControl, in: skin.shapes.circle) }
                 .buttonStyle(.plain).accessibilityLabel("收起")
-        }.padding(.horizontal, 16).frame(height: 52)
+        }.padding(.horizontal, skin.isUnit ? 32 : 16).frame(height: 52)
     }
     private var canvas: some View {
         CanvasViewportView(model: model)

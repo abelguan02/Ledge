@@ -7,7 +7,7 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
 @MainActor final class PanelController {
     let model: WorkbenchModel
     var edge: DockEdge
-    func setEdge(_ value: DockEdge) { edge = value; reposition() }
+    func setEdge(_ value: DockEdge) { guard edge != value else { return }; edge = value; reposition() }
     let panel: DumpPanel
     let surface: DropSurface
     var screen: NSScreen
@@ -135,9 +135,9 @@ private typealias EdgeViewState<Value> = SwiftUI.State<Value>
     }
     private func updateRoot() {
         switch surface.mode {
-        case .canvas: surface.host.rootView = AnyView(WorkbenchView(model: model, width: max(1, panel.frame.width - (edge == .top ? 48 : 20)), height: max(1, panel.frame.height - (edge == .top ? 20 : 48))))
-        case .drop: surface.host.rootView = AnyView(DropView(model: model))
-        case .line: surface.host.rootView = AnyView(EdgeLineView(model: model, open: { [weak self] in self?.show(.canvas) }))
+        case .canvas: surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) { WorkbenchView(model: model, width: max(1, panel.frame.width - (edge == .top ? 48 : 20)), height: max(1, panel.frame.height - (edge == .top ? 20 : 48))) })
+        case .drop: surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) { DropView(model: model) })
+        case .line: surface.host.rootView = AnyView(SkinRoot(preferences: model.preferences, scanlines: false) { EdgeLineView(model: model, open: { [weak self] in self?.show(.canvas) }) })
         }
     }
     private func handle(_ event: NSEvent) -> NSEvent? {
@@ -231,7 +231,7 @@ struct EdgeLineView: View {
             shortcut.start()
             let settingsWindow = SettingsController(model: model, shortcut: shortcut, login: LoginPreference())
             settingsController = settingsWindow; settingsAction = { [weak settingsWindow] in settingsWindow?.present() }
-            let aboutWindow = AboutController { [weak self] in self?.presentOnboarding(automatic: false) }
+            let aboutWindow = AboutController(preferences: preferences) { [weak self] in self?.presentOnboarding(automatic: false) }
             aboutController = aboutWindow; aboutAction = { [weak aboutWindow] in aboutWindow?.present() }
             preferenceObservation = preferences.objectWillChange.sink { [weak self, weak model] in
                 Task { @MainActor in

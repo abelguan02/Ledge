@@ -29,12 +29,12 @@ private typealias SettingsState<Value> = SwiftUI.State<Value>
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 250), styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         super.init(window: window)
-        window.contentView = NSHostingView(rootView: SettingsView(model: model, preferences: model.preferences, shortcut: shortcut, login: login, resize: { [weak window] title, height in
+        window.contentView = NSHostingView(rootView: SkinRoot(preferences: model.preferences) { SettingsView(model: model, preferences: model.preferences, shortcut: shortcut, login: login, resize: { [weak window] title, height in
             guard let window else { return }
             window.title = title
             let frame = window.frameRect(forContentRect: NSRect(x: 0, y: 0, width: 520, height: height))
             window.setFrame(NSRect(x: window.frame.minX, y: window.frame.maxY - frame.height, width: frame.width, height: frame.height), display: true, animate: LedgeSkin.classic.motion.animateSettingsResize(reduced: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion))
-        }))
+        }) })
         window.center()
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) is unavailable") }
@@ -45,7 +45,7 @@ private typealias SettingsState<Value> = SwiftUI.State<Value>
 private enum SettingsTab: String, CaseIterable {
     case general = "通用", storage = "存储", ai = "AI", web = "网页预览"
     var symbol: String { switch self { case .general: "gearshape"; case .storage: "internaldrive"; case .ai: "sparkles"; case .web: "globe" } }
-    var height: CGFloat { switch self { case .general: 250; case .storage: 380; case .ai: 195; case .web: 155 } }
+    var height: CGFloat { switch self { case .general: 291; case .storage: 380; case .ai: 195; case .web: 155 } }
 }
 
 private struct SettingsView: View {
@@ -62,9 +62,13 @@ private struct SettingsView: View {
             HStack(spacing: 12) {
                 ForEach(SettingsTab.allCases, id: \.self) { page in
                     Button { tab = page } label: {
-                        VStack(spacing: 4) { Image(systemName: page.symbol).font(skin.typography.settingsIcon); Text(page.rawValue).font(skin.typography.small) }
-                            .frame(width: 72, height: 54).foregroundStyle(tab == page ? skin.palette.accent : skin.palette.secondary)
+                        VStack(spacing: 4) {
+                            if skin.isUnit { SkinDisplayText(page.rawValue, size: 34) }
+                            else { Image(systemName: page.symbol).font(skin.typography.settingsIcon); Text(page.rawValue).font(skin.typography.small) }
+                        }
+                            .frame(width: skin.isUnit ? 104 : 72, height: 54).foregroundStyle(tab == page ? skin.palette.accent : skin.palette.secondary)
                             .background(tab == page ? skin.palette.settingsTab : skin.palette.clear, in: skin.shapes.control)
+                            .overlay(alignment: .bottom) { if skin.isUnit && tab == page { skin.palette.accent.frame(height: 3) } }
                     }.buttonStyle(.plain)
                 }
             }.padding(.top, 10)
@@ -72,6 +76,12 @@ private struct SettingsView: View {
                 switch tab {
                 case .general:
                     group {
+                        row("皮肤") {
+                            Picker("皮肤", selection: $preferences.skin) {
+                                ForEach(SkinChoice.allCases, id: \.self) { Text($0.title()).tag($0) }
+                            }.labelsHidden().pickerStyle(.segmented).frame(width: 180)
+                        }
+                        Divider()
                         row("登录时启动") { Toggle("登录时启动", isOn: Binding(get: { login.enabled }, set: { login.set($0) })).labelsHidden().toggleStyle(.switch).controlSize(.small) }
                         Divider()
                         row("显示／收起 \(AppIdentity.name)") { ShortcutRecorder(shortcut: shortcut, preferences: preferences).frame(width: 182, height: 28) }
@@ -129,6 +139,7 @@ private struct SettingsView: View {
 }
 
 private struct ShortcutRecorder: NSViewRepresentable {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var shortcut: GlobalShortcut
     @ObservedObject var preferences: AppPreferences
     func makeNSView(context: Context) -> ShortcutField {
@@ -137,11 +148,11 @@ private struct ShortcutRecorder: NSViewRepresentable {
         view.recordingFeedback = { shortcut.error = $0 }
         return view
     }
-    func updateNSView(_ view: ShortcutField, context: Context) { view.label = preferences.shortcut?.display ?? ""; view.needsDisplay = true }
+    func updateNSView(_ view: ShortcutField, context: Context) { view.skin = skin; view.label = preferences.shortcut?.display ?? ""; view.needsDisplay = true }
     static func dismantleNSView(_ view: ShortcutField, coordinator: ()) { view.stopRecording() }
 }
 final class ShortcutField: NSView {
-    private let skin = LedgeSkin.classic
+    var skin = LedgeSkin.classic
     var label = ""
     var changed: ((AppShortcut?) -> Void)?
     var recordingFeedback: ((String) -> Void)?
