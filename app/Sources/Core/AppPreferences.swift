@@ -30,6 +30,9 @@ enum SkinChoice: String, CaseIterable, Sendable {
     @Published var collectionLimit: Int64 { didSet { defaults?.set(collectionLimit, forKey: "collectionLimit") } }
     @Published var itemLimit: Int64 { didSet { defaults?.set(itemLimit, forKey: "itemLimit") } }
     @Published var freeDiskLimit: Int64 { didSet { defaults?.set(freeDiskLimit, forKey: "freeDiskLimit") } }
+    static func savedLanguage(in defaults: UserDefaults?, preferredLanguages: [String] = Locale.preferredLanguages) -> LanguageChoice {
+        defaults?.string(forKey: "interfaceLanguage").flatMap(LanguageChoice.init(rawValue:)) ?? .initial(preferredLanguages)
+    }
     init(defaults: UserDefaults? = nil, preferredLanguages: [String] = Locale.preferredLanguages) {
         self.preferredLanguages = preferredLanguages
         self.defaults = defaults
@@ -42,7 +45,7 @@ enum SkinChoice: String, CaseIterable, Sendable {
         } else { shortcut = .initial }
         aiEnabled = defaults?.object(forKey: "aiEnabled") as? Bool ?? true
         automaticWebPreviews = defaults?.object(forKey: "automaticWebPreviews") as? Bool ?? true
-        language = defaults?.string(forKey: "interfaceLanguage").flatMap(LanguageChoice.init(rawValue:)) ?? .initial(preferredLanguages)
+        language = Self.savedLanguage(in: defaults, preferredLanguages: preferredLanguages)
         skin = SkinChoice(rawValue: defaults?.string(forKey: "skin") ?? "classic") ?? .classic
         dockEdge = DockEdge(rawValue: defaults?.string(forKey: "dockEdge") ?? "right") ?? .right
         collectionLimit = (defaults?.object(forKey: "collectionLimit") as? NSNumber)?.int64Value ?? 5_000_000_000

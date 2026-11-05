@@ -7,7 +7,8 @@ struct CodexLaunch {
     static func quote(_ text: String) -> String {
         String(data: try! JSONSerialization.data(withJSONObject: [text], options: [.withoutEscapingSlashes]), encoding: .utf8)!.dropFirst().dropLast().description
     }
-    static func disabledMCP(_ text: String) throws -> [String] {
+    static func disabledMCP(_ configuration: String) throws -> [String] {
+        let text = configuration.replacingOccurrences(of: "\r\n", with: "\n")
         try rejectEscapedKeys(text)
         let inline = try NSRegularExpression(pattern: #"(?m)^\s*(?:mcp_servers|"mcp_servers"|'mcp_servers')\s*(?:=|\.)"#)
         guard inline.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) == nil else {

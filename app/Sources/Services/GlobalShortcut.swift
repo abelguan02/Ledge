@@ -72,7 +72,8 @@ import Carbon
             do { if let oldID { try registry.unregister(id: oldID) } }
             catch { if shortcut != nil { try registry.unregister(id: nextID) }; throw error }
             activeID = shortcut == nil ? nil : nextID
-            preferences.shortcut = shortcut; error = ""
+            if !initial { preferences.shortcut = shortcut }
+            error = ""
         } catch { self.error = error.localizedDescription }
     }
 }

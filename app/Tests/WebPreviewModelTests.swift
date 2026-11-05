@@ -52,6 +52,17 @@ import AppKit
             precondition(text.contains(model.openURL(for: item)!.absoluteString) && text.contains(model.linkTitle(item)) && text.contains(model.linkSiteName(item)))
             precondition(file != model.payloadURLs[item.id] && !file.path.hasPrefix(root.path))
         }
+        for (locale, marker) in [("en", "No screenshot is available."), ("zh-Hant", "尚無網頁截圖"), ("zh-Hans", "尚无网页截图")] {
+            let prefs = AppPreferences(preferredLanguages: [locale])
+            let translated = WorkbenchModel(library: library, preferences: prefs)
+            await translated.refresh(); translated.selected = [a.id]
+            translated.presentPreview = { previews = $0 }
+            translated.previewSelected()
+            let file = previews[0].previewItemURL!
+            let text = try String(contentsOf: file, encoding: .utf8)
+            precondition(text.contains(marker) && text.contains("自带标题") && text.contains(aURL) && file.isFileURL)
+            try await translated.shutdown()
+        }
         precondition(harness.calls.count == 1, "preview must not schedule any webpage capture")
         harness.complete(.success(result)); try await until { harness.calls.count == 2 }
         precondition(harness.calls[1].url.absoluteString == bURL)

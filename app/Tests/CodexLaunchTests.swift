@@ -19,6 +19,12 @@ import Foundation
                      #"note = '''quote'''''"# + "\n" + #"["mcp_\u0073ervers".remote]"#] {
             do { _ = try CodexLaunch.disabledMCP(text); fatalError("Unsupported config must fail closed") } catch is AIError {}
         }
+        for newline in ["\n", "\r\n"] {
+            let escaped = ["# Configuration", #"["mcp\u005fservers".remote]"#, "url='https://synthetic.invalid'"].joined(separator: newline)
+            do { _ = try CodexLaunch.disabledMCP(escaped); fatalError("Escaped server declaration must fail closed") } catch is AIError {}
+            let normal = try CodexLaunch.disabledMCP("# Configuration" + newline + "[mcp_servers.remote]" + newline)
+            precondition(normal == ["mcp_servers.remote.enabled=false"])
+        }
         let empty = try CodexLaunch.disabledMCP("# [mcp_servers.ignored]\nmodel='synthetic'")
         precondition(empty.isEmpty)
         let values = #"""

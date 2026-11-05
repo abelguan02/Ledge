@@ -257,9 +257,8 @@ struct EdgeLineView: View {
     private var preferenceObservation: AnyCancellable?
     func applicationDidFinishLaunching(_ notification: Notification) {
         UIFocusTrace.start()
-        let preferences = AppPreferences(defaults: .standard)
         do {
-            let root = try LibraryLocation.open(language: preferences.interfaceLanguage)
+            let (root, preferences) = try LibraryLocation.openForLaunch()
             let library = try Library(root: root, limits: preferences.capacity)
             let model = WorkbenchModel(library: library, webSnapshot: { url, manual, progress in
                 try await WebSnapshotCapture().capture(url, permitsOneTime: manual, progress: progress)
@@ -310,7 +309,8 @@ struct EdgeLineView: View {
                 }
             }
         } catch {
-            let alert = NSAlert(); alert.messageText = preferences.interfaceLanguage.phrase("%@无法打开收集区", preferences.interfaceLanguage.label("搁这儿")); alert.informativeText = InterfaceText(error: error).rendered(preferences.interfaceLanguage)
+            let language = AppPreferences.savedLanguage(in: .standard).resolve()
+            let alert = NSAlert(); alert.messageText = language.phrase("%@无法打开收集区", language.label("搁这儿")); alert.informativeText = InterfaceText(error: error).rendered(language)
             alert.runModal(); NSApp.terminate(nil)
         }
     }

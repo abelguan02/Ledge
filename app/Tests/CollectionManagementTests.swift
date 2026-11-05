@@ -2,7 +2,7 @@ import Foundation
 
 @main struct CollectionManagementTests {
     static func check(_ value: Bool, file: StaticString = #file, line: UInt = #line) { precondition(value, file: file, line: line) }
-    static func removed(_ result: CollectionRemovalResult) -> Bool {
+    static func removed(_ result: RemovalResult<CollectionRemovalSnapshot>) -> Bool {
         if case .removed(cleanupWarning: nil) = result { return true }
         return false
     }

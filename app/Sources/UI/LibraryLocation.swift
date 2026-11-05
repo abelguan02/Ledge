@@ -7,6 +7,12 @@ import AppKit
             throw LibraryError.invalid("请先退出旧版 Dump，再打开\(InterfaceText(key: "搁这儿"))。旧库尚未迁移。")
         }
     }
+    static func openForLaunch(defaults: UserDefaults = .standard,
+                              locate: (AppLanguage) throws -> URL = { try open(language: $0) }) throws -> (URL, AppPreferences) {
+        let language = AppPreferences.savedLanguage(in: defaults).resolve()
+        let root = try locate(language) // Migration may import privacy settings and the shortcut.
+        return (root, AppPreferences(defaults: defaults))
+    }
     static func choose(_ message: String) throws -> URL {
         let panel = NSOpenPanel()
         panel.message = message; panel.canChooseDirectories = true; panel.canChooseFiles = false

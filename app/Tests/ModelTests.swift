@@ -27,11 +27,35 @@ final class CleanupFailure: @unchecked Sendable {
 }
 
 @main @MainActor struct ModelTests {
+    static func checkCommittedCleanup(root: URL) async throws {
+        let fm = FileManager.default
+        let library = try Library(root: root)
+        let item = try await library.importText("synthetic bytes", collection: library.index.currentCollection)
+        let model = WorkbenchModel(library: library)
+        await model.refresh()
+        let trash = root.appendingPathComponent("trash/\(item.id)")
+        try Data().write(to: trash)
+        model.askRemoval(ids: [item.id]); await model.waitForWrites()
+        model.confirmRemoval(); await model.waitForWrites()
+        precondition(model.items.isEmpty && model.removal == nil && model.index.undo != nil && !model.message.isEmpty)
+        try fm.removeItem(at: trash)
+        _ = try Library(root: root) // Finish the interrupted move before testing the reverse direction.
+        let active = root.appendingPathComponent("objects/\(item.id)")
+        try Data().write(to: active)
+        model.message = ""
+        model.undo(); await model.waitForWrites()
+        precondition(model.items.map(\.id) == [item.id] && model.index.undo == nil && !model.message.isEmpty)
+        try fm.removeItem(at: active)
+        let reopened = try Library(root: root)
+        let bytes = try await reopened.text(for: item)
+        precondition(bytes == "synthetic bytes")
+    }
     static func main() async throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent("dump-model-tests-\(UUID())")
         defer { try? fm.removeItem(at: root) }
         let library = try Library(root: root, makeBookmark: { _ in Data() })
+        try await checkCommittedCleanup(root: root.appendingPathComponent("cleanup"))
         let model = WorkbenchModel(library: library)
         await model.refresh()
         model.importPayload(.text("synthetic draft source"))
@@ -43,7 +67,7 @@ final class CleanupFailure: @unchecked Sendable {
         model.errors = [:]; model.busy = []; model.markViewed(); precondition(model.edgeState == .quiet)
         model.drafts[item.id] = AnswerDraft(sourceID: item.id, answer: "answer")
         model.editDraft(item.id, followUp: "new unsent question")
-        model.removal = RemovalRequest(ids: [item.id], title: "test", summary: ClearSummary())
+        model.removal = RemovalRequest(ids: [item.id], title: "test", summary: try await library.clearSummary(ids: [item.id]))
         model.confirmRemoval()
         await model.waitForWrites()
         model.undo()

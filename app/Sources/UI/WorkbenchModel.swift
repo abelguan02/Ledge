@@ -430,6 +430,8 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
         switch entry {
         case .file(let url, let source):
             return try await library.importFile(url, collection: collection, kind: MediaPreview.kind(url), preferred: point, metadata: source)
+        case .note(let text, let source):
+            return try await library.importText(text, collection: collection, preferred: point, metadata: source, recognizeLink: false)
         case .text(let text, let source):
             return try await library.importText(text, collection: collection, preferred: point, metadata: source)
         case .image(let data, let source):
@@ -641,19 +643,27 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
     }
     func confirmRemoval() {
         guard let request = removal, !locked else { return }
-        for id in request.ids { webTasks[id]?.cancel() }
         performWrite { [self] in do {
             draftSave?.cancel(); await draftSave?.value
             try await flushDrafts()
             let title = request.ids == Set(items.map(\.id)) ? "撤销清空「\(collectionName)」" : "撤销删除 \(request.ids.count) 样材料"
-            try await library.remove(ids: request.ids, collection: request.collection, actionTitle: title)
+            switch try await library.remove(ids: request.ids, collection: request.collection, actionTitle: title, expected: request.summary) {
+            case .changed(let current):
+                removal?.summary = current
+                message = "内容有变化，请再确认一次。"
+                return
+            case .removed(let warning):
+                if let warning { messageCopy = warning }
+            }
             removal = nil; selected = []; pasteActions = nil
+            for id in request.ids { webTasks[id]?.cancel() }
             for id in request.ids { payloadURLs[id] = nil; thumbnails[id] = nil; textPreviews[id] = nil; errors[id] = nil; drafts[id] = nil }
             await refresh()
         } catch { fail(error); await refresh() } }
     }
     func undo() { performWrite { [self] in do {
-        if index.dissolved != nil { try await library.undoDissolve() } else { try await library.undoRemoval() }
+        if index.dissolved != nil { try await library.undoDissolve() }
+        else if let warning = try await library.undoRemoval() { messageCopy = warning }
         openStackID = nil; await refresh()
     } catch { fail(error) } } }
     func export(_ ids: Set<UUID>) {
@@ -698,7 +708,7 @@ enum CollectionPage { case closed, switcher, manager, confirmation }
                     if let screenshot = webImageURLs[item.id] { previewURL = screenshot }
                     else {
                         guard let target = openURL(for: item) else { throw LibraryError.invalid("网址无效，无法预览。") }
-                        previewURL = try linkPreviewDocuments.make(title: title, siteName: siteName, url: target)
+                        previewURL = try linkPreviewDocuments.make(title: title, siteName: siteName, url: target, language: preferences.interfaceLanguage)
                     }
                     return SystemPreviewItem(id: item.id, url: previewURL, title: "\(title) — \(siteName)")
                 }

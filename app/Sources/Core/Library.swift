@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 // Copied from Ming then adapted: retain copy-only imports, controlled paths and
 // atomic manifest commits. Dump adds canvas placement and one durable undo slot.
@@ -60,8 +61,8 @@ private struct StoragePaths: Sendable {
     }
 }
 
-enum CollectionRemovalResult {
-    case changed(CollectionRemovalSnapshot)
+enum RemovalResult<Snapshot: Sendable>: Sendable {
+    case changed(Snapshot)
     case removed(cleanupWarning: InterfaceText?)
 }
 
@@ -202,6 +203,11 @@ actor Library {
                             kind: original.folder ? .folder : kind, origin: derivedFrom == nil ? origin : .result, derivedFrom: derivedFrom)
         item.sourceTitle = metadata.title; item.sourceURL = metadata.url
         if item.origin == .importedFile {
+            var relationship = FileManager.URLRelationship.other
+            try FileManager.default.getRelationship(&relationship, ofDirectoryAt: root, toItemAt: URL(fileURLWithPath: sourcePath))
+            if relationship != .other { item.origin = .unsourced }
+        }
+        if item.origin == .importedFile {
             item.sourcePath = source.path
             item.sourceBookmark = try makeBookmark(source)
             item.sourceFileID = try Self.fileIdentity(source.path)
@@ -254,10 +260,11 @@ actor Library {
         return (top.isDirectory == true, bytes, entries)
     }
     @discardableResult func importText(_ text: String, collection: UUID, derivedFrom: UUID? = nil,
-                                      origin: MaterialOrigin = .pastedText, preferred: CanvasPoint? = nil, metadata: MaterialSource = MaterialSource()) throws -> Material {
+                                      origin: MaterialOrigin = .pastedText, preferred: CanvasPoint? = nil, metadata: MaterialSource = MaterialSource(),
+                                      recognizeLink: Bool = true) throws -> Material {
         guard !text.isEmpty else { throw LibraryError.invalid("文字为空。") }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let link = derivedFrom == nil && Self.webURL(trimmed) != nil
+        let link = recognizeLink && derivedFrom == nil && Self.webURL(trimmed) != nil
         let bytes = link ? try PropertyListSerialization.data(fromPropertyList: ["URL": trimmed], format: .xml, options: 0) : Data(text.utf8)
         try capacity(Int64(bytes.count), collection: collection)
         var item = Material(collectionID: collection, name: String(trimmed.prefix(40)), filename: link ? "链接.webloc" : "文字.txt",
@@ -428,7 +435,7 @@ actor Library {
             let category: ClearCategory
             switch item.origin {
             case .importedFile:
-                if originalExists(item) { summary.backedUp += 1; continue }; category = .missingOriginal
+                if hasMatchingExternalOriginal(item) { summary.backedUp += 1; continue }; category = .missingOriginal
             case .pastedText: category = .pastedText
             case .link: category = .link
             case .result: category = .result
@@ -438,7 +445,7 @@ actor Library {
         }
         return summary
     }
-    private func originalExists(_ item: Material) -> Bool {
+    private func hasMatchingExternalOriginal(_ item: Material) -> Bool {
         guard let path = item.sourcePath else { return false }
         var scopedURL: URL?
         if let bookmark = item.sourceBookmark {
@@ -447,10 +454,38 @@ actor Library {
         }
         let acquired = scopedURL?.startAccessingSecurityScopedResource() ?? false
         defer { if acquired { scopedURL?.stopAccessingSecurityScopedResource() } }
-        // Failed permission / moved bookmark is conservatively classified as
-        // unique. Only an original still at its recorded path counts as a copy.
-        guard let expected = item.sourceFileID, let actual = try? Self.fileIdentity(path) else { return false }
-        return actual == expected
+        guard let expected = item.sourceFileID, (try? Self.fileIdentity(path)) == expected,
+              let payload = try? url(for: item) else { return false }
+        let original = URL(fileURLWithPath: path).resolvingSymlinksInPath()
+        var relationship = FileManager.URLRelationship.other
+        do { try FileManager.default.getRelationship(&relationship, ofDirectoryAt: root, toItemAt: original) }
+        catch { return false }
+        // An editor can change either copy in place, including files inside a folder.
+        return relationship == .other && (try? Self.samePayload(original, payload)) == true
+    }
+    private static func samePayload(_ a: URL, _ b: URL) throws -> Bool {
+        let fm = FileManager.default
+        let type = try fm.attributesOfItem(atPath: a.path)[.type] as? FileAttributeType
+        guard type == (try fm.attributesOfItem(atPath: b.path)[.type] as? FileAttributeType) else { return false }
+        switch type {
+        case .typeDirectory:
+            let names = try fm.contentsOfDirectory(atPath: a.path)
+            guard Set(names) == Set(try fm.contentsOfDirectory(atPath: b.path)) else { return false }
+            for name in names {
+                guard try samePayload(a.appendingPathComponent(name), b.appendingPathComponent(name)) else { return false }
+            }
+            return true
+        case .typeRegular:
+            guard fm.contentsEqual(atPath: a.path, andPath: b.path) else { return false }
+            // contentsEqual compares only the data fork. Mac files can also store content in the resource fork.
+            func forkSize(_ path: String) -> Int? {
+                let size = getxattr(path, "com.apple.ResourceFork", nil, 0, 0, XATTR_NOFOLLOW)
+                return size >= 0 ? size : (errno == ENOATTR ? 0 : nil)
+            }
+            guard let size = forkSize(a.path), size == forkSize(b.path) else { return false }
+            return size == 0 || fm.contentsEqual(atPath: a.path + "/..namedfork/rsrc", andPath: b.path + "/..namedfork/rsrc")
+        default: return false
+        }
     }
     private static func fileIdentity(_ path: String) throws -> String {
         let values = try FileManager.default.attributesOfItem(atPath: path)
@@ -458,8 +493,13 @@ actor Library {
               let device = values[.systemNumber] as? NSNumber, let inode = values[.systemFileNumber] as? NSNumber else { throw LibraryError.invalid("原件身份无法读取。") }
         return "\(device.uint64Value):\(inode.uint64Value)"
     }
-    func remove(ids: Set<UUID>, collection: UUID? = nil, actionTitle: String? = nil) throws {
+    @discardableResult func remove(ids: Set<UUID>, collection: UUID? = nil, actionTitle: String? = nil,
+                                   expected: ClearSummary? = nil) throws -> RemovalResult<ClearSummary> {
         guard ids.isSubset(of: Set(index.items.map(\.id))) else { throw LibraryError.invalid("材料已变化，请重新确认。") }
+        if let expected {
+            let current = try clearSummary(ids: ids)
+            guard current == expected else { return .changed(current) }
+        }
         var next = index
         if let old = next.undo { next.garbage += old.items.map(\.id) }
         let oldCollection = collection.flatMap { id in next.collections.first { $0.id == id } }
@@ -478,11 +518,16 @@ actor Library {
         next.undo?.stackLayout = index.items.filter { !ids.contains($0.id) && $0.stackID.map(affectedStacks.contains) == true }.map(StackLayout.init)
         next.items.removeAll { ids.contains($0.id) }; next.drafts.removeAll { ids.contains($0.sourceID) }
         CardStacks.dissolveSingletons(&next.items); next.dissolved = nil
-        try save(next); try paths.reconcile(index)
+        try save(next)
+        do { try reconcileAfterCommit(); return .removed(cleanupWarning: nil) }
+        catch { return .removed(cleanupWarning: "材料已删除，但文件清理未完成：\(InterfaceText(error: error))") }
+    }
+    private func reconcileAfterCommit() throws {
+        try paths.reconcile(index)
         if !index.garbage.isEmpty { var cleaned = index; cleaned.garbage = []; try save(cleaned) }
     }
-    func undoRemoval() throws {
-        guard let undo = index.undo else { return }
+    @discardableResult func undoRemoval() throws -> InterfaceText? {
+        guard let undo = index.undo else { return nil }
         var next = index
         if let restored = undo.collections {
             if let replacement = undo.replacementCollection, undo.replacementRenamed != true, !next.items.contains(where: { $0.collectionID == replacement }), next.collections.first(where: { $0.id == replacement })?.name == "收集区" {
@@ -523,7 +568,9 @@ actor Library {
         }
         CardStacks.dissolveSingletons(&next.items); next.dissolved = nil
         next.drafts += undo.drafts; next.undo = nil
-        try save(next); try paths.reconcile(index)
+        try save(next)
+        do { try reconcileAfterCommit(); return nil }
+        catch { return "撤销已生效，但文件恢复未完成：\(InterfaceText(error: error))" }
     }
     func finishSession() throws {
         var next = index; next.garbage += next.undo?.items.map(\.id) ?? []; next.undo = nil
@@ -541,7 +588,7 @@ actor Library {
     // Revalidation and the single atomic manifest commit share this actor turn.
     // Report post-commit cleanup separately: a cleanup error cannot turn an
     // already committed deletion into "nothing was deleted" in the interface.
-    func removeCollections(_ expected: CollectionRemovalSnapshot) throws -> CollectionRemovalResult {
+    func removeCollections(_ expected: CollectionRemovalSnapshot) throws -> RemovalResult<CollectionRemovalSnapshot> {
         let current = try collectionRemovalSnapshot(expected.ids)
         guard current == expected else { return .changed(current) }
         guard !current.collections.isEmpty else { throw LibraryError.invalid("所选收集区已不存在，请返回列表。") }
@@ -562,8 +609,7 @@ actor Library {
         next.dissolved = nil
         try save(next)
         do {
-            try paths.reconcile(index)
-            if !index.garbage.isEmpty { var cleaned = index; cleaned.garbage = []; try save(cleaned) }
+            try reconcileAfterCommit()
             return .removed(cleanupWarning: nil)
         } catch {
             return .removed(cleanupWarning: "收集区已删除，但文件清理未完成：\(InterfaceText(error: error))")
