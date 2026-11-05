@@ -11,6 +11,7 @@ struct CardResizeHandle: NSViewRepresentable {
 }
 
 @MainActor final class CardResizeView: NSView {
+    private let skin = LedgeSkin.classic
     let model: WorkbenchModel
     var item: Material
     private var start: CGPoint?
@@ -22,14 +23,9 @@ struct CardResizeHandle: NSViewRepresentable {
     override func draw(_ dirtyRect: NSRect) {
         let scale = model.canvasCoordinateScale
         NSGraphicsContext.saveGraphicsState()
-        let shadow = NSShadow(); shadow.shadowColor = .black.withAlphaComponent(0.3); shadow.shadowBlurRadius = 2 / scale; shadow.set()
-        let path = NSBezierPath()
-        path.move(to: CGPoint(x: 1 / scale, y: 1.5 / scale))
-        path.line(to: CGPoint(x: 7 / scale, y: 1.5 / scale))
-        path.curve(to: CGPoint(x: 14.5 / scale, y: 9 / scale), controlPoint1: CGPoint(x: 13 / scale, y: 1.5 / scale), controlPoint2: CGPoint(x: 14.5 / scale, y: 3 / scale))
-        path.line(to: CGPoint(x: 14.5 / scale, y: 15 / scale))
-        path.lineWidth = 3 / scale; path.lineCapStyle = .round
-        NSColor.white.setStroke(); path.stroke()
+        let shadow = NSShadow(); shadow.shadowColor = skin.palette.resizeShadow; shadow.shadowBlurRadius = skin.shadows.resizeBlur / scale; shadow.set()
+        let path = skin.shapes.resizeGrip(scale: scale)
+        skin.palette.resizeHandle.setStroke(); path.stroke()
         NSGraphicsContext.restoreGraphicsState()
     }
     override func resetCursorRects() {
@@ -348,12 +344,13 @@ enum PanelMode { case line, drop, canvas }
 }
 
 struct DropView: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var model: WorkbenchModel
     var body: some View {
         PanelShell(width: 300, height: 420, edge: model.preferences.dockEdge) {
             VStack(spacing: 12) {
                 Text("\(model.dropCount) \(model.dropKind == .image ? "张图片" : model.dropKind == .text ? "段文字" : model.dropKind == .link ? "个链接" : "个文件") → \(model.collectionName)")
-                    .font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    .font(skin.typography.caption).foregroundStyle(skin.ink.secondary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                 tile("放进来", zone: 0).frame(maxHeight: .infinity)
                 if model.dropKind.hasActions {
                     HStack(spacing: 10) {
@@ -365,10 +362,10 @@ struct DropView: View {
         }
     }
     private func tile(_ text: String, zone: Int) -> some View {
-        Text(text).font(.system(size: zone == 0 ? 19 : 13, weight: .medium)).frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(.primary.opacity(model.dropZone == zone ? 0.12 : 0.03), in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(.primary.opacity(model.dropZone == zone ? 0.6 : 0.1), lineWidth: model.dropZone == zone ? 1.5 : 1))
-            .opacity(zone > 0 && model.dropKind == .text && !model.canUseAI ? 0.35 : 1)
+        Text(text).font(skin.typography.dropLabel(primary: zone == 0)).frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(skin.ink.dropFill(active: model.dropZone == zone), in: skin.shapes.dropZone)
+            .overlay(skin.shapes.dropZone.stroke(skin.ink.dropBorder(active: model.dropZone == zone), lineWidth: model.dropZone == zone ? 1.5 : 1))
+            .opacity(zone > 0 && model.dropKind == .text && !model.canUseAI ? skin.opacity.disabled : 1)
             .help(zone > 0 && model.dropKind == .text ? model.aiHelp : "")
     }
 }

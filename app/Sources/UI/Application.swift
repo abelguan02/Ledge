@@ -185,7 +185,7 @@ struct EdgeLineView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EdgeViewState private var hovering = false
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1/30, paused: reduceMotion || model.edgeState == .quiet)) { context in
+        TimelineView(.animation(minimumInterval: LedgeSkin.classic.motion.edgeFrameInterval, paused: reduceMotion || model.edgeState == .quiet)) { context in
             EdgeLineIndicator(state: model.edgeState, time: context.date.timeIntervalSinceReferenceDate, reduceMotion: reduceMotion, hovering: hovering, edge: model.preferences.dockEdge)
         }.frame(width: model.preferences.dockEdge == .top ? 160 : 48, height: model.preferences.dockEdge == .top ? 48 : 160, alignment: model.preferences.dockEdge == .top ? .top : model.preferences.dockEdge == .left ? .leading : .trailing).contentShape(Rectangle()).onTapGesture(perform: open)
             .onHover { hovering = $0 }

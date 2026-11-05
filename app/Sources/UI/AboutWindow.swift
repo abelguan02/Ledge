@@ -24,6 +24,7 @@ private typealias AboutState<Value> = SwiftUI.State<Value>
 }
 
 private struct AboutView: View {
+    @Environment(\.ledgeSkin) private var skin
     @ObservedObject var update: UpdateCheck
     let replay: () -> Void
     @AboutState private var coffee = false
@@ -32,59 +33,59 @@ private struct AboutView: View {
     var body: some View {
         ZStack {
             GlassBackground()
-            (scheme == .dark ? Color(red: 30/255, green: 30/255, blue: 36/255) : Color(red: 248/255, green: 248/255, blue: 250/255)).opacity(scheme == .dark ? 0.78 : 0.86)
+            skin.palette.aboutTint(dark: scheme == .dark)
             if coffee { coffeePage } else { mainPage }
-        }.frame(maxWidth: .infinity, maxHeight: .infinity).ignoresSafeArea().clipShape(RoundedRectangle(cornerRadius: 22))
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(.primary.opacity(0.12), lineWidth: 0.5))
+        }.frame(maxWidth: .infinity, maxHeight: .infinity).ignoresSafeArea().clipShape(skin.shapes.dialog)
+            .overlay(skin.shapes.dialog.stroke(skin.ink.floatingBorder, lineWidth: 0.5))
     }
     private var mainPage: some View {
         VStack(spacing: 0) {
-            Image(nsImage: NSImage(named: "Ledge") ?? NSImage()).resizable().frame(width: 84, height: 84).shadow(color: .black.opacity(0.25), radius: 8, y: 3)
-            Text(AppIdentity.name).font(.system(size: 24, weight: .bold)).padding(.top, 16)
-            if chinese { Text("Ledge").font(.system(size: 13)).foregroundStyle(.secondary).padding(.top, 2) }
-            Text(chinese ? "看中的东西，先搁这儿" : "Set it here for now.").font(.system(size: 13)).foregroundStyle(.secondary).padding(.top, 6)
+            Image(nsImage: NSImage(named: "Ledge") ?? NSImage()).resizable().frame(width: 84, height: 84).skinShadow(skin.shadows.appIcon)
+            Text(AppIdentity.name).font(skin.typography.applicationTitle).padding(.top, 16)
+            if chinese { Text("Ledge").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 2) }
+            Text(chinese ? "看中的东西，先搁这儿" : "Set it here for now.").font(skin.typography.body).foregroundStyle(skin.ink.secondary).padding(.top, 6)
             HStack(spacing: 10) {
-                Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")（\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")）").font(.system(size: 12)).monospacedDigit().foregroundStyle(.secondary)
+                Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")（\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")）").font(skin.typography.caption).monospacedDigit().foregroundStyle(skin.ink.secondary)
                 updateButton
             }.frame(height: 24).padding(.top, 14)
             VStack(spacing: 0) {
-                linkRow("开源仓库", detail: "GitHub", symbol: "chevron.left.forwardslash.chevron.right", color: Color(red: 36/255, green: 41/255, blue: 47/255), arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.repository) }
+                linkRow("开源仓库", detail: "GitHub", symbol: "chevron.left.forwardslash.chevron.right", color: skin.palette.repositoryIcon, arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.repository) }
                 Divider()
-                linkRow("反馈与建议", detail: "Issues", symbol: "bubble.left.and.bubble.right", color: .blue, arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.feedback) }
+                linkRow("反馈与建议", detail: "Issues", symbol: "bubble.left.and.bubble.right", color: skin.palette.feedback, arrow: "arrow.up.right") { NSWorkspace.shared.open(ProjectLinks.feedback) }
                 Divider()
-                linkRow("自愿赞赏", detail: "请作者喝杯咖啡", symbol: "cup.and.saucer.fill", color: .orange, arrow: "chevron.right") { coffee = true }
-            }.background(.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 12)).padding(.top, 20)
-            Button("重新观看新手引导", action: replay).buttonStyle(.plain).foregroundStyle(Color.accentColor).font(.system(size: 12)).padding(.top, 18)
+                linkRow("自愿赞赏", detail: "请作者喝杯咖啡", symbol: "cup.and.saucer.fill", color: skin.palette.coffee, arrow: "chevron.right") { coffee = true }
+            }.background(skin.ink.sectionInset, in: skin.shapes.card).padding(.top, 20)
+            Button("重新观看新手引导", action: replay).buttonStyle(.plain).foregroundStyle(skin.palette.accent).font(skin.typography.caption).padding(.top, 18)
             Spacer(minLength: 0)
         }.padding(.horizontal, 20).padding(.top, 44)
     }
     @ViewBuilder private var updateButton: some View {
         switch update.status {
-        case .checking: HStack(spacing: 4) { ProgressView().controlSize(.mini); Text("正在检查…") }.font(.system(size: 11.5))
-        case .current: Label("已是最新版本", systemImage: "checkmark").font(.system(size: 11.5))
-        case .unreleased: Text("暂无正式发布").font(.system(size: 11.5)).foregroundStyle(.secondary)
+        case .checking: HStack(spacing: 4) { ProgressView().controlSize(.mini); Text("正在检查…") }.font(skin.typography.detail)
+        case .current: Label("已是最新版本", systemImage: "checkmark").font(skin.typography.detail)
+        case .unreleased: Text("暂无正式发布").font(skin.typography.detail).foregroundStyle(skin.ink.secondary)
         case .available(let version, let url): Button("新版本 \(version) · 前往下载 ↗") { NSWorkspace.shared.open(url) }.buttonStyle(.borderedProminent).controlSize(.mini)
         case .idle, .failed:
-            Button(update.status == .failed ? "无法连接 · 重试" : "检查更新") { Task { await update.check() } }.buttonStyle(.bordered).clipShape(Capsule()).controlSize(.mini)
+            Button(update.status == .failed ? "无法连接 · 重试" : "检查更新") { Task { await update.check() } }.buttonStyle(.bordered).clipShape(skin.shapes.capsule).controlSize(.mini)
         }
     }
     private func linkRow(_ title: String, detail: String, symbol: String, color: Color, arrow: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 11) {
-                Image(systemName: symbol).font(.system(size: 14)).foregroundStyle(.white).frame(width: 26, height: 26).background(color, in: RoundedRectangle(cornerRadius: 7))
-                Text(title).font(.system(size: 13)); Spacer(minLength: 2)
-                Text(detail).font(.system(size: 11.5)).foregroundStyle(.secondary)
-                Image(systemName: arrow).font(.system(size: 11)).foregroundStyle(.secondary)
+                Image(systemName: symbol).font(skin.typography.actionIcon).foregroundStyle(skin.palette.light).frame(width: 26, height: 26).background(color, in: skin.shapes.compactControl)
+                Text(title).font(skin.typography.body); Spacer(minLength: 2)
+                Text(detail).font(skin.typography.detail).foregroundStyle(skin.ink.secondary)
+                Image(systemName: arrow).font(skin.typography.small).foregroundStyle(skin.ink.secondary)
             }.padding(.horizontal, 12).frame(height: 46).contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
     private var coffeePage: some View {
         VStack(spacing: 0) {
-            Button { coffee = false } label: { Label("关于", systemImage: "chevron.left").font(.system(size: 13)) }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
-            Image(systemName: "cup.and.saucer.fill").font(.system(size: 28)).foregroundStyle(.white).frame(width: 56, height: 56).background(Color.orange, in: RoundedRectangle(cornerRadius: 14)).padding(.top, 24)
-            Text("请作者喝杯咖啡").font(.system(size: 18, weight: .semibold)).padding(.top, 14)
+            Button { coffee = false } label: { Label("关于", systemImage: "chevron.left").font(skin.typography.body) }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
+            Image(systemName: "cup.and.saucer.fill").font(skin.typography.mediaIcon).foregroundStyle(skin.palette.light).frame(width: 56, height: 56).background(skin.palette.coffee, in: skin.shapes.payment).padding(.top, 24)
+            Text("请作者喝杯咖啡").font(skin.typography.sectionTitle).padding(.top, 14)
             CoffeePaymentCode().padding(.top, 20)
-            Text("完全自愿，不影响任何功能").font(.system(size: 12)).foregroundStyle(.secondary).padding(.top, 16)
+            Text("完全自愿，不影响任何功能").font(skin.typography.caption).foregroundStyle(skin.ink.secondary).padding(.top, 16)
             Spacer(minLength: 0)
         }.padding(.horizontal, 20).padding(.top, 44)
     }
