@@ -32,6 +32,7 @@ private struct AboutView: View {
     let replay: () -> Void
     var setWindowTitle: (String) -> Void = { _ in }
     @AboutState private var coffee = false
+    @AboutState private var paymentMethod = CoffeePaymentMethod.wechat
     @Environment(\.colorScheme) private var scheme
     private var chinese: Bool { skin.language != .english }
     var body: some View {
@@ -98,12 +99,14 @@ private struct AboutView: View {
         VStack(spacing: 0) {
             Button { coffee = false } label: { Label(skin.label("关于"), systemImage: "chevron.left").font(skin.typography.body) }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
             if skin.isUnit {
-                VStack(spacing: -6) { SkinDisplayText("请作者", size: 60, compression: 0.62); SkinDisplayText("喝杯咖啡", size: 60, compression: 0.62) }.padding(.top, 14)
+                VStack(spacing: -6) { SkinDisplayText("请作者", size: 60, compression: 0.62); SkinDisplayText("喝杯咖啡", size: 60, compression: 0.62) }.padding(.top, 8)
             } else {
-                Image(systemName: "cup.and.saucer.fill").font(skin.typography.mediaIcon).foregroundStyle(skin.palette.light).frame(width: 56, height: 56).background(skin.palette.coffee, in: skin.shapes.payment).padding(.top, 24)
+                Image(systemName: "cup.and.saucer.fill").font(skin.typography.mediaIcon).foregroundStyle(skin.palette.light).frame(width: 56, height: 56).background(skin.palette.coffee, in: skin.shapes.payment).padding(.top, 16)
                 Text(skin.label("请作者喝杯咖啡")).font(skin.typography.sectionTitle).padding(.top, 14)
             }
-            CoffeePaymentCode().padding(.top, 20)
+            SkinSegments(title: "支付方式", choices: CoffeePaymentMethod.allCases.map { ($0, $0.rawValue) }, selection: $paymentMethod)
+                .frame(width: 196).padding(.top, 10)
+            CoffeePaymentCode(method: paymentMethod).padding(.top, 8)
             (skin.isUnit || skin.language != .simplified ? Text(skin.label("完全自愿，不影响任何功能")) : Text("完全自愿，不影响任何功能")).font(skin.typography.caption).foregroundStyle(skin.ink.secondary).padding(.top, 16)
             Spacer(minLength: 0)
         }.padding(.horizontal, 20).padding(.top, 44)

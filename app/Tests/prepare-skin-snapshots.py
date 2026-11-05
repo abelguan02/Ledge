@@ -50,6 +50,19 @@ extension OnboardingView {
 }
 ''',
 }
+if "--payment-methods" in sys.argv[3:]:
+    adapters["AboutWindow.swift"] += r'''
+@MainActor func skinSnapshotCoffee(method: CoffeePaymentMethod) -> some View {
+    AboutView.snapshot(method: method)
+}
+private extension AboutView {
+    static func snapshot(method: CoffeePaymentMethod) -> Self {
+        var view = snapshot(coffee: true)
+        view._paymentMethod = AboutState(initialValue: method)
+        return view
+    }
+}
+'''
 for name, adapter in adapters.items():
     path = destination / "UI" / name
     with path.open("a") as output:

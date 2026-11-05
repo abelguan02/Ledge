@@ -1,16 +1,23 @@
 import AppKit
 import SwiftUI
 
+enum CoffeePaymentMethod: String, CaseIterable {
+    case wechat = "微信支付"
+    case alipay = "支付宝"
+
+    var resourceName: String { self == .wechat ? "CoffeePayment" : "AlipayPayment" }
+}
+
 struct CoffeePaymentCode: View {
     @Environment(\.ledgeSkin) private var skin
     // This is a standalone bundle resource, not an asset-catalog image.
-    private let image = Bundle.main.image(forResource: "CoffeePayment")
+    let method: CoffeePaymentMethod
 
     var body: some View {
         Group {
-            if let image {
+            if let image = Bundle.main.image(forResource: method.resourceName) {
                 Image(nsImage: image).resizable().interpolation(.none).scaledToFit()
-                    .accessibilityLabel(skin.label("作者收款码"))
+                    .accessibilityLabel(skin.phrase("%@收款码", skin.label(method.rawValue)))
             } else {
                 Text(skin.label("收款码未能加载")).font(skin.typography.body).foregroundStyle(skin.palette.paymentMissingText)
             }
