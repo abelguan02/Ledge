@@ -297,38 +297,44 @@ private struct SkinProbe: NSViewRepresentable {
             }
             return bytes
         }
-        for choice in SkinChoice.allCases {
-            preferences.skin = choice
-            for scale: CGFloat in [1, 2] {
-                func render(scanlines: Bool) -> CGImage {
-                    let renderer = ImageRenderer(content: SkinRoot(preferences: preferences, scanlines: scanlines) {
-                        skinSnapshotAbout(coffee: true).frame(width: 340, height: 470)
-                    })
-                    renderer.scale = scale
-                    return renderer.cgImage!
-                }
-                let plain = render(scanlines: false), decorated = render(scanlines: true)
-                let code = try barcode(plain), scanned = try barcode(decorated)
-                precondition(code.payloadStringValue == scanned.payloadStringValue)
-                let before = pixels(plain), after = pixels(decorated)
-                if choice == .classic { precondition(before == after) }
-                else {
-                    precondition(before != after, "Surrounding About content must retain scanlines")
-                    // Vision uses a bottom-left origin; bitmap rows start at the
-                    // top. Include the white quiet zone around the dark modules.
-                    var rect = VNImageRectForNormalizedRect(code.boundingBox, plain.width, plain.height).insetBy(dx: -6 * scale, dy: -6 * scale).integral
-                    rect.origin.y = CGFloat(plain.height) - rect.maxY
-                    for y in Int(rect.minY)..<Int(rect.maxY) {
-                        for x in Int(rect.minX)..<Int(rect.maxX) {
-                            let offset = (y * plain.width + x) * 4
-                            precondition(before[offset..<offset+4] == after[offset..<offset+4], "Scanlines must leave QR and white quiet zone untouched")
+        for method in CoffeePaymentMethod.allCases {
+            let name = method == .wechat ? "CoffeePayment" : "AlipayPayment"
+            let url = Bundle.main.url(forResource: name, withExtension: "jpg")!
+            let image = NSImage(contentsOf: url)!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
+            let expected = try barcode(image).payloadStringValue!
+            for choice in SkinChoice.allCases {
+                preferences.skin = choice
+                for scale: CGFloat in [1, 2] {
+                    func render(scanlines: Bool) -> CGImage {
+                        let renderer = ImageRenderer(content: SkinRoot(preferences: preferences, scanlines: scanlines) {
+                            skinSnapshotCoffee(method: method).frame(width: 340, height: 470)
+                        })
+                        renderer.scale = scale
+                        return renderer.cgImage!
+                    }
+                    let plain = render(scanlines: false), decorated = render(scanlines: true)
+                    let code = try barcode(plain), scanned = try barcode(decorated)
+                    precondition(code.payloadStringValue == expected && scanned.payloadStringValue == expected)
+                    let before = pixels(plain), after = pixels(decorated)
+                    if choice == .classic { precondition(before == after) }
+                    else {
+                        precondition(before != after, "Surrounding About content must retain scanlines")
+                        // Vision uses a bottom-left origin; bitmap rows start at the
+                        // top. Include the white quiet zone around the dark modules.
+                        var rect = VNImageRectForNormalizedRect(code.boundingBox, plain.width, plain.height).insetBy(dx: -6 * scale, dy: -6 * scale).integral
+                        rect.origin.y = CGFloat(plain.height) - rect.maxY
+                        for y in Int(rect.minY)..<Int(rect.maxY) {
+                            for x in Int(rect.minX)..<Int(rect.maxX) {
+                                let offset = (y * plain.width + x) * 4
+                                precondition(before[offset..<offset+4] == after[offset..<offset+4], "Scanlines must leave QR and white quiet zone untouched")
+                            }
                         }
                     }
+                    try NSBitmapImageRep(cgImage: decorated).representation(using: .png, properties: [:])!
+                        .write(to: root.appendingPathComponent("coffee-\(method)-\(choice)-\(Int(scale))x.png"))
                 }
-                try NSBitmapImageRep(cgImage: decorated).representation(using: .png, properties: [:])!
-                    .write(to: root.appendingPathComponent("coffee-\(choice)-\(Int(scale))x.png"))
             }
         }
-        print("PASS actual About + SkinRoot composite: QR payload/white quiet zone intact at 1x/2x, surrounding scanlines retained, Classic unchanged")
+        print("PASS actual About + SkinRoot composite: both payment methods, QR payload/white quiet zone intact at 1x/2x, surrounding scanlines retained, Classic unchanged")
     }
 }

@@ -389,3 +389,7 @@
 "撤销已生效，但文件恢复未完成：%@" = "The deletion was undone, but some files could not be restored: %@";
 "尚无网页截图。这是本地网址说明，预览不会打开网页。" = "No screenshot is available. This local preview does not open the webpage.";
 "要打开网页，请返回 %@ 双击链接卡片。" = "To open the webpage, return to %@ and double-click the link card.";
+"支付方式" = "Payment method";
+"微信支付" = "WeChat Pay";
+"支付宝" = "Alipay";
+"%@收款码" = "%@ payment QR code";

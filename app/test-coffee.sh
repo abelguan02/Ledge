@@ -5,7 +5,7 @@ test_root="$(mktemp -d /private/tmp/ledge-coffee-tests.XXXXXX)"
 trap 'rm -rf "$test_root"' EXIT
 bundle="$test_root/CoffeeTests.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources" build/module-cache
-cp Resources/CoffeePayment.jpg "$bundle/Contents/Resources/"
+cp Resources/CoffeePayment.jpg Resources/AlipayPayment.jpg "$bundle/Contents/Resources/"
 cat > "$bundle/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

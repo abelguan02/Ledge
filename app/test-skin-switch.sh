@@ -10,7 +10,7 @@ cp Info.plist "$bundle/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleIdentifier local.ledge.skin-switch-tests' "$bundle/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c 'Set :CFBundleExecutable SkinSwitchTests' "$bundle/Contents/Info.plist"
 source_copy="$test_root/Sources"
-python3 Tests/prepare-skin-snapshots.py Sources "$source_copy"
+python3 Tests/prepare-skin-snapshots.py Sources "$source_copy" --payment-methods
 xcrun swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors -parse-as-library \
     -target arm64-apple-macosx14.0 -module-cache-path build/module-cache \
     "$source_copy"/Core/*.swift "$source_copy"/Services/*.swift "$source_copy"/UI/*.swift Tests/SyntheticDrag.swift Tests/SkinSwitchTests.swift \
