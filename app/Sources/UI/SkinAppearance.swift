@@ -22,13 +22,18 @@ struct SkinRoot<Content: View>: View {
             .background { if decorateWindow { SkinWindowChrome(isUnit: skin.isUnit).frame(width: 0, height: 0) } }
             .foregroundStyle(skin.ink.primary)
             .tint(skin.palette.accent)
-            .overlay { if scanlines && skin.isUnit { SkinScanlines() } }
+            .overlayPreferenceValue(SkinScanlineExclusion.self) { excluded in
+                if scanlines && skin.isUnit {
+                    GeometryReader { proxy in SkinScanlines(excluding: excluded.map { proxy[$0] }) }
+                        .allowsHitTesting(false).accessibilityHidden(true)
+                }
+            }
             .environment(\.ledgeSkin, LedgeSkin.selected(preferences.skin))
             .environment(\.colorScheme, preferences.skin == .unit01 ? .dark : systemScheme)
     }
 }
 
-// Change only our own hosting window's shadow, leaving system preview panels,
+// Change only our own hosting window's chrome, leaving system preview panels,
 // file choosers, permission dialogs and menus outside the skin environment.
 private struct SkinWindowChrome: NSViewRepresentable {
     let isUnit: Bool
@@ -41,16 +46,24 @@ private final class SkinChromeView: NSView {
     var isUnit = false
     private weak var styledWindow: NSWindow?
     private var originalShadow = false
+    private var originalAppearance: NSAppearance?
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         restore()
         styledWindow = window
         originalShadow = window?.hasShadow ?? false
+        originalAppearance = window?.appearance
         apply()
     }
     func apply() {
         let shadow = isUnit ? false : originalShadow
         if styledWindow?.hasShadow != shadow { styledWindow?.hasShadow = shadow }
+        let appearance = isUnit ? NSAppearance(named: .darkAqua) : originalAppearance
+        if styledWindow?.appearance != appearance { styledWindow?.appearance = appearance }
     }
-    func restore() { styledWindow?.hasShadow = originalShadow; styledWindow = nil }
+    func restore() {
+        styledWindow?.hasShadow = originalShadow
+        styledWindow?.appearance = originalAppearance
+        styledWindow = nil
+    }
 }

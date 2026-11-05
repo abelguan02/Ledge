@@ -52,6 +52,7 @@ import SwiftUI
         guide = OnboardingController(preferences: preferences) { [weak self] in self?.panel.resume(.canvas) }
         about = AboutController(preferences: preferences) { [weak self] in self?.showGuide() }
         model.requestSettings = { [weak self] in self?.settings.present() }
+        model.requestQuit = { NSApp.terminate(nil) }
         let menu = NSMenu()
         let item = NSMenuItem(title: "经典验收", action: nil, keyEquivalent: "")
         let commands = NSMenu()

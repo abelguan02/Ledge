@@ -16,5 +16,6 @@ struct CoffeePaymentCode: View {
             }
         }.frame(width: 196, height: 196).background(skin.palette.light)
             .clipShape(skin.shapes.payment)
+            .anchorPreference(key: SkinScanlineExclusion.self, value: .bounds) { $0 }
     }
 }

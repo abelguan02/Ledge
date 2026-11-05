@@ -1,6 +1,14 @@
 import AppKit
 import SwiftUI
 
+// Bounds that must remain optically clear beneath a root scanline overlay.
+struct SkinScanlineExclusion: PreferenceKey {
+    static var defaultValue: Anchor<CGRect>? { nil }
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
+}
+
 // Presentation values only. A skin never owns material, selection, viewport,
 // undo, or processing state.
 struct LedgeSkin: Sendable {

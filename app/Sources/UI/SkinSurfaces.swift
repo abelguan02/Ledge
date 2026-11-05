@@ -91,8 +91,14 @@ struct GlassTabShape: Shape {
 
 // Decoration is local to the UI, never part of an image, export, or drag payload.
 struct SkinScanlines: View {
+    var excluding: CGRect? = nil
     var body: some View {
         Canvas { context, size in
+            if let excluding {
+                var mask = Path(CGRect(origin: .zero, size: size))
+                mask.addRect(excluding)
+                context.clip(to: mask, style: FillStyle(eoFill: true))
+            }
             for y in stride(from: 0.0, to: size.height, by: 3) {
                 context.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.black.opacity(0.13)))
             }

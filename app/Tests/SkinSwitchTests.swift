@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import CoreText
+import Vision
 
 @MainActor final class SnapshotShortcuts: ShortcutRegistry {
     func register(_ shortcut: AppShortcut, id: UInt32) throws { fatalError("No real shortcuts in skin tests") }
@@ -25,6 +26,7 @@ private struct SkinProbe: NSViewRepresentable {
 @main @MainActor struct SkinSwitchTests {
     static func main() async throws {
         NSApplication.shared.setActivationPolicy(.prohibited)
+        NSApp.appearance = NSAppearance(named: .aqua)
         let root = URL(fileURLWithPath: CommandLine.arguments[1])
         let library = try Library(root: root.appendingPathComponent("library"), makeBookmark: { _ in Data() })
         let group = await library.index.currentCollection
@@ -43,7 +45,7 @@ private struct SkinProbe: NSViewRepresentable {
                 .overlay { AnswerCard(model: model, item: a).frame(width: 284, height: 430) }
                 .background(SkinProbe(state: probe).frame(width: 1, height: 1))
         }.environment(\.colorScheme, .light))
-        let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 540, height: 768), styleMask: .borderless, backing: .buffered, defer: false)
+        let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 540, height: 768), styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.hasShadow = true
         let originalShadow = window.hasShadow
         window.contentView = host
@@ -78,7 +80,15 @@ private struct SkinProbe: NSViewRepresentable {
             precondition(probe.skin.isUnit == (choice == .unit01))
             precondition(probe.scheme == (choice == .unit01 ? .dark : .light))
             precondition(window.hasShadow == (choice == .unit01 ? false : originalShadow))
+            precondition(window.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == (choice == .unit01 ? .darkAqua : .aqua))
+            precondition(choice == .unit01 || window.appearance == nil, "Classic must restore inherited appearance")
+            precondition(NSApp.appearance?.name == .aqua, "Skin must not change application/system appearance")
         }
+        // Independent system panels continue to inherit the application's appearance.
+        preferences.skin = .unit01; try await settle()
+        let picker = NSOpenPanel()
+        precondition(!picker.isVisible && picker.appearance == nil)
+        precondition(picker.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .aqua)
         model.closeStack(); model.askRemoval(ids: [a.id]); await model.waitForWrites()
         let removalID = model.removal?.id
         preferences.skin = .unit01; try await settle()
@@ -91,6 +101,7 @@ private struct SkinProbe: NSViewRepresentable {
         // Menu state itself is checked without asking NSPopover to show; actual
         // popover appearance is reserved for an authorized foreground review.
         window.contentView = nil
+        precondition(window.appearance == nil && window.hasShadow == originalShadow)
         model.collectionPage = .manager; model.collectionSelection = [group]
         preferences.skin = .unit01
         precondition(model.collectionPage == .manager && model.collectionSelection == [group])
@@ -142,6 +153,59 @@ private struct SkinProbe: NSViewRepresentable {
             try NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])!
                 .write(to: root.appendingPathComponent("settings-\(choice).png"))
         }
+        try checkCoffee(preferences: preferences, root: root)
         print("PASS bundled renamed Black font, Songti fallback, identical fixed-dark renders, both General settings; no visible windows or network")
+    }
+
+    static func checkCoffee(preferences: AppPreferences, root: URL) throws {
+        func barcode(_ image: CGImage) throws -> VNBarcodeObservation {
+            let request = VNDetectBarcodesRequest(); request.symbologies = [.qr]
+            try VNImageRequestHandler(cgImage: image).perform([request])
+            precondition(request.results?.count == 1, "Production About QR must decode")
+            return request.results![0]
+        }
+        func pixels(_ image: CGImage) -> [UInt8] {
+            var bytes = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            bytes.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                                        bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return bytes
+        }
+        for choice in SkinChoice.allCases {
+            preferences.skin = choice
+            for scale: CGFloat in [1, 2] {
+                func render(scanlines: Bool) -> CGImage {
+                    let renderer = ImageRenderer(content: SkinRoot(preferences: preferences, scanlines: scanlines) {
+                        skinSnapshotAbout(coffee: true).frame(width: 340, height: 470)
+                    })
+                    renderer.scale = scale
+                    return renderer.cgImage!
+                }
+                let plain = render(scanlines: false), decorated = render(scanlines: true)
+                let code = try barcode(plain), scanned = try barcode(decorated)
+                precondition(code.payloadStringValue == scanned.payloadStringValue)
+                let before = pixels(plain), after = pixels(decorated)
+                if choice == .classic { precondition(before == after) }
+                else {
+                    precondition(before != after, "Surrounding About content must retain scanlines")
+                    // Vision uses a bottom-left origin; bitmap rows start at the
+                    // top. Include the white quiet zone around the dark modules.
+                    var rect = VNImageRectForNormalizedRect(code.boundingBox, plain.width, plain.height).insetBy(dx: -6 * scale, dy: -6 * scale).integral
+                    rect.origin.y = CGFloat(plain.height) - rect.maxY
+                    for y in Int(rect.minY)..<Int(rect.maxY) {
+                        for x in Int(rect.minX)..<Int(rect.maxX) {
+                            let offset = (y * plain.width + x) * 4
+                            precondition(before[offset..<offset+4] == after[offset..<offset+4], "Scanlines must leave QR and white quiet zone untouched")
+                        }
+                    }
+                }
+                try NSBitmapImageRep(cgImage: decorated).representation(using: .png, properties: [:])!
+                    .write(to: root.appendingPathComponent("coffee-\(choice)-\(Int(scale))x.png"))
+            }
+        }
+        print("PASS actual About + SkinRoot composite: QR payload/white quiet zone intact at 1x/2x, surrounding scanlines retained, Classic unchanged")
     }
 }
